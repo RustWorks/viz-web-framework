@@ -2,7 +2,7 @@
 //!
 //! Maintain context in multiple handles.
 //!
-//! `Pin<&mut 🦀>` Don't let him/she get away. 'Stay at home' 2020.
+//! `Pin<&mut 🦀>` Don't let him/her get away. 'Stay at home on 2020'.
 //!
 //! Examples
 //!
@@ -82,7 +82,10 @@ use std::future::Future;
 use std::pin::Pin;
 
 #[async_trait]
-pub trait Handle<'a, Context, Output>: Send + Sync + 'static {
+pub trait Handle<'a, Context, Output>
+where
+    Self: Send + Sync + 'static,
+{
     async fn call(&'a self, cx: Pin<&'a mut Context>) -> Output;
 }
 
