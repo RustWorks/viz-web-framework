@@ -39,9 +39,9 @@ struct Context {
 }
 
 impl Context {
-    async fn next(&mut self) -> Result {
+    async fn next(mut self: Pin<&mut Context>) -> Result {
         if let Some(m) = self.middleware.pop() {
-            m.call(Pin::new(self)).await
+            m.call(self).await
         } else {
             Ok(())
         }
@@ -55,7 +55,7 @@ fn main() {
             let repeat = "-".repeat(2 * size);
             println!("exec Fn a --{}>> {:>2}", repeat, cx.index);
             cx.index += 1;
-            let fut = cx.next().await;
+            let fut = cx.as_mut().next().await;
             cx.index += 1;
             println!("exec Fn a --{}<< {:>2}", repeat, cx.index);
             fut
@@ -67,7 +67,7 @@ fn main() {
             println!("exec Fn b --{}>> {:>2}", repeat, cx.index);
             cx.index += 1;
             Box::pin(async move {
-                let fut = cx.next().await;
+                let fut = cx.as_mut().next().await;
                 cx.index += 1;
                 println!("exec Fn b --{}<< {:>2}", repeat, cx.index);
                 fut
@@ -80,7 +80,7 @@ fn main() {
             println!("exec Fn c --{}>> {:>2}", repeat, cx.index);
             cx.index += 1;
             Box::pin(async move {
-                let fut = cx.next().await;
+                let fut = cx.as_mut().next().await;
                 cx.index += 1;
                 println!("exec Fn c --{}<< {:>2}", repeat, cx.index);
                 fut
@@ -93,7 +93,7 @@ fn main() {
             println!("exec Fn d --{}>> {:>2}", repeat, cx.index);
             cx.index += 1;
             async move {
-                let fut = cx.next().await;
+                let fut = cx.as_mut().next().await;
                 cx.index += 1;
                 println!("exec Fn d --{}<< {:>2}", repeat, cx.index);
                 fut
@@ -106,7 +106,7 @@ fn main() {
             println!("exec Fn e --{}>> {:>2}", repeat, cx.index);
             cx.index += 1;
             async move {
-                let fut = cx.next().await;
+                let fut = cx.as_mut().next().await;
                 cx.index += 1;
                 println!("exec Fn e --{}<< {:>2}", repeat, cx.index);
                 fut
@@ -118,12 +118,13 @@ fn main() {
             let repeat = "-".repeat(2 * size);
             println!("exec Fn f --{}>> {:>2}", repeat, cx.index);
             cx.index += 1;
-            let fut = cx.next().await;
+            let fut = cx.as_mut().next().await;
             cx.index += 1;
             println!("exec Fn f --{}<< {:>2}", repeat, cx.index);
             fut
         }
 
+        #[derive(Clone)]
         struct A {
             index: usize,
         }
@@ -135,7 +136,7 @@ fn main() {
                 let repeat = "-".repeat(2 * size);
                 println!("exec St A --{}>> {:>2}", repeat, cx.index);
                 cx.index += self.index;
-                let fut = cx.next().await;
+                let fut = cx.as_mut().next().await;
                 cx.index -= self.index;
                 println!("exec St A --{}<< {:>2}", repeat, cx.index);
                 fut
@@ -153,7 +154,7 @@ fn main() {
                 let repeat = "-".repeat(2 * size);
                 println!("exec St B --{}>> {:>2}", repeat, cx.index);
                 cx.index += self.index;
-                let fut = cx.next().await;
+                let fut = cx.as_mut().next().await;
                 cx.index -= self.index;
                 println!("exec St B --{}<< {:>2}", repeat, cx.index);
                 fut
@@ -176,20 +177,35 @@ fn main() {
         // let _ = (B {}).call(cx.as_mut()).await;
         // let _ = (A {}).call(cx.as_mut()).await;
 
+        let mut v: Vec<Box<dyn for<'a> Handle<'a, Context, Result>>> = vec![];
+        v.push(Box::new(a));
+        v.push(Box::new(b));
+        v.push(Box::new(c));
+        v.push(Box::new(d));
+        v.push(Box::new(e));
+        v.push(Box::new(f));
+
         let mut v: Vec<Arc<dyn for<'a> Handle<'a, Context, Result>>> = vec![];
         v.push(Arc::new(a));
+        let f_b = b.clone();
         v.push(Arc::new(b));
+        v.push(Arc::new(f_b));
         v.push(Arc::new(c));
         v.push(Arc::new(d));
         v.push(Arc::new(e));
         v.push(Arc::new(f));
+
         v.push(Arc::new(B { index: 1 }));
         v.push(Arc::new(A { index: 2 }));
+        let a_0 = A { index: 1 };
+        let a_1 = a_0.clone();
+        v.push(Arc::new(a_0));
+        v.push(Arc::new(a_1));
 
         cx.as_mut().middleware = v.clone();
         println!("mw 0: {}", v.len());
 
-        let result = cx.next().await;
+        let result = cx.as_mut().next().await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), ());
 
@@ -197,7 +213,7 @@ fn main() {
 
         cx.as_mut().middleware = v.clone();
 
-        let result = cx.next().await;
+        let result = cx.as_mut().next().await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), ());
 
@@ -205,7 +221,7 @@ fn main() {
 
         cx.as_mut().middleware = v.clone();
 
-        let result = cx.next().await;
+        let result = cx.as_mut().next().await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), ());
     });
