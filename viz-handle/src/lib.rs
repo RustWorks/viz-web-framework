@@ -1,8 +1,8 @@
-//! A Handle Trait for asynchronous context pipeline.
+//! A handle trait for asynchronous context pipeline.
 //!
-//! Maintain context in multiple handles.
+//! Maintain context in multiple handlers.
 //!
-//! `Pin<&mut 🦀>` Don't let him/her get away. 'Stay at home on 2020'.
+//! `Pin<&mut 🦀>` Don't let him/her get away. Stay at home on 2020.
 //!
 //! Examples
 //!
@@ -77,24 +77,30 @@
 //! }
 //! ```
 
+#![forbid(unsafe_code, rust_2018_idioms)]
+#![deny(missing_debug_implementations, nonstandard_style)]
+#![warn(missing_docs, missing_doc_code_examples, unreachable_pub)]
+
 use async_trait::async_trait;
 use std::future::Future;
 use std::pin::Pin;
 
+/// A handle trait for asynchronous context pipeline.
 #[async_trait]
 pub trait Handle<'a, Context, Output>
 where
-    Self: Send + Sync + 'static,
+    Self: Send + Sync,
 {
+    /// Invokes the handler within the given `Context` and then returns `Output`
     async fn call(&'a self, cx: Pin<&'a mut Context>) -> Output;
 }
 
 #[async_trait]
 impl<'a, Context, Output, F, Fut> Handle<'a, Context, Output> for F
 where
-    F: Send + Sync + 'static + Fn(Pin<&'a mut Context>) -> Fut,
+    F: Send + Sync + Fn(Pin<&'a mut Context>) -> Fut,
     Fut: Future<Output = Output> + Send + 'a,
-    Context: 'a + Send,
+    Context: Send + 'a,
     Output: 'a,
 {
     #[inline]
