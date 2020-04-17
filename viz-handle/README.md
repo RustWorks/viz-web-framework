@@ -1,8 +1,8 @@
 <h1 align="center">Handle</h1>
 
 <div align="center">
+  <p><strong>Pin<&mut 🦀></strong> <sup style="color: #006e00">Safety!</sup></p>
   <p><strong>A handle trait for asynchronous context pipeline.</strong></p>
-  <p><strong>Pin<&mut 🦀></strong> Safety!</p>
   <p>Don't let him/her get away. Stay at home on 2020.</p>
 </div>
 

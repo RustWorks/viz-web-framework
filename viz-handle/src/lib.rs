@@ -395,7 +395,10 @@ mod tests {
 
                 println!("We handled it!");
 
-                async move { Ok(()) }
+                async move {
+                    // assert_eq!(cx.index, 12); // Error
+                    Ok(())
+                }
             }));
             v.push(Arc::new(C { index: 3 }));
             v.push(Arc::new(B { index: 2 }));
