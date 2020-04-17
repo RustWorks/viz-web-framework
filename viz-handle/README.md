@@ -2,7 +2,8 @@
 
 <div align="center">
   <p><strong>A handle trait for asynchronous context pipeline.</strong></p>
-  <p><strong>Pin<&mut 🦀></strong> Don't let him/her get away. Stay at home on 2020.</p>
+  <p><strong>Pin<&mut 🦀></strong> Safety!</p>
+  <p>Don't let him/her get away. Stay at home on 2020.</p>
 </div>
 
 <div align="center">

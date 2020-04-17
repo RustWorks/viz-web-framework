@@ -2,7 +2,8 @@
 //!
 //! Maintain context in multiple handlers.
 //!
-//! `Pin<&mut 🦀>` Don't let him/her get away. Stay at home on 2020.
+//! `Pin<&mut 🦀>` Safety!
+//! Don't let him/her get away. Stay at home on 2020.
 //!
 //! Examples
 //!
@@ -379,7 +380,11 @@ mod tests {
             v.push(Box::new(c));
             v.push(Box::new(b));
             v.push(Box::new(a));
-            assert_eq!(v.len(), 6);
+            v.push(Box::new(A { index: 1 }));
+            v.push(Box::new(B { index: 2 }));
+            v.push(Box::new(C { index: 3 }));
+            v.reverse();
+            assert_eq!(v.len(), 9);
 
             let mut v: Vec<Arc<dyn for<'a> Handle<'a, Context, Result>>> = vec![];
 
