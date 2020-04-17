@@ -34,11 +34,15 @@
 //! async fn a(mut cx: Pin<&mut Context>) -> Result {
 //!     let size = cx.middleware.len();
 //!     let repeat = "-".repeat(2 * size);
+//!
 //!     println!("exec Fn a --{}>> {:>2}", repeat, cx.index);
+//!
 //!     cx.index += 1;
 //!     let fut = cx.as_mut().next().await;
 //!     cx.index += 1;
+//!
 //!     println!("exec Fn a --{}<< {:>2}", repeat, cx.index);
+//!
 //!     fut
 //! }
 //!
@@ -52,11 +56,15 @@
 //!     async fn call(&'a self, mut cx: Pin<&'a mut Context>) -> Result {
 //!         let size = cx.middleware.len();
 //!         let repeat = "-".repeat(2 * size);
+//!
 //!         println!("exec St A --{}>> {:>2}", repeat, cx.index);
+//!
 //!         cx.index += self.index;
 //!         let fut = cx.as_mut().next().await;
 //!         cx.index -= self.index;
+//!
 //!         println!("exec St A --{}<< {:>2}", repeat, cx.index);
+//!
 //!         fut
 //!     }
 //! }
@@ -118,11 +126,12 @@ mod tests {
     use std::{future::Future, pin::Pin, sync::Arc};
 
     type Result = anyhow::Result<()>;
+    type Middleware = dyn for<'a> Handle<'a, Context, Result>;
     type BoxFuture<'a, T = Result> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
     struct Context {
         index: usize,
-        middleware: Vec<Arc<dyn for<'a> Handle<'a, Context, Result>>>,
+        middleware: Vec<Arc<Middleware>>,
     }
 
     impl Context {
@@ -373,7 +382,7 @@ mod tests {
             // let _ = (B {}).call(cx.as_mut()).await;
             // let _ = (A {}).call(cx.as_mut()).await;
 
-            let mut v: Vec<Box<dyn for<'a> Handle<'a, Context, Result>>> = vec![];
+            let mut v: Vec<Box<Middleware>> = vec![];
             v.push(Box::new(f));
             v.push(Box::new(e));
             v.push(Box::new(d));
@@ -386,7 +395,7 @@ mod tests {
             v.reverse();
             assert_eq!(v.len(), 9);
 
-            let mut v: Vec<Arc<dyn for<'a> Handle<'a, Context, Result>>> = vec![];
+            let mut v: Vec<Arc<Middleware>> = vec![];
 
             // Handled it!
             // A Closure cant use `cx.next()`.
@@ -444,7 +453,7 @@ mod tests {
 
         let mut cx: Pin<&mut Context> = Pin::new(&mut cx);
 
-        let mut v: Vec<Arc<dyn for<'a> Handle<'a, Context, Result>>> = vec![];
+        let mut v: Vec<Arc<Middleware>> = vec![];
         v.insert(0, Arc::new(a));
         v.insert(0, Arc::new(b));
         v.insert(0, Arc::new(c));
@@ -467,7 +476,7 @@ mod tests {
         cx.as_mut().middleware = v.clone();
         println!("mw 0: {}", v.len());
 
-        let result = cx.as_mut().next().await;
+        let result = cx.next().await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), ());
 
@@ -475,7 +484,7 @@ mod tests {
 
         cx.as_mut().middleware = v.clone();
 
-        let result = cx.as_mut().next().await;
+        let result = cx.next().await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), ());
 
@@ -483,7 +492,7 @@ mod tests {
 
         cx.as_mut().middleware = v.clone();
 
-        let result = cx.as_mut().next().await;
+        let result = cx.next().await;
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), ());
 
