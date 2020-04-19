@@ -98,7 +98,7 @@ use std::pin::Pin;
 #[async_trait]
 pub trait Handle<'a, Context, Output>
 where
-    Self: Send + Sync,
+    Self: Send + Sync + 'static,
 {
     /// Invokes the handler within the given `Context` and then returns `Output`
     async fn call(&'a self, cx: Pin<&'a mut Context>) -> Output;
@@ -107,7 +107,7 @@ where
 #[async_trait]
 impl<'a, Context, Output, F, Fut> Handle<'a, Context, Output> for F
 where
-    F: Send + Sync + Fn(Pin<&'a mut Context>) -> Fut,
+    F: Send + Sync + 'static + Fn(Pin<&'a mut Context>) -> Fut,
     Fut: Future<Output = Output> + Send + 'a,
     Context: Send + 'a,
     Output: 'a,

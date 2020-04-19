@@ -34,8 +34,8 @@ use futures::executor::block_on;
 use std::{future::Future, pin::Pin, sync::Arc};
 
 type Result = anyhow::Result<()>;
-type BoxFuture<'a, T = Result> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 type Middleware = dyn for<'a> Handle<'a, Context, Result>;
+type BoxFuture<'a, T = Result> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
 
 struct Context {
     index: usize,
