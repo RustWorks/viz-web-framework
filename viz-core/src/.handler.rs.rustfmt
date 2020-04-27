@@ -1,0 +1,249 @@
+use pin_project::pin_project;
+use std::future::Future;
+use std::marker::PhantomData;
+use std::pin::Pin;
+use std::task::{Context as TaskContext, Poll};
+use futures::future::{ok, FutureExt, Ready};
+
+use crate::Context;
+use crate::Error;
+use crate::FromContext;
+use crate::LocalBoxFuture;
+use crate::Request;
+use crate::Response;
+use crate::Result;
+use crate::ToResponde;
+
+pub trait Handler<Args>: Clone + 'static {
+    type Output: ToResponde;
+    type Future: Future<Output = Self::Output> + 'static;
+
+    fn call(&self, args: Args) -> Self::Future;
+}
+
+impl<F, R> Handler<()> for F
+where
+    F: Clone + 'static + Fn() -> R,
+    R: Future + 'static,
+    R::Output: ToResponde,
+{
+    type Future = R;
+    type Output = R::Output;
+
+    fn call(&self, _: ()) -> R {
+        (self)()
+    }
+}
+
+pub(super) trait HandlerFn {
+    fn call(&self, _: Context) -> LocalBoxFuture<'static, Result<Response>>;
+
+    fn clone_handler(&self) -> Box<dyn HandlerFn>;
+}
+
+pub(super) struct HandlerWrapper<F, T>
+where
+    F: Handler<T>,
+    F::Future: 'static,
+    T: FromRequest,
+{
+    h: F,
+    _t: PhantomData<T>,
+}
+
+impl<F, T> HandlerWrapper<F, T>
+where
+    F: Handler<T>,
+    F::Future: 'static,
+    T: FromRequest,
+{
+    pub(super) fn new(h: F) -> Self {
+        HandlerWrapper { h, _t: PhantomData }
+    }
+}
+
+impl<F, T> HandlerFn for HandlerWrapper<F, T>
+where
+    F: Handler<T>,
+    F::Future: 'static,
+    T: FromRequest + 'static,
+{
+    fn call(&self, cx: Context) -> LocalBoxFuture<'static, Result<Response>> {
+        // let (req, mut payload) = req.into_parts();
+
+        Box::pin(HandlerWrapperResponse {
+            hnd: self.h.clone(),
+            from_request: Some(T::from_request(&cx)),
+            handler: None,
+            responder: None,
+            req: Some(Request::new()),
+        })
+        // .boxed_local()
+
+        // Box::pin(async move {
+        //     let args = T::from_request(&cx).await?;
+        //     // let fut = (self.f).call(args).await?;
+
+        //     Ok(Response::new())
+        // })
+    }
+
+    fn clone_handler(&self) -> Box<dyn HandlerFn> {
+        Box::new(HandlerWrapper {
+            h: self.h.clone(),
+            _t: PhantomData,
+        })
+    }
+}
+
+#[pin_project]
+pub(super) struct HandlerWrapperResponse<F, T>
+where
+    F: Handler<T>,
+    F::Future: 'static,
+    T: FromRequest,
+{
+    hnd: F,
+    #[pin]
+    from_request: Option<T::Future>,
+    #[pin]
+    handler: Option<F::Future>,
+    #[pin]
+    responder: Option<<F::Output as ToResponde>::Future>,
+    req: Option<Request>,
+}
+
+impl<F, T> Future for HandlerWrapperResponse<F, T>
+where
+    F: Handler<T>,
+    F::Future: 'static,
+    T: FromRequest,
+{
+    type Output = Result<Response>;
+
+    fn poll(mut self: Pin<&mut Self>, cx: &mut TaskContext<'_>) -> Poll<Self::Output> {
+        let mut this = self.as_mut().project();
+
+        if let Some(fut) = this.from_request.as_pin_mut() {
+            return match fut.poll(cx) {
+                Poll::Ready(Ok(param)) => {
+                    let fut = this.hnd.call(param);
+                    this = self.as_mut().project();
+                    this.from_request.set(None);
+                    this.handler.set(Some(fut));
+                    self.poll(cx)
+                }
+                Poll::Pending => Poll::Pending,
+                Poll::Ready(Err(e)) => Poll::Ready(Ok(Response::new())),
+            };
+        }
+
+        if let Some(fut) = this.handler.as_pin_mut() {
+            return match fut.poll(cx) {
+                Poll::Ready(res) => {
+                    let fut = res.to_response();
+                    this = self.as_mut().project();
+                    this.handler.set(None);
+                    this.responder.set(Some(fut));
+                    self.poll(cx)
+                }
+                Poll::Pending => Poll::Pending,
+            };
+        }
+
+        if let Some(fut) = this.responder.as_pin_mut() {
+            return match fut.poll(cx) {
+                Poll::Ready(res) => Poll::Ready(Ok(Response::new())),
+                Poll::Pending => Poll::Pending,
+            };
+        }
+
+        unreachable!();
+    }
+}
+
+macro_rules! factory_tuple ({$fut_type:ident, $(($n:tt, $T:ident)),+} => {
+    impl<Func, $($T,)+ R> Handler<($($T,)+)> for Func
+    where Func: Clone + 'static + Fn($($T,)+) -> R,
+          R: Future + 'static,
+          R::Output: ToResponde,
+    {
+        type Future = R;
+        type Output = R::Output;
+
+        fn call(&self, args: ($($T,)+)) -> R {
+            (self)($(args.$n,)+)
+        }
+    }
+
+        /// FromRequest implementation for a tuple
+    #[allow(unused_parens)]
+    impl<$($T: FromRequest + 'static),+> FromRequest for ($($T,)+)
+    {
+        type Error = Error;
+        type Future = $fut_type<$($T),+>;
+
+        fn from_request(req: &Context) -> Self::Future {
+            $fut_type {
+                items: <($(Option<$T>,)+)>::default(),
+                $($T: $T::from_request(req),)+
+            }
+        }
+    }
+
+    #[doc(hidden)]
+    #[pin_project::pin_project]
+    pub struct $fut_type<$($T: FromRequest),+>
+    {
+        items: ($(Option<$T>,)+),
+        $(#[pin] $T: $T::Future),+
+    }
+
+    impl<$($T: FromRequest),+> Future for $fut_type<$($T),+>
+    where
+        $($T::Error: Into<Error>),+
+    {
+        type Output = Result<($($T,)+), Error>;
+
+        fn poll(self: Pin<&mut Self>, cx: &mut TaskContext<'_>) -> Poll<Self::Output> {
+            let this = self.project();
+
+            let mut ready = true;
+            $(
+                if this.items.$n.is_none() {
+                    match this.$T.poll(cx) {
+                        Poll::Ready(Ok(item)) => {
+                            this.items.$n = Some(item);
+                        }
+                        Poll::Pending => ready = false,
+                        Poll::Ready(Err(e)) => return Poll::Ready(Err(e.into())),
+                    }
+                }
+            )+
+
+                if ready {
+                    Poll::Ready(Ok(
+                        ($(this.items.$n.take().unwrap(),)+)
+                    ))
+                } else {
+                    Poll::Pending
+                }
+        }
+    }
+});
+
+#[rustfmt::skip]
+mod m {
+    use super::*;
+
+factory_tuple!(TupleFromRequest1, (0, A));
+// factory_tuple!(TupleFromRequest2, (0, A), (1, B));
+// factory_tuple!(TupleFromRequest3, (0, A), (1, B), (2, C));
+// factory_tuple!(TupleFromRequest4, (0, A), (1, B), (2, C), (3, D));
+// factory_tuple!(TupleFromRequest5, (0, A), (1, B), (2, C), (3, D), (4, E));
+// factory_tuple!(TupleFromRequest6, (0, A), (1, B), (2, C), (3, D), (4, E), (5, F));
+// factory_tuple!(TupleFromRequest7, (0, A), (1, B), (2, C), (3, D), (4, E), (5, F), (6, G));
+// factory_tuple!(TupleFromRequest8, (0, A), (1, B), (2, C), (3, D), (4, E), (5, F), (6, G), (7, H));
+// factory_tuple!(TupleFromRequest9, (0, A), (1, B), (2, C), (3, D), (4, E), (5, F), (6, G), (7, H), (8, I));
+// factory_tuple!(TupleFromRequest10, (0, A), (1, B), (2, C), (3, D), (4, E), (5, F), (6, G), (7, H), (8, I), (9, J));
+}
