@@ -1,44 +1,33 @@
+//!
+//! Thanks:
+//!   ntex:     https://docs.rs/ntex/0.1.14/ntex/web/trait.Handler.html
+//!   warp:     https://github.com/seanmonstar/warp/blob/master/src/generic.rs
+
 use std::marker::PhantomData;
 
-use crate::async_trait;
 use crate::Context;
 use crate::FromContext;
 use crate::Future;
+use crate::Pin;
 use crate::Response;
 use crate::Result;
 
-#[async_trait(?Send)]
 pub trait HandlerBase<Args>: Clone + 'static {
     type Output: Into<Response>;
+    type Future: Future<Output = Self::Output> + Send + 'static;
 
-    async fn call(&self, args: Args) -> Self::Output;
+    fn call(&self, args: Args) -> Self::Future;
 }
 
-#[async_trait(?Send)]
-impl<F, R> HandlerBase<()> for F
-where
-    F: Clone + 'static + Fn() -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, _: ()) -> Self::Output {
-        (self)().await
-    }
-}
-
-#[async_trait(?Send)]
-pub trait Handler {
-    async fn call(&self, _: Context) -> Result<Response>;
+pub trait Handler: Send + 'static {
+    fn call(&self, _: Context) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>>;
 
     fn clone_handler(&self) -> Box<dyn Handler>;
 }
+
 pub struct HandlerWrapper<F, T>
 where
     F: HandlerBase<T>,
-    F::Output: Into<Response>,
     T: FromContext,
     T::Error: Into<Response>,
 {
@@ -49,7 +38,6 @@ where
 impl<F, T> HandlerWrapper<F, T>
 where
     F: HandlerBase<T>,
-    F::Output: Into<Response>,
     T: FromContext,
     T::Error: Into<Response>,
 {
@@ -58,19 +46,20 @@ where
     }
 }
 
-#[async_trait(?Send)]
 impl<F, T> Handler for HandlerWrapper<F, T>
 where
-    F: HandlerBase<T>,
-    F::Output: Into<Response>,
-    T: FromContext + 'static,
-    T::Error: Into<Response>,
+    F: HandlerBase<T> + Send + Sync,
+    T: FromContext + Send + 'static,
+    T::Error: Into<Response> + Send,
 {
     #[inline]
-    async fn call(&self, cx: Context) -> Result<Response> {
-        Ok(match T::from_context(&cx).await {
-            Ok(args) => self.h.call(args).await.into(),
-            Err(e) => e.into(),
+    fn call(&self, cx: Context) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>> {
+        let h = self.h.clone();
+        Box::pin(async move {
+            Ok(match T::from_context(&cx).await {
+                Ok(args) => h.call(args).await.into(),
+                Err(e) => e.into(),
+            })
         })
     }
 
@@ -83,323 +72,54 @@ where
     }
 }
 
-#[async_trait(?Send)]
-impl<Func, T0, R> HandlerBase<(T0,)> for Func
-where
-    T0: 'static,
-    Func: Clone + 'static + Fn(T0) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0,)) -> Self::Output {
-        (self)(args.0).await
-    }
+macro_rules! peel {
+    ($T0:ident, $($T:ident,)*) => (tuple! { $($T,)* })
 }
 
-#[async_trait(?Send)]
-impl<Func, T0, T1, R> HandlerBase<(T0, T1)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    Func: Clone + 'static + Fn(T0, T1) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
+macro_rules! tuple {
+    () => {
+        impl<F, R> HandlerBase<()> for F
+        where
+            F: Fn() -> R + Clone + 'static,
+            R: Future + Send + 'static,
+            R::Output: Into<Response>,
+        {
+            type Output = R::Output;
+            type Future = R;
 
-    #[inline]
-    async fn call(&self, args: (T0, T1)) -> Self::Output {
-        (self)(args.0, args.1).await
-    }
+            fn call(&self, _: ()) -> R {
+                (self)()
+            }
+        }
+    };
+    ( $($T:ident,)+ ) => (
+        impl<Func, $($T,)+ R> HandlerBase<($($T,)+)> for Func
+        where
+            Func: Fn($($T,)+) -> R + Clone + 'static,
+            R: Future + Send + 'static,
+            R::Output: Into<Response>,
+        {
+            type Output = R::Output;
+            type Future = R;
+
+            #[inline]
+            fn call(&self, args: ($($T,)+)) -> R {
+                #[allow(non_snake_case)]
+                let ($($T,)+) = args;
+                (self)($($T,)+)
+            }
+        }
+
+        peel! { $($T,)+ }
+    )
 }
 
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, R> HandlerBase<(T0, T1, T2)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2)) -> Self::Output {
-        (self)(args.0, args.1, args.2).await
-    }
-}
-
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, T3, R> HandlerBase<(T0, T1, T2, T3)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    T3: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2, T3) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2, T3)) -> Self::Output {
-        (self)(args.0, args.1, args.2, args.3).await
-    }
-}
-
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, T3, T4, R> HandlerBase<(T0, T1, T2, T3, T4)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    T3: 'static,
-    T4: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2, T3, T4) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2, T3, T4)) -> Self::Output {
-        (self)(args.0, args.1, args.2, args.3, args.4).await
-    }
-}
-
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, T3, T4, T5, R> HandlerBase<(T0, T1, T2, T3, T4, T5)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    T3: 'static,
-    T4: 'static,
-    T5: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2, T3, T4, T5) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2, T3, T4, T5)) -> Self::Output {
-        (self)(args.0, args.1, args.2, args.3, args.4, args.5).await
-    }
-}
-
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, T3, T4, T5, T6, R> HandlerBase<(T0, T1, T2, T3, T4, T5, T6)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    T3: 'static,
-    T4: 'static,
-    T5: 'static,
-    T6: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2, T3, T4, T5, T6) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2, T3, T4, T5, T6)) -> Self::Output {
-        (self)(args.0, args.1, args.2, args.3, args.4, args.5, args.6).await
-    }
-}
-
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, T3, T4, T5, T6, T7, R> HandlerBase<(T0, T1, T2, T3, T4, T5, T6, T7)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    T3: 'static,
-    T4: 'static,
-    T5: 'static,
-    T6: 'static,
-    T7: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2, T3, T4, T5, T6, T7) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2, T3, T4, T5, T6, T7)) -> Self::Output {
-        (self)(
-            args.0, args.1, args.2, args.3, args.4, args.5, args.6, args.7,
-        )
-        .await
-    }
-}
-
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, T3, T4, T5, T6, T7, T8, R> HandlerBase<(T0, T1, T2, T3, T4, T5, T6, T7, T8)>
-    for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    T3: 'static,
-    T4: 'static,
-    T5: 'static,
-    T6: 'static,
-    T7: 'static,
-    T8: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2, T3, T4, T5, T6, T7, T8) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2, T3, T4, T5, T6, T7, T8)) -> Self::Output {
-        (self)(
-            args.0, args.1, args.2, args.3, args.4, args.5, args.6, args.7, args.8,
-        )
-        .await
-    }
-}
-
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, R>
-    HandlerBase<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    T3: 'static,
-    T4: 'static,
-    T5: 'static,
-    T6: 'static,
-    T7: 'static,
-    T8: 'static,
-    T9: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9)) -> Self::Output {
-        (self)(
-            args.0, args.1, args.2, args.3, args.4, args.5, args.6, args.7, args.8, args.9,
-        )
-        .await
-    }
-}
-
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, R>
-    HandlerBase<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    T3: 'static,
-    T4: 'static,
-    T5: 'static,
-    T6: 'static,
-    T7: 'static,
-    T8: 'static,
-    T9: 'static,
-    T10: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)) -> Self::Output {
-        (self)(
-            args.0, args.1, args.2, args.3, args.4, args.5, args.6, args.7, args.8, args.9, args.10,
-        )
-        .await
-    }
-}
-
-#[async_trait(?Send)]
-impl<Func, T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11, R>
-    HandlerBase<(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)> for Func
-where
-    T0: 'static,
-    T1: 'static,
-    T2: 'static,
-    T3: 'static,
-    T4: 'static,
-    T5: 'static,
-    T6: 'static,
-    T7: 'static,
-    T8: 'static,
-    T9: 'static,
-    T10: 'static,
-    T11: 'static,
-    Func: Clone + 'static + Fn(T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11) -> R,
-    R: Future + 'static,
-    R::Output: Into<Response>,
-{
-    type Output = R::Output;
-
-    #[inline]
-    async fn call(&self, args: (T0, T1, T2, T3, T4, T5, T6, T7, T8, T9, T10, T11)) -> Self::Output {
-        (self)(
-            args.0, args.1, args.2, args.3, args.4, args.5, args.6, args.7, args.8, args.9,
-            args.10, args.11,
-        )
-        .await
-    }
-}
-
-// macro_rules! tuple ({$(($n:tt, $T:ident)),+} => {
-//     // // Issue: https://github.com/dtolnay/async-trait/issues/46
-//     // #[async_trait(?Send)]
-//     // impl<Func, $($T,)+ R> HandlerBase<($($T,)+)> for Func
-//     // where
-//     //     $($T: 'static,)+
-//     //     Func: Clone + 'static + Fn($($T,)+) -> R,
-//     //     R: Future + 'static,
-//     //     R::Output: Into<Response>,
-//     // {
-//     //     type Output = R::Output;
-
-//     //     async fn call(&self, args: ($($T,)+)) -> Self::Output {
-//     //         (self)($(args.$n,)+).await
-//     //     }
-//     // }
-// });
-
-// #[rustfmt::skip]
-// mod m {
-//     use super::*;
-
-// tuple!((0, A));
-// tuple!((0, A), (1, B));
-// tuple!((0, A), (1, B), (2, C));
-// tuple!((0, A), (1, B), (2, C), (3, D));
-// tuple!((0, A), (1, B), (2, C), (3, D), (4, E));
-// tuple!((0, A), (1, B), (2, C), (3, D), (4, E), (5, F));
-// tuple!((0, A), (1, B), (2, C), (3, D), (4, E), (5, F), (6, G));
-// tuple!((0, A), (1, B), (2, C), (3, D), (4, E), (5, F), (6, G), (7, H));
-// tuple!((0, A), (1, B), (2, C), (3, D), (4, E), (5, F), (6, G), (7, H), (8, I));
-// tuple!((0, A), (1, B), (2, C), (3, D), (4, E), (5, F), (6, G), (7, H), (8, I), (9, J));
-// }
+tuple! { A, B, C, D, E, F, G, H, I, J, K, L, }
 
 #[cfg(test)]
 mod test {
     use crate::*;
     use anyhow::anyhow;
-    use async_trait::async_trait;
     use futures::executor::block_on;
 
     #[test]
@@ -409,13 +129,16 @@ mod test {
             hello: String,
         }
 
-        #[async_trait(?Send)]
         impl FromContext for Info {
             type Error = Error;
 
-            async fn from_context(_: &Context) -> Result<Info, Self::Error> {
-                Ok(Info {
-                    hello: "world".to_owned(),
+            fn from_context<'a>(
+                _: &'a Context,
+            ) -> Pin<Box<dyn Future<Output = Result<Self, Self::Error>> + Send + 'a>> {
+                Box::pin(async {
+                    Ok(Info {
+                        hello: "world".to_owned(),
+                    })
                 })
             }
         }
@@ -425,13 +148,16 @@ mod test {
             id: usize,
         }
 
-        #[async_trait(?Send)]
         impl FromContext for User {
             type Error = Error;
 
-            async fn from_context(_: &Context) -> Result<User, Self::Error> {
-                Ok(User { id: 0 })
-                // Err(anyhow!("User Error"))
+            fn from_context<'a>(
+                _: &'a Context,
+            ) -> Pin<Box<dyn Future<Output = Result<Self, Self::Error>> + Send + 'a>> {
+                Box::pin(async {
+                    Ok(User { id: 0 })
+                    // Err(anyhow!("User Error"))
+                })
             }
         }
 
@@ -460,10 +186,9 @@ mod test {
 
             fn make_handler<F, Args>(handler: F) -> Box<dyn Handler>
             where
-                F: HandlerBase<Args>,
-                F::Output: Into<Response>,
-                Args: FromContext + 'static,
-                Args::Error: Into<Response>,
+                F: HandlerBase<Args> + Send + Sync + 'static,
+                Args: FromContext + Send + 'static,
+                Args::Error: Into<Response> + Send,
             {
                 Box::new(HandlerWrapper::new(handler))
             }
@@ -516,12 +241,14 @@ mod test {
             let r = h.call(cx).await;
             assert!(r.is_ok());
 
-            #[async_trait(?Send)]
             impl FromContext for usize {
                 type Error = Error;
 
-                async fn from_context(_: &Context) -> Result<Self, Self::Error> {
-                    Ok(0)
+                fn from_context<'a>(
+                    _: &'a Context,
+                ) -> Pin<Box<dyn Future<Output = Result<Self, Self::Error>> + Send + 'a>>
+                {
+                    Box::pin(async { Ok(0) })
                 }
             }
 
