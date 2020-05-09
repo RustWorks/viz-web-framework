@@ -2,14 +2,10 @@
 //!
 //! Maintain context in multiple handlers.
 //!
-//! `Pin<&mut 🦀>` Safety!
-//! Don't let him/her get away. Stay at home on 2020.
-//!
 //! Examples
 //!
 //! ```
 //! use handle::Handle;
-//! use async_trait::async_trait;
 //! use futures::executor::block_on;
 //! use std::{future::Future, pin::Pin, sync::Arc};
 //!
@@ -18,11 +14,11 @@
 //!
 //! struct Context {
 //!     index: usize,
-//!     middleware: Vec<Box<dyn for<'a> Handle<'a, Context, Result>>>,
+//!     middleware: Vec<Box<dyn for<'a> Handle<'a, Context, Output = Result>>>,
 //! }
 //!
 //! impl Context {
-//!     async fn next(mut self: Pin<&mut Context>) -> Result {
+//!     async fn next(&mut self) -> Result {
 //!         if let Some(m) = self.middleware.pop() {
 //!             m.call(self).await
 //!         } else {
@@ -31,14 +27,14 @@
 //!     }
 //! }
 //!
-//! async fn a(mut cx: Pin<&mut Context>) -> Result {
+//! async fn a(cx: &mut Context) -> Result {
 //!     let size = cx.middleware.len();
 //!     let repeat = "-".repeat(2 * size);
 //!
 //!     println!("exec Fn a --{}>> {:>2}", repeat, cx.index);
 //!
 //!     cx.index += 1;
-//!     let fut = cx.as_mut().next().await;
+//!     let fut = cx.next().await;
 //!     cx.index += 1;
 //!
 //!     println!("exec Fn a --{}<< {:>2}", repeat, cx.index);
@@ -51,21 +47,27 @@
 //!     index: usize,
 //! }
 //!
-//! #[async_trait]
-//! impl<'a> Handle<'a, Context, Result> for A {
-//!     async fn call(&'a self, mut cx: Pin<&'a mut Context>) -> Result {
-//!         let size = cx.middleware.len();
-//!         let repeat = "-".repeat(2 * size);
+//! impl<'a> Handle<'a, Context> for A {
+//!     type Output = Result;
 //!
-//!         println!("exec St A --{}>> {:>2}", repeat, cx.index);
+//!     fn call(
+//!         &'a self,
+//!         cx: &'a mut Context
+//!     ) -> Pin<Box<dyn Future<Output = Result> + Send + 'a>> {
+//!         Box::pin(async move {
+//!             let size = cx.middleware.len();
+//!             let repeat = "-".repeat(2 * size);
 //!
-//!         cx.index += self.index;
-//!         let fut = cx.as_mut().next().await;
-//!         cx.index -= self.index;
+//!             println!("exec St A --{}>> {:>2}", repeat, cx.index);
 //!
-//!         println!("exec St A --{}<< {:>2}", repeat, cx.index);
+//!             cx.index += self.index;
+//!             let fut = cx.next().await;
+//!             cx.index -= self.index;
 //!
-//!         fut
+//!             println!("exec St A --{}<< {:>2}", repeat, cx.index);
+//!
+//!             fut
+//!         })
 //!     }
 //! }
 //!
@@ -76,9 +78,7 @@
 //!         middleware: vec![Box::new(a), Box::new(A { index: 2 })],
 //!     };
 //!
-//!     let mut cx: Pin<&mut Context> = Pin::new(&mut cx);
-//!
-//!     let result = cx.as_mut().next().await;
+//!     let result = cx.next().await;
 //!     assert!(result.is_ok());
 //!     assert_eq!(result.unwrap(), ());
 //!
@@ -90,44 +90,50 @@
 #![deny(missing_debug_implementations, nonstandard_style)]
 #![warn(missing_docs, missing_doc_code_examples, unreachable_pub)]
 
-use async_trait::async_trait;
 use std::future::Future;
 use std::pin::Pin;
 
 /// A handle trait for asynchronous context pipeline.
-#[async_trait]
-pub trait Handle<'a, Context, Output>
+pub trait Handle<'a, Context>
 where
     Self: Send + Sync + 'static,
 {
+    /// Returns `Output`
+    type Output;
+
     /// Invokes the handler within the given `Context` and then returns `Output`
-    async fn call(&'a self, cx: Pin<&'a mut Context>) -> Output;
+    #[must_use]
+    fn call(
+        &'a self,
+        cx: &'a mut Context,
+    ) -> Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>>;
 }
 
-#[async_trait]
-impl<'a, Context, Output, F, Fut> Handle<'a, Context, Output> for F
+impl<'a, Context, Output, F, Fut> Handle<'a, Context> for F
 where
-    F: Send + Sync + 'static + Fn(Pin<&'a mut Context>) -> Fut,
+    F: Send + Sync + 'static + Fn(&'a mut Context) -> Fut,
     Fut: Future<Output = Output> + Send + 'a,
-    Context: Send + 'a,
-    Output: 'a,
+    Context: 'a,
 {
+    type Output = Output;
+
     #[inline]
-    async fn call(&'a self, cx: Pin<&'a mut Context>) -> Output {
-        (*self)(cx).await
+    fn call(
+        &'a self,
+        cx: &'a mut Context,
+    ) -> Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>> {
+        Box::pin((self)(cx))
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::Handle;
-    use async_trait::async_trait;
-    use futures::executor::block_on;
+    use futures::{executor::block_on, future::BoxFuture};
     use std::{future::Future, pin::Pin, sync::Arc};
 
     type Result = anyhow::Result<()>;
-    type Middleware = dyn for<'a> Handle<'a, Context, Result>;
-    type BoxFuture<'a, T = Result> = Pin<Box<dyn Future<Output = T> + Send + 'a>>;
+    type Middleware = dyn for<'a> Handle<'a, Context, Output = Result>;
 
     struct Context {
         index: usize,
@@ -137,14 +143,14 @@ mod tests {
     impl Context {
         async fn next(&mut self) -> Result {
             if let Some(m) = self.middleware.pop() {
-                m.call(Pin::new(self)).await
+                m.call(self).await
             } else {
                 Ok(())
             }
         }
     }
 
-    async fn a(mut cx: Pin<&mut Context>) -> Result {
+    async fn a(cx: &mut Context) -> Result {
         let size = cx.middleware.len();
         let repeat = "-".repeat(2 * size);
 
@@ -165,7 +171,7 @@ mod tests {
         fut
     }
 
-    fn b<'a>(mut cx: Pin<&'a mut Context>) -> BoxFuture<'a, Result> {
+    fn b<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result> {
         let size = cx.middleware.len();
         let repeat = "-".repeat(2 * size);
 
@@ -188,7 +194,7 @@ mod tests {
         })
     }
 
-    fn c(mut cx: Pin<&mut Context>) -> BoxFuture<'_, Result> {
+    fn c(cx: &mut Context) -> BoxFuture<'_, Result> {
         let size = cx.middleware.len();
         let repeat = "-".repeat(2 * size);
 
@@ -211,7 +217,7 @@ mod tests {
         })
     }
 
-    fn d<'a>(mut cx: Pin<&'a mut Context>) -> impl Future<Output = Result> + 'a {
+    fn d<'a>(cx: &'a mut Context) -> impl Future<Output = Result> + 'a {
         let size = cx.middleware.len();
         let repeat = "-".repeat(2 * size);
 
@@ -234,7 +240,7 @@ mod tests {
         }
     }
 
-    fn e(mut cx: Pin<&mut Context>) -> impl Future<Output = Result> + '_ {
+    fn e(cx: &mut Context) -> impl Future<Output = Result> + '_ {
         let size = cx.middleware.len();
         let repeat = "-".repeat(2 * size);
 
@@ -257,7 +263,7 @@ mod tests {
         }
     }
 
-    async fn f(mut cx: Pin<&mut Context>) -> Result {
+    async fn f(cx: &mut Context) -> Result {
         let size = cx.middleware.len();
         let repeat = "-".repeat(2 * size);
 
@@ -283,27 +289,33 @@ mod tests {
         index: usize,
     }
 
-    #[async_trait]
-    impl<'a> Handle<'a, Context, Result> for A {
-        async fn call(&'a self, mut cx: Pin<&'a mut Context>) -> Result {
-            let size = cx.middleware.len();
-            let repeat = "-".repeat(2 * size);
+    impl<'a> Handle<'a, Context> for A {
+        type Output = Result;
 
-            println!("exec St A --{}>> {:>2}", repeat, cx.index);
+        fn call(
+            &'a self,
+            cx: &'a mut Context,
+        ) -> Pin<Box<dyn Future<Output = Result> + Send + 'a>> {
+            Box::pin(async move {
+                let size = cx.middleware.len();
+                let repeat = "-".repeat(2 * size);
 
-            assert_eq!(cx.index, 6);
-            cx.index += self.index; // + 1
-            assert_eq!(cx.index, 7);
+                println!("exec St A --{}>> {:>2}", repeat, cx.index);
 
-            let fut = cx.next().await;
+                assert_eq!(cx.index, 6);
+                cx.index += self.index; // + 1
+                assert_eq!(cx.index, 7);
 
-            assert_eq!(cx.index, 7);
-            cx.index -= self.index; // - 1
-            assert_eq!(cx.index, 6);
+                let fut = cx.next().await;
 
-            println!("exec St A --{}<< {:>2}", repeat, cx.index);
+                assert_eq!(cx.index, 7);
+                cx.index -= self.index; // - 1
+                assert_eq!(cx.index, 6);
 
-            fut
+                println!("exec St A --{}<< {:>2}", repeat, cx.index);
+
+                fut
+            })
         }
     }
 
@@ -311,27 +323,33 @@ mod tests {
         index: usize,
     }
 
-    #[async_trait]
-    impl<'a> Handle<'a, Context, Result> for B {
-        async fn call(&'a self, mut cx: Pin<&'a mut Context>) -> Result {
-            let size = cx.middleware.len();
-            let repeat = "-".repeat(2 * size);
+    impl<'a> Handle<'a, Context> for B {
+        type Output = Result;
 
-            println!("exec St B --{}>> {:>2}", repeat, cx.index);
+        fn call(
+            &'a self,
+            cx: &'a mut Context,
+        ) -> Pin<Box<dyn Future<Output = Result> + Send + 'a>> {
+            Box::pin(async move {
+                let size = cx.middleware.len();
+                let repeat = "-".repeat(2 * size);
 
-            assert_eq!(cx.index, 7);
-            cx.index += self.index; // + 2
-            assert_eq!(cx.index, 9);
+                println!("exec St B --{}>> {:>2}", repeat, cx.index);
 
-            let fut = cx.next().await;
+                assert_eq!(cx.index, 7);
+                cx.index += self.index; // + 2
+                assert_eq!(cx.index, 9);
 
-            assert_eq!(cx.index, 9);
-            cx.index -= self.index; // - 2
-            assert_eq!(cx.index, 7);
+                let fut = cx.next().await;
 
-            println!("exec St B --{}<< {:>2}", repeat, cx.index);
+                assert_eq!(cx.index, 9);
+                cx.index -= self.index; // - 2
+                assert_eq!(cx.index, 7);
 
-            fut
+                println!("exec St B --{}<< {:>2}", repeat, cx.index);
+
+                fut
+            })
         }
     }
 
@@ -339,27 +357,33 @@ mod tests {
         index: usize,
     }
 
-    #[async_trait]
-    impl<'a> Handle<'a, Context, Result> for C {
-        async fn call(&'a self, mut cx: Pin<&'a mut Context>) -> Result {
-            let size = cx.middleware.len();
-            let repeat = "-".repeat(2 * size);
+    impl<'a> Handle<'a, Context> for C {
+        type Output = Result;
 
-            println!("exec St C --{}>> {:>2}", repeat, cx.index);
+        fn call(
+            &'a self,
+            cx: &'a mut Context,
+        ) -> Pin<Box<dyn Future<Output = Result> + Send + 'a>> {
+            Box::pin(async move {
+                let size = cx.middleware.len();
+                let repeat = "-".repeat(2 * size);
 
-            assert_eq!(cx.index, 9);
-            cx.index += self.index; // + 3
-            assert_eq!(cx.index, 12);
+                println!("exec St C --{}>> {:>2}", repeat, cx.index);
 
-            let fut = cx.next().await;
+                assert_eq!(cx.index, 9);
+                cx.index += self.index; // + 3
+                assert_eq!(cx.index, 12);
 
-            assert_eq!(cx.index, 12);
-            cx.index -= self.index; // - 3
-            assert_eq!(cx.index, 9);
+                let fut = cx.next().await;
 
-            println!("exec St C --{}<< {:>2}", repeat, cx.index);
+                assert_eq!(cx.index, 12);
+                cx.index -= self.index; // - 3
+                assert_eq!(cx.index, 9);
 
-            fut
+                println!("exec St C --{}<< {:>2}", repeat, cx.index);
+
+                fut
+            })
         }
     }
 
@@ -370,17 +394,6 @@ mod tests {
                 index: 0,
                 middleware: Vec::new(),
             };
-
-            let mut cx: Pin<&mut Context> = Pin::new(&mut cx);
-
-            // let _ = a(cx.as_mut()).await;
-            // let _ = b(cx.as_mut()).await;
-            // let _ = c(cx.as_mut()).await;
-            // let _ = d(cx.as_mut()).await;
-            // let _ = e(cx.as_mut()).await;
-            // let _ = f(cx.as_mut()).await;
-            // let _ = (B {}).call(cx.as_mut()).await;
-            // let _ = (A {}).call(cx.as_mut()).await;
 
             let mut v: Vec<Box<Middleware>> = vec![];
             v.push(Box::new(f));
@@ -399,7 +412,7 @@ mod tests {
 
             // Handled it!
             // A Closure cant use `cx.next()`.
-            v.push(Arc::new(|cx: Pin<&mut Context>| {
+            v.push(Arc::new(|cx: &mut Context| {
                 assert_eq!(cx.index, 12);
 
                 println!("We handled it!");
@@ -419,26 +432,26 @@ mod tests {
             v.push(Arc::new(b));
             v.push(Arc::new(a));
 
-            cx.as_mut().middleware = v.clone();
+            cx.middleware = v.clone();
             println!("mw 0: {}", v.len());
 
-            let result = cx.as_mut().next().await;
+            let result = cx.next().await;
             assert!(result.is_ok());
             assert_eq!(result.unwrap(), ());
 
             println!("mw 1: {}", v.len());
 
-            cx.as_mut().middleware = v.clone();
+            cx.middleware = v.clone();
 
-            let result = cx.as_mut().next().await;
+            let result = cx.next().await;
             assert!(result.is_ok());
             assert_eq!(result.unwrap(), ());
 
             println!("mw 2: {}", v.len());
 
-            cx.as_mut().middleware = v.clone();
+            cx.middleware = v.clone();
 
-            let result = cx.as_mut().next().await;
+            let result = cx.next().await;
             assert!(result.is_ok());
             assert_eq!(result.unwrap(), ());
         });
@@ -451,8 +464,6 @@ mod tests {
             middleware: Vec::new(),
         };
 
-        let mut cx: Pin<&mut Context> = Pin::new(&mut cx);
-
         let mut v: Vec<Arc<Middleware>> = vec![];
         v.insert(0, Arc::new(a));
         v.insert(0, Arc::new(b));
@@ -464,7 +475,7 @@ mod tests {
         v.insert(0, Arc::new(B { index: 2 }));
         v.insert(0, Arc::new(C { index: 3 }));
         // Handled it!
-        async fn handler(cx: Pin<&mut Context>) -> Result {
+        async fn handler(cx: &mut Context) -> Result {
             assert_eq!(cx.index, 12);
 
             println!("We handled it!");
@@ -473,7 +484,7 @@ mod tests {
         }
         v.insert(0, Arc::new(handler));
 
-        cx.as_mut().middleware = v.clone();
+        cx.middleware = v.clone();
         println!("mw 0: {}", v.len());
 
         let result = cx.next().await;
@@ -482,7 +493,7 @@ mod tests {
 
         println!("mw 1: {}", v.len());
 
-        cx.as_mut().middleware = v.clone();
+        cx.middleware = v.clone();
 
         let result = cx.next().await;
         assert!(result.is_ok());
@@ -490,7 +501,7 @@ mod tests {
 
         println!("mw 2: {}", v.len());
 
-        cx.as_mut().middleware = v.clone();
+        cx.middleware = v.clone();
 
         let result = cx.next().await;
         assert!(result.is_ok());

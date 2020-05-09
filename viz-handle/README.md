@@ -1,9 +1,7 @@
 <h1 align="center">Handle</h1>
 
 <div align="center">
-  <p><strong>Pin<&mut 🦀></strong></p>
   <p><strong>A handle trait for asynchronous context pipeline.</strong></p>
-  <p>Don't let him/her get away. Stay at home on 2020.</p>
 </div>
 
 <div align="center">
@@ -29,7 +27,6 @@
 
 ```rust
 use handle::Handle;
-use async_trait::async_trait;
 use futures::executor::block_on;
 use std::{future::Future, pin::Pin, sync::Arc};
 
@@ -52,7 +49,7 @@ impl Context {
     }
 }
 
-async fn a(mut cx: Pin<&mut Context>) -> Result {
+async fn a(cx: &mut Context) -> Result {
     let size = cx.middleware.len();
     let repeat = "-".repeat(2 * size);
 
@@ -73,7 +70,7 @@ async fn a(mut cx: Pin<&mut Context>) -> Result {
     fut
 }
 
-fn b<'a>(mut cx: Pin<&'a mut Context>) -> BoxFuture<'a, Result> {
+fn b<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result> {
     let size = cx.middleware.len();
     let repeat = "-".repeat(2 * size);
 
@@ -96,7 +93,7 @@ fn b<'a>(mut cx: Pin<&'a mut Context>) -> BoxFuture<'a, Result> {
     })
 }
 
-fn c(mut cx: Pin<&mut Context>) -> BoxFuture<'_, Result> {
+fn c(cx: &mut Context) -> BoxFuture<'_, Result> {
     let size = cx.middleware.len();
     let repeat = "-".repeat(2 * size);
 
@@ -119,7 +116,7 @@ fn c(mut cx: Pin<&mut Context>) -> BoxFuture<'_, Result> {
     })
 }
 
-fn d<'a>(mut cx: Pin<&'a mut Context>) -> impl Future<Output = Result> + 'a {
+fn d<'a>(cx: &'a mut Context) -> impl Future<Output = Result> + 'a {
     let size = cx.middleware.len();
     let repeat = "-".repeat(2 * size);
 
@@ -142,7 +139,7 @@ fn d<'a>(mut cx: Pin<&'a mut Context>) -> impl Future<Output = Result> + 'a {
     }
 }
 
-fn e(mut cx: Pin<&mut Context>) -> impl Future<Output = Result> + '_ {
+fn e(cx: Pin<&mut Context>) -> impl Future<Output = Result> + '_ {
     let size = cx.middleware.len();
     let repeat = "-".repeat(2 * size);
 
@@ -165,7 +162,7 @@ fn e(mut cx: Pin<&mut Context>) -> impl Future<Output = Result> + '_ {
     }
 }
 
-async fn f(mut cx: Pin<&mut Context>) -> Result {
+async fn f(cx: &mut Context) -> Result {
     let size = cx.middleware.len();
     let repeat = "-".repeat(2 * size);
 
@@ -191,27 +188,31 @@ struct A {
     index: usize,
 }
 
-#[async_trait]
 impl<'a> Handle<'a, Context, Result> for A {
-    async fn call(&'a self, mut cx: Pin<&'a mut Context>) -> Result {
-        let size = cx.middleware.len();
-        let repeat = "-".repeat(2 * size);
+    fn call(
+        &'a self,
+        cx: &'a mut Context
+    ) -> Pin<Box<dyn Future<Output = Result> + Send + 'a>> {
+        Box::pin(async move {
+            let size = cx.middleware.len();
+            let repeat = "-".repeat(2 * size);
 
-        println!("exec St A --{}>> {:>2}", repeat, cx.index);
+            println!("exec St A --{}>> {:>2}", repeat, cx.index);
 
-        assert_eq!(cx.index, 6);
-        cx.index += self.index; // + 1
-        assert_eq!(cx.index, 7);
+            assert_eq!(cx.index, 6);
+            cx.index += self.index; // + 1
+            assert_eq!(cx.index, 7);
 
-        let fut = cx.next().await;
+            let fut = cx.next().await;
 
-        assert_eq!(cx.index, 7);
-        cx.index -= self.index; // - 1
-        assert_eq!(cx.index, 6);
+            assert_eq!(cx.index, 7);
+            cx.index -= self.index; // - 1
+            assert_eq!(cx.index, 6);
 
-        println!("exec St A --{}<< {:>2}", repeat, cx.index);
+            println!("exec St A --{}<< {:>2}", repeat, cx.index);
 
-        fut
+            fut
+        })
     }
 }
 
@@ -219,27 +220,31 @@ struct B {
     index: usize,
 }
 
-#[async_trait]
 impl<'a> Handle<'a, Context, Result> for B {
-    async fn call(&'a self, mut cx: Pin<&'a mut Context>) -> Result {
-        let size = cx.middleware.len();
-        let repeat = "-".repeat(2 * size);
+    fn call(
+        &'a self,
+        cx: &'a mut Context
+    ) -> Pin<Box<dyn Future<Output = Result> + Send + 'a>> {
+        Box::pin(async move {
+            let size = cx.middleware.len();
+            let repeat = "-".repeat(2 * size);
 
-        println!("exec St B --{}>> {:>2}", repeat, cx.index);
+            println!("exec St B --{}>> {:>2}", repeat, cx.index);
 
-        assert_eq!(cx.index, 7);
-        cx.index += self.index; // + 2
-        assert_eq!(cx.index, 9);
+            assert_eq!(cx.index, 7);
+            cx.index += self.index; // + 2
+            assert_eq!(cx.index, 9);
 
-        let fut = cx.next().await;
+            let fut = cx.next().await;
 
-        assert_eq!(cx.index, 9);
-        cx.index -= self.index; // - 2
-        assert_eq!(cx.index, 7);
+            assert_eq!(cx.index, 9);
+            cx.index -= self.index; // - 2
+            assert_eq!(cx.index, 7);
 
-        println!("exec St B --{}<< {:>2}", repeat, cx.index);
+            println!("exec St B --{}<< {:>2}", repeat, cx.index);
 
-        fut
+            fut
+        })
     }
 }
 
@@ -247,27 +252,31 @@ struct C {
     index: usize,
 }
 
-#[async_trait]
 impl<'a> Handle<'a, Context, Result> for C {
-    async fn call(&'a self, mut cx: Pin<&'a mut Context>) -> Result {
-        let size = cx.middleware.len();
-        let repeat = "-".repeat(2 * size);
+    fn call(
+        &'a self,
+        cx: &'a mut Context
+    ) -> Pin<Box<dyn Future<Output = Result> + Send + 'a>> {
+        Box::pin(async move {
+            let size = cx.middleware.len();
+            let repeat = "-".repeat(2 * size);
 
-        println!("exec St C --{}>> {:>2}", repeat, cx.index);
+            println!("exec St C --{}>> {:>2}", repeat, cx.index);
 
-        assert_eq!(cx.index, 9);
-        cx.index += self.index; // + 3
-        assert_eq!(cx.index, 12);
+            assert_eq!(cx.index, 9);
+            cx.index += self.index; // + 3
+            assert_eq!(cx.index, 12);
 
-        let fut = cx.next().await;
+            let fut = cx.next().await;
 
-        assert_eq!(cx.index, 12);
-        cx.index -= self.index; // - 3
-        assert_eq!(cx.index, 9);
+            assert_eq!(cx.index, 12);
+            cx.index -= self.index; // - 3
+            assert_eq!(cx.index, 9);
 
-        println!("exec St C --{}<< {:>2}", repeat, cx.index);
+            println!("exec St C --{}<< {:>2}", repeat, cx.index);
 
-        fut
+            fut
+        })
     }
 }
 
@@ -277,17 +286,6 @@ fn main() {
             index: 0,
             middleware: Vec::new(),
         };
-
-        let mut cx: Pin<&mut Context> = Pin::new(&mut cx);
-
-        // let _ = a(cx.as_mut()).await;
-        // let _ = b(cx.as_mut()).await;
-        // let _ = c(cx.as_mut()).await;
-        // let _ = d(cx.as_mut()).await;
-        // let _ = e(cx.as_mut()).await;
-        // let _ = f(cx.as_mut()).await;
-        // let _ = (B {}).call(cx.as_mut()).await;
-        // let _ = (A {}).call(cx.as_mut()).await;
 
         let mut v: Vec<Box<Middleware>> = vec![];
         v.push(Box::new(a));
@@ -301,7 +299,7 @@ fn main() {
 
         // Handled it!
         // A Closure cant use `cx.next()` in async block.
-        v.push(Arc::new(|cx: Pin<&mut Context>| {
+        v.push(Arc::new(|cx: &mut Context| {
             assert_eq!(cx.index, 12);
 
             println!("We handled it!");
@@ -321,7 +319,7 @@ fn main() {
         v.push(Arc::new(b));
         v.push(Arc::new(a));
 
-        cx.as_mut().middleware = v.clone();
+        cx.middleware = v.clone();
         println!("mw 0: {}", v.len());
 
         let result = cx.next().await;
@@ -340,7 +338,7 @@ fn main() {
         v.insert(0, Arc::new(B { index: 2 }));
         v.insert(0, Arc::new(C { index: 3 }));
         // Handled it!
-        async fn handler(cx: Pin<&mut Context>) -> Result {
+        async fn handler(cx: &mut Context) -> Result {
             assert_eq!(cx.index, 12);
 
             println!("We handled it!");
