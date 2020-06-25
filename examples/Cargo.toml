@@ -1,0 +1,24 @@
+[package]
+name = "examples"
+version = "0.1.0"
+authors = ["Fangdun Cai <cfddream@gmail.com>"]
+edition = "2018"
+publish = false
+
+[dev-dependencies]
+viz-core = { path = "../viz-core", version = "0.1.0" }
+viz-router = { path = "../viz-router", version = "0.1.0" }
+viz-utils = { path = "../viz-utils", version = "0.1.0" }
+
+serde = { version = "1", features = ["derive"] }
+ramhorns = "0.9"
+bytes = "0.5"
+num_cpus = "1"
+futures = "0.3"
+
+hyper = { version = "0.13", default-features = false, features = ["tcp", "stream"] }
+tokio = { version = "0.2", default-features = false }
+
+[[example]]
+name = "hello-smol"
+path = "hello-smol.rs"
