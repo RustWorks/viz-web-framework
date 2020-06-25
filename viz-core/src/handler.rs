@@ -1,14 +1,17 @@
 //!
 //! Thanks:
 //!   ntex:     https://docs.rs/ntex/0.1.14/ntex/web/trait.Handler.html
-//!   warp:     https://github.com/seanmonstar/warp/blob/master/src/generic.rs
+//!   warp:     https://docs.rs/crate/warp/0.2.2/source/src/generic.rs
+//!   tide:     https://github.com/http-rs/tide/pull/156
 
+use std::future::Future;
 use std::marker::PhantomData;
 
+use viz_utils::futures::future::BoxFuture;
+
 use crate::Context;
-use crate::FromContext;
-use crate::Future;
-use crate::Pin;
+use crate::Extract;
+use crate::Middleware;
 use crate::Response;
 use crate::Result;
 
@@ -19,45 +22,44 @@ pub trait HandlerBase<Args>: Clone + 'static {
     fn call(&self, args: Args) -> Self::Future;
 }
 
-pub trait Handler: Send + 'static {
-    fn call(&self, _: Context) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>>;
+pub trait Handler: Send + Sync + 'static {
+    fn call<'a>(&'a self, _: &'a mut Context) -> BoxFuture<'a, Result<Response>>;
 
     fn clone_handler(&self) -> Box<dyn Handler>;
 }
 
-pub struct HandlerWrapper<F, T>
-where
-    F: HandlerBase<T>,
-    T: FromContext,
-    T::Error: Into<Response>,
-{
-    h: F,
+impl Handler for Box<dyn Handler> {
+    fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result<Response>> {
+        (**self).call(cx)
+    }
+
+    fn clone_handler(&self) -> Box<dyn Handler> {
+        (**self).clone_handler()
+    }
+}
+
+pub struct HandlerWrapper<F, T> {
+    pub(crate) f: F,
     _t: PhantomData<T>,
 }
 
-impl<F, T> HandlerWrapper<F, T>
-where
-    F: HandlerBase<T>,
-    T: FromContext,
-    T::Error: Into<Response>,
-{
-    pub fn new(h: F) -> Self {
-        HandlerWrapper { h, _t: PhantomData }
+impl<F, T> HandlerWrapper<F, T> {
+    pub fn new(f: F) -> Self {
+        Self { f, _t: PhantomData }
     }
 }
 
 impl<F, T> Handler for HandlerWrapper<F, T>
 where
     F: HandlerBase<T> + Send + Sync,
-    T: FromContext + Send + 'static,
+    T: Extract + Send + Sync + 'static,
     T::Error: Into<Response> + Send,
 {
     #[inline]
-    fn call(&self, cx: Context) -> Pin<Box<dyn Future<Output = Result<Response>> + Send>> {
-        let h = self.h.clone();
+    fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result<Response>> {
         Box::pin(async move {
-            Ok(match T::from_context(&cx).await {
-                Ok(args) => h.call(args).await.into(),
+            Ok(match T::extract(cx).await {
+                Ok(args) => self.f.call(args).await.into(),
                 Err(e) => e.into(),
             })
         })
@@ -65,63 +67,94 @@ where
 
     #[inline]
     fn clone_handler(&self) -> Box<dyn Handler> {
-        Box::new(HandlerWrapper {
-            h: self.h.clone(),
+        Box::new(Self {
+            f: self.f.clone(),
             _t: PhantomData,
         })
     }
 }
 
-macro_rules! peel {
-    ($T0:ident, $($T:ident,)*) => (tuple! { $($T,)* })
+impl<'a, F, T> Middleware<'a, Context> for HandlerWrapper<F, T>
+where
+    F: HandlerBase<T> + Send + Sync + 'static,
+    T: Extract + Send + Sync + 'static,
+    T::Error: Into<Response> + Send,
+{
+    type Output = Result<Response>;
+
+    #[inline]
+    fn call(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Self::Output> {
+        Handler::call(self, cx)
+    }
 }
 
-macro_rules! tuple {
-    () => {
-        impl<F, R> HandlerBase<()> for F
-        where
-            F: Fn() -> R + Clone + 'static,
-            R: Future + Send + 'static,
-            R::Output: Into<Response>,
-        {
-            type Output = R::Output;
-            type Future = R;
+pub trait HandlerCamp<'h, Args>: Clone + 'static {
+    type Output: Into<Response>;
+    type Future: Future<Output = Self::Output> + Send + 'h;
 
-            fn call(&self, _: ()) -> R {
-                (self)()
-            }
-        }
-    };
-    ( $($T:ident,)+ ) => (
-        impl<Func, $($T,)+ R> HandlerBase<($($T,)+)> for Func
-        where
-            Func: Fn($($T,)+) -> R + Clone + 'static,
-            R: Future + Send + 'static,
-            R::Output: Into<Response>,
-        {
-            type Output = R::Output;
-            type Future = R;
-
-            #[inline]
-            fn call(&self, args: ($($T,)+)) -> R {
-                #[allow(non_snake_case)]
-                let ($($T,)+) = args;
-                (self)($($T,)+)
-            }
-        }
-
-        peel! { $($T,)+ }
-    )
+    fn call(&'h self, cx: &'h mut Context, args: Args) -> Self::Future;
 }
 
-tuple! { A, B, C, D, E, F, G, H, I, J, K, L, }
+pub struct HandlerSuper<F, T> {
+    pub(crate) f: F,
+    _t: PhantomData<T>,
+}
+
+impl<F, T> HandlerSuper<F, T> {
+    pub fn new(f: F) -> Self {
+        Self { f, _t: PhantomData }
+    }
+}
+
+impl<F, T> Handler for HandlerSuper<F, T>
+where
+    F: for<'h> HandlerCamp<'h, T> + Send + Sync,
+    T: Extract + Send + Sync + 'static,
+    T::Error: Into<Response> + Send,
+{
+    #[inline]
+    fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result<Response>> {
+        Box::pin(async move {
+            Ok(match T::extract(cx).await {
+                Ok(args) => self.f.call(cx, args).await.into(),
+                Err(e) => e.into(),
+            })
+        })
+    }
+
+    #[inline]
+    fn clone_handler(&self) -> Box<dyn Handler> {
+        Box::new(Self {
+            f: self.f.clone(),
+            _t: PhantomData,
+        })
+    }
+}
+
+impl<'a, F, T> Middleware<'a, Context> for HandlerSuper<F, T>
+where
+    F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
+    T: Extract + Send + Sync + 'static,
+    T::Error: Into<Response> + Send,
+{
+    type Output = Result<Response>;
+
+    #[inline]
+    fn call(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Self::Output> {
+        Handler::call(self, cx)
+    }
+}
 
 #[cfg(test)]
 mod test {
-    use crate::*;
-    use anyhow::anyhow;
-    use futures::executor::block_on;
+    use futures_executor::block_on;
 
+    use viz_utils::anyhow::anyhow;
+    use viz_utils::futures::future::BoxFuture;
+
+    use crate::*;
+
+    #[allow(unstable_name_collisions)]
     #[test]
     fn handler() {
         #[derive(Debug, PartialEq)]
@@ -129,12 +162,10 @@ mod test {
             hello: String,
         }
 
-        impl FromContext for Info {
+        impl Extract for Info {
             type Error = Error;
 
-            fn from_context<'a>(
-                _: &'a Context,
-            ) -> Pin<Box<dyn Future<Output = Result<Self, Self::Error>> + Send + 'a>> {
+            fn extract<'a>(_: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
                 Box::pin(async {
                     Ok(Info {
                         hello: "world".to_owned(),
@@ -148,28 +179,44 @@ mod test {
             id: usize,
         }
 
-        impl FromContext for User {
+        impl Extract for User {
             type Error = Error;
 
-            fn from_context<'a>(
-                _: &'a Context,
-            ) -> Pin<Box<dyn Future<Output = Result<Self, Self::Error>> + Send + 'a>> {
+            fn extract<'a>(_: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
                 Box::pin(async {
-                    Ok(User { id: 0 })
                     // Err(anyhow!("User Error"))
+                    Ok(User { id: 0 })
                 })
             }
         }
 
         /// Helper method for extractors testing
-        pub async fn from_context<T: FromContext>(cx: &Context) -> Result<T, T::Error> {
-            T::from_context(cx).await
+        pub async fn extract<T: Extract>(cx: &mut Context) -> Result<T, T::Error> {
+            T::extract(cx).await
         }
 
         block_on(async move {
-            let cx = Context::new();
+            let mut cx: Context = http::Request::new("hello".into()).into();
 
-            let r = from_context::<Option<Info>>(&cx).await.unwrap();
+            let r_0 = extract::<Info>(&mut cx).await.unwrap();
+
+            assert_eq!(
+                r_0,
+                Info {
+                    hello: "world".to_owned(),
+                }
+            );
+
+            let r_1 = cx.extract::<Info>().await.unwrap();
+
+            assert_eq!(
+                r_1,
+                Info {
+                    hello: "world".to_owned(),
+                }
+            );
+
+            let r = extract::<Option<Info>>(&mut cx).await.unwrap();
 
             assert_eq!(
                 r,
@@ -178,16 +225,19 @@ mod test {
                 })
             );
 
-            let r0 = from_context::<(Info, User)>(&cx).await.unwrap();
-            let r1 = from_context::<(User, Info)>(&cx).await.unwrap();
+            let r0 = extract::<(Info, User)>(&mut cx).await.unwrap();
+            let r1 = extract::<(User, Info)>(&mut cx).await.unwrap();
+            let r2 = cx.extract::<(User, Info)>().await.unwrap();
 
             assert_eq!(r0.0, r1.1);
             assert_eq!(r0.1, r1.0);
+            assert_eq!(r0.0, r2.1);
+            assert_eq!(r1.0, r2.0);
 
             fn make_handler<F, Args>(handler: F) -> Box<dyn Handler>
             where
                 F: HandlerBase<Args> + Send + Sync + 'static,
-                Args: FromContext + Send + 'static,
+                Args: Extract + Send + Sync + 'static,
                 Args::Error: Into<Response> + Send,
             {
                 Box::new(HandlerWrapper::new(handler))
@@ -198,8 +248,8 @@ mod test {
             }
 
             let h = make_handler(a);
-            let cx = Context::new();
-            let r = h.call(cx).await;
+            let mut cx: Context = http::Request::new("hello".into()).into();
+            let r = h.call(&mut cx).await;
             assert!(r.is_ok());
 
             async fn b(i: Info, u: User) -> Result<Response> {
@@ -213,23 +263,23 @@ mod test {
                 Ok(Response::new())
             }
             let h = make_handler(b);
-            let cx = Context::new();
-            let r = h.call(cx).await;
+            let mut cx: Context = http::Request::new("hello".into()).into();
+            let r = h.call(&mut cx).await;
             assert!(r.is_ok());
 
             let c = || async { Response::new() };
             let h = make_handler(c);
-            let cx = Context::new();
-            let r = h.call(cx).await;
+            let mut cx: Context = http::Request::new("hello".into()).into();
+            let r = h.call(&mut cx).await;
             assert!(r.is_ok());
 
             let d = || Box::pin(async { anyhow!("throws error and converts to response") });
             let h = make_handler(d);
-            let cx = Context::new();
+            let mut cx: Context = http::Request::new("hello".into()).into();
             let hh = h.clone_handler();
-            let r = h.call(cx).await;
-            let cx = Context::new();
-            let r0 = hh.call(cx).await;
+            let r = h.call(&mut cx).await;
+            let mut cx: Context = http::Request::new("hello".into()).into();
+            let r0 = hh.call(&mut cx).await;
             assert_eq!(r.is_ok(), r0.is_ok());
 
             async fn e(u: User) -> Result<Response> {
@@ -237,17 +287,14 @@ mod test {
                 Ok(Response::new())
             }
             let h = make_handler(e);
-            let cx = Context::new();
-            let r = h.call(cx).await;
+            let mut cx: Context = http::Request::new("hello".into()).into();
+            let r = h.call(&mut cx).await;
             assert!(r.is_ok());
 
-            impl FromContext for usize {
+            impl Extract for usize {
                 type Error = Error;
 
-                fn from_context<'a>(
-                    _: &'a Context,
-                ) -> Pin<Box<dyn Future<Output = Result<Self, Self::Error>> + Send + 'a>>
-                {
+                fn extract<'a>(_: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
                     Box::pin(async { Ok(0) })
                 }
             }
@@ -258,8 +305,87 @@ mod test {
                 "Hello world"
             }
             let h = make_handler(f);
-            let cx = Context::new();
-            let r = h.call(cx).await;
+            let mut cx: Context = http::Request::new("hello".into()).into();
+            let r = h.call(&mut cx).await;
+            assert!(r.is_ok());
+            let r = Handler::call(&h.clone_handler(), &mut cx).await;
+            assert!(r.is_ok());
+
+            assert_eq!(f.call(cx.extract().await.unwrap()).await, "Hello world");
+            assert_eq!(
+                f.call(cx.extract().await.unwrap()).await,
+                HandlerBase::call(&f, cx.extract().await.unwrap()).await
+            );
+
+            let mut cx: Context = http::Request::new("hello".into()).into();
+            let r = Handler::call(&h, &mut cx).await;
+            assert!(r.is_ok());
+            let r = Handler::call(&h.clone_handler(), &mut cx).await;
+            assert!(r.is_ok());
+        });
+    }
+
+    #[test]
+    fn handler_with_context() {
+        block_on(async move {
+            fn make_middle(
+                f: impl for<'a> Middleware<'a, Context, Output = Result<Response>>,
+            ) -> Box<DynMiddleware> {
+                Box::new(f)
+            }
+
+            #[derive(Debug, PartialEq)]
+            struct Language {
+                name: String,
+            }
+
+            impl Extract for Language {
+                type Error = Error;
+
+                fn extract<'a>(_: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+                    Box::pin(async {
+                        Ok(Language {
+                            name: "rust".to_owned(),
+                        })
+                    })
+                }
+            }
+
+            async fn hello(lang: Language) -> &'static str {
+                assert_eq!(
+                    lang,
+                    Language {
+                        name: "rust".to_owned()
+                    }
+                );
+
+                "Hello"
+            }
+
+            async fn world(cx: &mut Context, lang: Language) -> &'static str {
+                assert_eq!(cx.method(), "GET");
+                assert_eq!(
+                    lang,
+                    Language {
+                        name: "rust".to_owned()
+                    }
+                );
+
+                "World"
+            }
+
+            let mut cx: Context = http::Request::new("hello".into()).into();
+
+            let f: Box<dyn Handler> = Box::new(HandlerWrapper::new(hello));
+            let r = f.call(&mut cx).await;
+            assert!(r.is_ok());
+
+            let f: Box<DynMiddleware> = make_middle(HandlerWrapper::new(hello));
+            let r = f.call(&mut cx).await;
+            assert!(r.is_ok());
+
+            let f: Box<DynMiddleware> = make_middle(HandlerSuper::new(world));
+            let r = f.call(&mut cx).await;
             assert!(r.is_ok());
         });
     }

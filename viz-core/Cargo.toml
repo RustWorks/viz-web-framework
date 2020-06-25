@@ -5,13 +5,16 @@ authors = ["Fangdun Cai <cfddream@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-viz-utils = { path = "../viz-utils" }
-pin-project = "0.4.9"
-anyhow = "1.0.28"
-http = "0.2.1"
-futures-core = "0.3.4"
-futures = "0.3.4"
-log = "0.4.8"
-async-trait = "0.1.30"
-thiserror = "1.0.15"
-handle = "0.2.5"
+viz-utils = { path = "../viz-utils", version = "0.1.0" }
+
+handle = "1"
+
+form-data = "0.0.5"
+bytes = "0.5"
+http = "0.2"
+mime = "0.3"
+hyper = { version = "0.13", features = ["stream"] }
+serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+futures-executor = "0.3"
