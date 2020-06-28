@@ -1,10 +1,19 @@
 [package]
 name = "viz"
-version = "0.1.0"
+version = "0.1.0-alpha"
 authors = ["Fangdun Cai <cfddream@gmail.com>"]
-edition = "2018"
+description = "Fast, flexible, minimalist web framework for Rust"
 homepage = "https://viz.rs"
+documentation = "https://docs.rs/viz"
+keywords = ["viz", "http", "web", "framework", "async"]
+categories = ["asynchronous", "network-programming", "web-programming::http-server"]
+license = "Apache-2.0/MIT"
+readme = "README.md"
+edition = "2018"
 
 [dependencies]
-anyhow = "1.0.28"
-async-trait = "0.1.29"
+viz-core = { path = "../viz-core", version = "0.1.0-alpha" }
+viz-router = { path = "../viz-router", version = "0.1.0-alpha" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
+
+hyper = { version = "0.13", features = ["stream", "tcp"] }
