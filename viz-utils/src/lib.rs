@@ -9,7 +9,6 @@ pub use pretty_env_logger;
 pub mod futures {
     pub use ::futures_util::ready;
     pub use ::futures_util::future;
-    pub use ::futures_util::io;
     pub use ::futures_util::stream;
 }
 
