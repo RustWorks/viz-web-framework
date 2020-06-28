@@ -2,10 +2,12 @@
 name = "viz-core"
 version = "0.1.0-alpha"
 authors = ["Fangdun Cai <cfddream@gmail.com>"]
+description = "Viz Core"
+license = "Apache-2.0/MIT"
 edition = "2018"
 
 [dependencies]
-viz-utils = { path = "../viz-utils" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
 
 handle = "1"
 
