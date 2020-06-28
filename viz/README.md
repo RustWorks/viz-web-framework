@@ -39,6 +39,7 @@
 
 ## Todos
 
+* [ ] Configuration
 * [ ] Data State
 * [ ] Sessions
 * [ ] Basic middlewares: `logger`, `cors`, `serve static files`
