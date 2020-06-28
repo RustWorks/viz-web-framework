@@ -1,7 +1,10 @@
-
 [workspace]
-
 members = [
   "viz",
-]
+  # "viz-cli",
+  "viz-core",
+  "viz-router",
+  "viz-utils",
 
+  "examples",
+]

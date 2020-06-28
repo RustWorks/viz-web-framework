@@ -1,11 +1,11 @@
 [package]
 name = "viz-core"
-version = "0.1.0"
+version = "0.1.0-alpha"
 authors = ["Fangdun Cai <cfddream@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-viz-utils = { path = "../viz-utils", version = "0.1.0" }
+viz-utils = { path = "../viz-utils" }
 
 handle = "1"
 

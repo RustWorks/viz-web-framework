@@ -12,13 +12,15 @@ use crate::PayloadCheck;
 use crate::PayloadError;
 use crate::PAYLOAD_LIMIT;
 
-impl PayloadCheck for FormData<http::Body> {
+pub type Multipart<T = http::Body> = FormData<T>;
+
+impl PayloadCheck for Multipart {
     fn check_type(m: &mime::Mime) -> bool {
         is_multipart(m)
     }
 }
 
-impl Extract for FormData<http::Body> {
+impl Extract for Multipart {
     type Error = PayloadError;
 
     #[inline]
@@ -44,12 +46,12 @@ impl Extract for FormData<http::Body> {
 
             // let charset = m.get_param(mime::CHARSET).map(|c| c.to_string());
 
-            Ok(FormData::new(boundary, cx.take_body().unwrap()))
+            Ok(Multipart::new(boundary, cx.take_body().unwrap()))
         })
     }
 }
 
-pub fn multipart() -> Payload<FormData<http::Body>> {
+pub fn multipart() -> Payload<Multipart> {
     // Limit 16 MB
     Payload::new(PAYLOAD_LIMIT * 16, None)
 }

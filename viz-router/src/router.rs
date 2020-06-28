@@ -75,6 +75,7 @@ impl Router {
 
     pub fn finish(mut self, tree: &mut HashMap<Method, PathTree<Middlewares>>) {
         let m0 = self.middleware.take().unwrap_or_default();
+        let h0 = m0.len() > 0;
 
         if let Some(routes) = self.routes.take() {
             for mut route in routes {
@@ -84,7 +85,7 @@ impl Router {
                 let path = join_paths(&self.path, &route.path);
 
                 for (method, handler) in route.handlers {
-                    log::debug!("{:>6}:{}", method.as_str(), &path);
+                    log::info!("{:>6}:{}", method.as_str(), &path);
 
                     let mut m = vec![if let Some(guard) = guard.clone().take() {
                         Arc::new(RouteHandler::new(guard, handler))
@@ -96,7 +97,7 @@ impl Router {
                         m.extend_from_slice(&m1);
                     }
 
-                    if carry && m0.len() > 0 {
+                    if h0 && carry {
                         m.extend_from_slice(&m0);
                     }
 
@@ -112,7 +113,7 @@ impl Router {
                 let path = join_paths(&self.path, &child.path);
                 // log::debug!("{}", &path);
                 child.path = path;
-                if child.carry && m0.len() > 0 {
+                if h0 && child.carry {
                     child
                         .middleware
                         .get_or_insert_with(Vec::new)
@@ -121,6 +122,17 @@ impl Router {
                 child.finish(tree);
             }
         }
+
+        //         if h0 && self.path.is_empty() {
+        //             let method = Method::All;
+        //             let path = "/*";
+
+        //             log::info!("{:>6}:{}", method.as_str(), &path);
+
+        //             tree.entry(method)
+        //                 .or_insert_with(PathTree::new)
+        //                 .insert(path, m0);
+        //         }
     }
 }
 
@@ -367,7 +379,7 @@ mod tests {
                         let res: http::Response = cx.next().await?.into();
 
                         assert_eq!(res.status(), 404);
-                        assert_eq!(to_bytes(res.into_body()).await.unwrap(), "404 Not Found");
+                        assert_eq!(to_bytes(res.into_body()).await.unwrap(), "");
 
                         Ok::<_, Error>(())
                     })

@@ -41,7 +41,7 @@ impl BitAnd for Box<dyn Guard> {
     type Output = Self;
 
     fn bitand(self, rhs: Self) -> Self::Output {
-        Box::new(move |cx: &Context| self.check(cx) & rhs.check(cx))
+        Box::new(move |cx: &Context| self.check(cx) && rhs.check(cx))
     }
 }
 
@@ -49,7 +49,7 @@ impl BitOr for Box<dyn Guard> {
     type Output = Self;
 
     fn bitor(self, rhs: Self) -> Self::Output {
-        Box::new(move |cx: &Context| self.check(cx) | (rhs.check(cx)))
+        Box::new(move |cx: &Context| self.check(cx) || rhs.check(cx))
     }
 }
 
@@ -57,7 +57,7 @@ impl BitXor for Box<dyn Guard> {
     type Output = Self;
 
     fn bitxor(self, rhs: Self) -> Self::Output {
-        Box::new(move |cx: &Context| self.check(cx) ^ (rhs.check(cx)))
+        Box::new(move |cx: &Context| self.check(cx) ^ rhs.check(cx))
     }
 }
 

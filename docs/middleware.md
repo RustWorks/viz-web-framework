@@ -5,7 +5,7 @@ Middleware is a trait, based on **[handle]**.
 - Async Functions
 
 ```rust
-async fn mid(cx: &mut Context) -> Result<Response> {
+async fn middle(cx: &mut Context) -> Result<Response> {
     cx.next().await
 }
 ```

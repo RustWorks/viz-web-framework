@@ -1,14 +1,15 @@
 [package]
 name = "examples"
-version = "0.1.0"
+version = "0.1.0-alpha"
 authors = ["Fangdun Cai <cfddream@gmail.com>"]
 edition = "2018"
 publish = false
 
 [dev-dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0" }
-viz-router = { path = "../viz-router", version = "0.1.0" }
-viz-utils = { path = "../viz-utils", version = "0.1.0" }
+viz = { path = "../viz" }
+viz-core = { path = "../viz-core" }
+viz-router = { path = "../viz-router" }
+viz-utils = { path = "../viz-utils" }
 
 serde = { version = "1", features = ["derive"] }
 ramhorns = "0.9"
@@ -17,7 +18,12 @@ num_cpus = "1"
 futures = "0.3"
 
 hyper = { version = "0.13", default-features = false, features = ["tcp", "stream"] }
-tokio = { version = "0.2", default-features = false }
+tokio = { version = "0.2", features = ["full"] }
+smol = "0.1"
+
+[[example]]
+name = "hello"
+path = "hello.rs"
 
 [[example]]
 name = "hello-smol"

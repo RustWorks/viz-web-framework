@@ -8,7 +8,7 @@
 //!
 //! Open in the browser any of these addresses:
 //!
-//! - http://localhost:8000/
+//! - http://localhost:8080/
 
 use std::{
     collections::HashMap,
@@ -19,7 +19,7 @@ use std::{
     sync::Arc,
     task::{Context, Poll},
     // Multi-Threaded
-    // thread,
+    thread,
 };
 
 use hyper::{
@@ -28,6 +28,7 @@ use hyper::{
 };
 use ramhorns::{Content, Template};
 use serde::{Deserialize, Serialize};
+use smol::{self, Async, Task};
 
 use viz_core::{
     http, into_guard, Context as VizContext, Error, Extract, Params, Response as VizResponse,
@@ -40,13 +41,12 @@ use viz_utils::{
     anyhow::anyhow,
     futures::{
         // Multi-Threaded
-        // future::{self, BoxFuture},
-        future::BoxFuture,
+        future::{self, BoxFuture},
+        // future::BoxFuture,
         io::{AsyncRead, AsyncWrite},
         stream::Stream,
     },
     log, pretty_env_logger,
-    smol::{self, Async, Task},
 };
 
 // Standard Mustache action here
@@ -167,6 +167,7 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
         .mid(m_0)
         // `/`
         .at("/", route().get(hello_world))
+        // `/*`
         .at("/*any", route().all(any))
         // `/users'
         .scope("/users", users)
@@ -189,7 +190,6 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
         let method = cx.method().to_owned();
         let path = cx.path();
 
-        log::info!("{}:{}", &method, &path);
         let route = tree
             .get(&Method::Verb(method.to_owned()))
             .and_then(|t| t.find(path))
@@ -216,8 +216,6 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
     Server::builder(SmolListener::new(listener))
         .executor(SmolExecutor)
         .serve(make_service_fn(move |_| {
-            // let middleware = middleware.clone();
-            // async { Ok::<_, Error>(service_fn(move |req| serve(req, middleware.clone()))) }
             let tree = tree.clone();
             async move { Ok::<_, Error>(service_fn(move |req| serve(req, tree.clone()))) }
         }))
@@ -229,19 +227,19 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
 fn main() -> Result<()> {
     pretty_env_logger::init();
 
-    let addr: SocketAddr = ([127, 0, 0, 1], 8000).into();
+    let addr: SocketAddr = ([127, 0, 0, 1], 8080).into();
 
-    println!("Listening on http://{}", addr);
+    log::info!("Listening on http://{}", addr);
 
     // Start HTTP server.
     // Multi-Threaded
-    // for _ in 0..num_cpus::get().max(1) {
-    //     thread::spawn(|| smol::run(future::pending::<()>()));
-    // }
-    // smol::block_on(listen(Async::<TcpListener>::bind(&addr)?))
+    for _ in 0..num_cpus::get().max(1) {
+        thread::spawn(|| smol::run(future::pending::<()>()));
+    }
+    smol::block_on(listen(Async::<TcpListener>::bind(&addr)?))
 
     // Single-Threaded
-    smol::run(listen(Async::<TcpListener>::bind(&addr)?))
+    // smol::run(listen(Async::<TcpListener>::bind(&addr)?))
 }
 
 /// Spawns futures.

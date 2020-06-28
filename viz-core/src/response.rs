@@ -1,4 +1,7 @@
-use std::borrow::Cow;
+use std::{
+    borrow::Cow,
+    ops::{Deref, DerefMut},
+};
 
 use crate::http;
 use crate::Error;
@@ -14,6 +17,20 @@ impl Response {
         Self {
             raw: http::Response::new(http::Body::empty()),
         }
+    }
+}
+
+impl Deref for Response {
+    type Target = http::Response;
+
+    fn deref(&self) -> &Self::Target {
+        &self.raw
+    }
+}
+
+impl DerefMut for Response {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.raw
     }
 }
 
@@ -88,8 +105,8 @@ impl From<()> for Response {
 impl From<http::StatusCode> for Response {
     fn from(s: http::StatusCode) -> Self {
         let mut res = Response::new();
-        *res.raw.status_mut() = s;
-        *res.raw.body_mut() = s.to_string().into();
+        *res.status_mut() = s;
+        // *res.body_mut() = s.to_string().into();
         res
     }
 }
@@ -100,7 +117,7 @@ where
 {
     fn from(t: (http::StatusCode, T)) -> Self {
         let mut res = t.1.into();
-        *res.raw.status_mut() = t.0;
+        *res.status_mut() = t.0;
         res
     }
 }

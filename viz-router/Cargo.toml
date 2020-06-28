@@ -1,12 +1,12 @@
 [package]
 name = "viz-router"
-version = "0.1.0"
+version = "0.1.0-alpha"
 authors = ["Fangdun Cai <cfddream@gmail.com>"]
 edition = "2018"
 
 [dependencies]
-viz-core = { path= "../viz-core", version = "0.1.0" }
-viz-utils = { path= "../viz-utils", version = "0.1.0" }
+viz-core = { path= "../viz-core" }
+viz-utils = { path= "../viz-utils" }
 path-tree = "0.1"
 
 [dev-dependencies]

@@ -95,8 +95,7 @@ impl Context {
         if let Some(m) = self.middleware.pop() {
             m.call(self).await.or_else(|e| Ok(e.into()))
         } else {
-            // TODO: Need a DefaultHandler
-            Ok(Response::new())
+            Ok(http::StatusCode::NOT_FOUND.into())
         }
     }
 }

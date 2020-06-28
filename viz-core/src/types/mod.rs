@@ -6,7 +6,7 @@ mod payload;
 
 pub use form::{form, Form};
 pub use json::{json, Json};
-pub use multipart::{multipart, FormData};
+pub use multipart::{multipart, Multipart};
 pub use params::{Params, ParamsDeserializer};
 pub use payload::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT};
 
@@ -14,9 +14,9 @@ pub use payload::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAY
 mod tests {
     use viz_utils::futures::stream::{self, TryStreamExt};
     use viz_utils::serde::urlencoded;
-    use viz_utils::smol::block_on;
 
     use bytes::buf::BufExt;
+    use futures_executor::block_on;
     use serde::Deserialize;
 
     use crate::*;
@@ -219,7 +219,7 @@ mod tests {
             assert_eq!(charset.unwrap(), "utf-8");
             assert_eq!(boundary.unwrap(), "b78128d03bdc557f");
 
-            let mut form = cx.extract::<FormData<http::Body>>().await.unwrap();
+            let mut form = cx.extract::<Multipart>().await.unwrap();
 
             while let Some(mut field) = form.try_next().await? {
                 let buffer = field.bytes().await?;
