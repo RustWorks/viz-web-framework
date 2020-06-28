@@ -35,7 +35,7 @@
 
 * Based on fast [hyper][]
 
-* Powerful Extractors
+* Powerful extractors
 
 ## Todos
 
@@ -43,7 +43,7 @@
 * [ ] Sessions
 * [ ] Basic middlewares: `logger`, `cors`, `serve static files`
 * [ ] Websocket
-* [ ] Templates
+* [ ] Template engines
 * [ ] TLS
 
 ## License
