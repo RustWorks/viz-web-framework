@@ -10,7 +10,7 @@ edition = "2018"
 anyhow = "1"
 thiserror = "1"
 
-futures-util = { version = "0.3", default-features = false, features = ["std", "io"] }
+futures-util = "0.3"
 
 serde_json = "1"
 serde_urlencoded = "0.6"
