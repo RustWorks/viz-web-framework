@@ -1,6 +1,6 @@
 ### Extract
 
-Trait implemented by types that can be extracted from Context.
+Trait implemented by types that can be extracted from [Context](context.md).
 
 ```rust
 #[derive(Debug)]

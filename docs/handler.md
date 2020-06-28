@@ -1,7 +1,16 @@
 ### Handler
 
+#### Generics Async Functions
 
-- Extracts, like `Actix`, `Rocket`, `Warp` style
+```rust
+async fn hey() -> &'static str {
+    "Hey Viz!"
+}
+```
+
+#### Extracts
+
+Follows `Actix`, `Rocket`, `Warp` style
 
 ```rust
 async fn login(user: User, query: Query) -> &'static str {
@@ -9,8 +18,9 @@ async fn login(user: User, query: Query) -> &'static str {
 }
 ```
 
-- Only havs `Contex`
+#### `Context`
 
+Has only `Context` parameter
 
 ```rust
 async fn hello(cx: &mut Context) -> &'static str {
@@ -18,11 +28,13 @@ async fn hello(cx: &mut Context) -> &'static str {
 }
 ```
 
-- `Contex` + Extracts, `Contex` must be first param
+#### `Context` + Extracts
+
+`Context` must be first parameter
 
 ```rust
 async fn hello_login(cx: &mut Context, user: User, query: Query) -> &'static str {
     // do something
-    login.call(cx).await
+    login(user, query).await
 }
 ```
