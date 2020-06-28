@@ -72,7 +72,7 @@ mod tests {
         let c: Box<dyn Guard> = Box::new(|_: &Context| true);
         let d: Box<dyn Guard> = Box::new(|_: &Context| false);
         let e: Box<dyn Guard> = (a & b) ^ (c | d);
-        let cx: Context = http::Request::new("hello world".into()).into();
+        let cx = Context::from(http::Request::new("hello world".into()));
         let res = e.check(&cx);
         assert!(res);
     }

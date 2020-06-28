@@ -297,9 +297,7 @@ mod tests {
 
         let mut tree = HashMap::new();
 
-        dbg!(routes).finish(&mut tree);
-
-        dbg!(tree.len());
+        routes.finish(&mut tree);
 
         for i in 0..3 {
             println!("");
@@ -317,7 +315,7 @@ mod tests {
                 println!("request {} {}", i, req.uri());
 
                 if let Some(r) = t.find(&req.uri().to_string()) {
-                    let mut cx: Context = req.into();
+                    let mut cx = Context::from(req);
 
                     *cx.middleware_mut() = r.0.to_vec();
 
@@ -343,7 +341,7 @@ mod tests {
                 println!("request {} {}", i, req.uri());
 
                 if let Some(r) = t.find(&req.uri().to_string()) {
-                    let mut cx: Context = req.into();
+                    let mut cx = Context::from(req);
 
                     *cx.middleware_mut() = r.0.to_vec();
 
@@ -369,7 +367,7 @@ mod tests {
                 println!("request {} {}", i, req.uri());
 
                 if let Some(r) = t.find(&req.uri().to_string()) {
-                    let mut cx: Context = req.into();
+                    let mut cx = Context::from(req);
 
                     *cx.middleware_mut() = r.0.to_vec();
 

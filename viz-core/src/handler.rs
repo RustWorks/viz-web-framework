@@ -196,7 +196,7 @@ mod test {
         }
 
         block_on(async move {
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
 
             let r_0 = extract::<Info>(&mut cx).await.unwrap();
 
@@ -248,7 +248,7 @@ mod test {
             }
 
             let h = make_handler(a);
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
             let r = h.call(&mut cx).await;
             assert!(r.is_ok());
 
@@ -263,22 +263,22 @@ mod test {
                 Ok(Response::new())
             }
             let h = make_handler(b);
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
             let r = h.call(&mut cx).await;
             assert!(r.is_ok());
 
             let c = || async { Response::new() };
             let h = make_handler(c);
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
             let r = h.call(&mut cx).await;
             assert!(r.is_ok());
 
             let d = || Box::pin(async { anyhow!("throws error and converts to response") });
             let h = make_handler(d);
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
             let hh = h.clone_handler();
             let r = h.call(&mut cx).await;
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
             let r0 = hh.call(&mut cx).await;
             assert_eq!(r.is_ok(), r0.is_ok());
 
@@ -287,7 +287,7 @@ mod test {
                 Ok(Response::new())
             }
             let h = make_handler(e);
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
             let r = h.call(&mut cx).await;
             assert!(r.is_ok());
 
@@ -305,7 +305,7 @@ mod test {
                 "Hello world"
             }
             let h = make_handler(f);
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
             let r = h.call(&mut cx).await;
             assert!(r.is_ok());
             let r = Handler::call(&h.clone_handler(), &mut cx).await;
@@ -317,7 +317,7 @@ mod test {
                 HandlerBase::call(&f, cx.extract().await.unwrap()).await
             );
 
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
             let r = Handler::call(&h, &mut cx).await;
             assert!(r.is_ok());
             let r = Handler::call(&h.clone_handler(), &mut cx).await;
@@ -374,7 +374,7 @@ mod test {
                 "World"
             }
 
-            let mut cx: Context = http::Request::new("hello".into()).into();
+            let mut cx = Context::from(http::Request::new("hello".into()));
 
             let f: Box<dyn Handler> = Box::new(HandlerWrapper::new(hello));
             let r = f.call(&mut cx).await;
