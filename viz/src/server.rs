@@ -41,8 +41,8 @@ impl Server {
         let tree = self.tree;
         let srv =
             HyperServer::builder(incoming).serve(make_service_fn(move |stream: &AddrStream| {
-                let tree = tree.clone();
                 let addr = stream.remote_addr();
+                let tree = tree.clone();
                 async move {
                     Ok::<_, Infallible>(service_fn(move |req| {
                         serve(req, addr, tree.clone())
