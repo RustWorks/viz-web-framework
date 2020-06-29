@@ -307,7 +307,7 @@ mod tests {
 
             if let Some(t) = tr {
                 // Open Edit User Page
-                let mut req = http::Request::<http::Body>::default();
+                let mut req = http::Request::default();
                 *req.uri_mut() = "/users/fundon/edit".parse().unwrap();
                 *req.body_mut() = "Open Edit User Page".into();
 
@@ -333,7 +333,7 @@ mod tests {
                 }
 
                 // Open Edit Post Page
-                let mut req = http::Request::<http::Body>::default();
+                let mut req = http::Request::default();
                 *req.uri_mut() = "/users/fundon/posts/233/edit".parse().unwrap();
                 *req.body_mut() = "Open Edit Post Page".into();
 
@@ -359,7 +359,7 @@ mod tests {
                 }
 
                 // Open Get Post Page
-                let mut req = http::Request::<http::Body>::default();
+                let mut req = http::Request::default();
                 *req.uri_mut() = "/users/fundon/posts/233".parse().unwrap();
                 *req.body_mut() = "Open Get Post Page".into();
 

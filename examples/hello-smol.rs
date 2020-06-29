@@ -187,11 +187,11 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
     Server::builder(SmolListener::new(listener))
         .executor(SmolExecutor)
         .serve(make_service_fn(move |stream: &SmolStream| {
+            let addr = stream.remote_addr();
             let tree = tree.clone();
-            let remote_addr = stream.remote_addr();
             async move {
                 Ok::<_, Error>(service_fn(move |req| {
-                    viz::serve(remote_addr, req, tree.clone())
+                    viz::serve(req, addr, tree.clone())
                 }))
             }
         }))
