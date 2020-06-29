@@ -1,5 +1,6 @@
 mod server;
 
+pub use server::serve;
 pub use server::Server;
 
 pub fn new() -> Server {

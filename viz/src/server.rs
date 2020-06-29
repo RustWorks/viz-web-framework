@@ -42,10 +42,10 @@ impl Server {
         let srv =
             HyperServer::builder(incoming).serve(make_service_fn(move |stream: &AddrStream| {
                 let tree = tree.clone();
-                let remote_addr = stream.remote_addr();
+                let addr = stream.remote_addr();
                 async move {
                     Ok::<_, Infallible>(service_fn(move |req| {
-                        serve(req, remote_addr, tree.clone())
+                        serve(req, addr, tree.clone())
                     }))
                 }
             }));
@@ -59,11 +59,11 @@ impl Server {
 /// Serves a request and returns a response.
 pub async fn serve(
     req: http::Request,
-    remote_addr: SocketAddr,
+    addr: SocketAddr,
     tree: Arc<Tree>,
 ) -> Result<http::Response> {
     let mut cx = Context::from(req);
-    cx.extensions_mut().insert(remote_addr);
+    cx.extensions_mut().insert(addr);
 
     let method = cx.method().to_owned();
     let path = cx.path();

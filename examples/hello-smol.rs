@@ -31,11 +31,10 @@ use serde::{Deserialize, Serialize};
 use smol::{self, Async, Task};
 
 use viz_core::{
-    http, into_guard, Context as VizContext, Error, Extract, Params, Response as VizResponse,
-    Result,
+    into_guard, Context as VizContext, Error, Extract, Params, Response as VizResponse, Result,
 };
 
-use viz_router::{route, router, Method, Tree};
+use viz_router::{route, router};
 
 use viz_utils::{
     anyhow::anyhow,
@@ -184,40 +183,17 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
 
     let tree = Arc::new(tree);
 
-    /// Serves a request and returns a response.
-    async fn serve(req: http::Request, tree: Arc<Tree>) -> Result<http::Response> {
-        let mut cx: VizContext = req.into();
-        let method = cx.method().to_owned();
-        let path = cx.path();
-
-        let route = tree
-            .get(&Method::Verb(method.to_owned()))
-            .and_then(|t| t.find(path))
-            .or_else(|| {
-                if method == http::Method::HEAD {
-                    tree.get(&Method::Verb(http::Method::GET))
-                        .and_then(|t| t.find(path))
-                } else {
-                    None
-                }
-            })
-            .or_else(|| tree.get(&Method::All).and_then(|t| t.find(path)));
-
-        if let Some((handler, params)) = route {
-            let params: Params = params.into();
-            *cx.middleware_mut() = handler.to_owned();
-            cx.extensions_mut().insert(params);
-        }
-
-        Ok(cx.next().await?.into())
-    }
-
     // Start a hyper server.
     Server::builder(SmolListener::new(listener))
         .executor(SmolExecutor)
-        .serve(make_service_fn(move |_| {
+        .serve(make_service_fn(move |stream: &SmolStream| {
             let tree = tree.clone();
-            async move { Ok::<_, Error>(service_fn(move |req| serve(req, tree.clone()))) }
+            let remote_addr = stream.remote_addr();
+            async move {
+                Ok::<_, Error>(service_fn(move |req| {
+                    viz::serve(remote_addr, req, tree.clone())
+                }))
+            }
         }))
         .await?;
 
@@ -273,12 +249,30 @@ impl hyper::server::accept::Accept for SmolListener {
     ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
         let poll = Pin::new(&mut self.listener.incoming()).poll_next(cx);
         let stream = futures::ready!(poll).unwrap()?;
-        Poll::Ready(Some(Ok(SmolStream(stream))))
+        let addr = stream.get_ref().peer_addr()?;
+        Poll::Ready(Some(Ok(SmolStream::new(addr, stream))))
     }
 }
 
 /// A TCP connection.
-struct SmolStream(Async<TcpStream>);
+struct SmolStream {
+    addr: SocketAddr,
+    stream: Async<TcpStream>,
+}
+
+impl SmolStream {
+    fn new(addr: SocketAddr, stream: Async<TcpStream>) -> Self {
+        Self { addr, stream }
+    }
+
+    fn remote_addr(&self) -> SocketAddr {
+        self.addr
+    }
+
+    fn stream(&self) -> &Async<TcpStream> {
+        &self.stream
+    }
+}
 
 impl hyper::client::connect::Connection for SmolStream {
     fn connected(&self) -> hyper::client::connect::Connected {
@@ -288,29 +282,29 @@ impl hyper::client::connect::Connection for SmolStream {
 
 impl tokio::io::AsyncRead for SmolStream {
     fn poll_read(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         buf: &mut [u8],
     ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut self.0).poll_read(cx, buf)
+        Pin::new(&mut self.stream()).poll_read(cx, buf)
     }
 }
 
 impl tokio::io::AsyncWrite for SmolStream {
     fn poll_write(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context<'_>,
         buf: &[u8],
     ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut self.0).poll_write(cx, buf)
+        Pin::new(&mut self.stream()).poll_write(cx, buf)
     }
 
-    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        Pin::new(&mut self.0).poll_flush(cx)
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<io::Result<()>> {
+        Pin::new(&mut self.stream()).poll_flush(cx)
     }
 
     fn poll_shutdown(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<io::Result<()>> {
-        self.0.get_ref().shutdown(Shutdown::Write)?;
+        self.stream().get_ref().shutdown(Shutdown::Write)?;
         Poll::Ready(Ok(()))
     }
 }
