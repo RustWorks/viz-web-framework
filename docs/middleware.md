@@ -1,8 +1,8 @@
-### Middleware
+## Middleware
 
-Middleware is a trait, based on **[handle][]**.
+Middleware is a trait, based on **[handle](https://github.com/viz-rs/handle)**.
 
-#### Async Functions
+### Async Functions
 
 ```rust
 async fn middle(cx: &mut Context) -> Result<Response> {
@@ -10,7 +10,7 @@ async fn middle(cx: &mut Context) -> Result<Response> {
 }
 ```
 
-#### Implement `Middleware` for struct
+### Implement `Middleware` for struct
 
 ```rust
 struct Middle {}
@@ -26,5 +26,3 @@ impl<'a> Middleware<'a, Context> for Middle
     }
 }
 ```
-
-[handle]: https://crates.io/crates/handle

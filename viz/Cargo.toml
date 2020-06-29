@@ -5,6 +5,7 @@ authors = ["Fangdun Cai <cfddream@gmail.com>"]
 description = "Fast, flexible, minimalist web framework for Rust"
 homepage = "https://viz.rs"
 documentation = "https://docs.rs/viz"
+repository = "https://github.com/viz-rs/viz"
 keywords = ["viz", "http", "web", "framework", "async"]
 categories = ["asynchronous", "network-programming", "web-programming::http-server"]
 license = "Apache-2.0/MIT"

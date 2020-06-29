@@ -1,6 +1,6 @@
-### Handler
+## Handler
 
-#### Generics Async Functions
+### Generics Async Functions
 
 ```rust
 async fn hey() -> &'static str {
@@ -8,7 +8,7 @@ async fn hey() -> &'static str {
 }
 ```
 
-#### Extracts
+### Extracts
 
 Follows `Actix`, `Rocket`, `Warp` style
 
@@ -18,7 +18,7 @@ async fn login(user: User, query: Query) -> &'static str {
 }
 ```
 
-#### `Context`
+### `Context`
 
 Has only `Context` parameter
 
@@ -28,7 +28,7 @@ async fn hello(cx: &mut Context) -> &'static str {
 }
 ```
 
-#### `Context` + Extracts
+### `Context` + Extracts
 
 `Context` must be first parameter
 

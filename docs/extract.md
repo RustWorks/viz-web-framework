@@ -1,4 +1,4 @@
-### Extract
+## Extract
 
 Trait implemented by types that can be extracted from [Context](context.md).
 
