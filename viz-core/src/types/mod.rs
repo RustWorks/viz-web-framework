@@ -1,9 +1,11 @@
+mod data;
 mod form;
 mod json;
 mod multipart;
 mod params;
 mod payload;
 
+pub use data::{Data, DataFactory};
 pub use form::{form, Form};
 pub use json::{json, Json};
 pub use multipart::{multipart, Multipart};
@@ -252,6 +254,54 @@ mod tests {
 
             assert_eq!(info.repo, "viz");
             assert_eq!(info.id, 233);
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
+    }
+
+    #[test]
+    fn test_data() {
+        use std::sync::{
+            atomic::{AtomicUsize, Ordering},
+            Arc,
+        };
+
+        assert!(block_on(async move {
+            let mut req = http::Request::new(http::Body::empty());
+
+            req.extensions_mut()
+                .insert::<Data<String>>(Data::new("Hey Viz".to_string()));
+
+            let mut cx: Context = req.into();
+
+            let text = cx.extract::<Data<String>>().await.unwrap();
+
+            assert_eq!(text.as_ref(), "Hey Viz");
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
+
+        assert!(block_on(async move {
+            let mut req = http::Request::new(http::Body::empty());
+
+            let num = Arc::new(AtomicUsize::new(0));
+
+            req.extensions_mut()
+                .insert::<Data<Arc<AtomicUsize>>>(Data::new(num.clone()));
+
+            num.fetch_add(1, Ordering::SeqCst);
+
+            let mut cx: Context = req.into();
+
+            let num_cloned = cx.extract::<Data<Arc<AtomicUsize>>>().await.unwrap();
+
+            assert_eq!(num_cloned.as_ref().load(Ordering::SeqCst), 1);
+
+            num.fetch_sub(1, Ordering::SeqCst);
+
+            assert_eq!(num.load(Ordering::SeqCst), 0);
 
             Ok::<_, Error>(())
         })

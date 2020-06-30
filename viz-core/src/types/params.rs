@@ -17,9 +17,7 @@ use serde::{
 
 use viz_utils::{futures::future::BoxFuture, log};
 
-use crate::Context;
-use crate::Error;
-use crate::Extract;
+use crate::{Context, Error, Extract};
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Params<T = Vec<(String, String)>>(T);

@@ -31,3 +31,13 @@ async fn handler(info: Info) -> String {
     format!("{:#?}", info)
 }
 ```
+
+### Built-in Extractors
+
+* `Data<T>`
+
+* `Form<T>`
+
+* `Json<T>`
+
+* `Multipart<T>`

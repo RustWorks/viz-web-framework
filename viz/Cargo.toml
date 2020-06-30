@@ -8,7 +8,7 @@ documentation = "https://docs.rs/viz"
 repository = "https://github.com/viz-rs/viz"
 keywords = ["viz", "http", "web", "framework", "async"]
 categories = ["asynchronous", "network-programming", "web-programming::http-server"]
-license = "Apache-2.0/MIT"
+license = "MIT/Apache-2.0"
 readme = "README.md"
 edition = "2018"
 

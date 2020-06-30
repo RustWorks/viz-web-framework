@@ -41,6 +41,7 @@
 
 ## Todos
 
+* [ ] More friendly Routing
 * [ ] Configuration
 * [ ] Data State
 * [ ] Sessions
@@ -48,6 +49,8 @@
 * [ ] Websocket
 * [ ] Template engines
 * [ ] TLS
+* [ ] GraphQL?
+* [ ] RPC?
 
 ## License
 

@@ -8,9 +8,9 @@ use crate::Response;
 use crate::Result;
 
 pub struct Context {
-    method: http::Method,
-
     uri: http::Uri,
+
+    method: http::Method,
 
     version: http::Version,
 
