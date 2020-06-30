@@ -12,6 +12,7 @@
 
 use std::{
     collections::HashMap,
+    env,
     future::Future,
     io,
     net::{Shutdown, SocketAddr, TcpListener, TcpStream},
@@ -181,6 +182,7 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
 
     routes.finish(&mut tree);
 
+    let data = Vec::new();
     let tree = Arc::new(tree);
 
     // Start a hyper server.
@@ -188,10 +190,11 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
         .executor(SmolExecutor)
         .serve(make_service_fn(move |stream: &SmolStream| {
             let addr = stream.remote_addr();
+            let data = data.clone();
             let tree = tree.clone();
             async move {
                 Ok::<_, Error>(service_fn(move |req| {
-                    viz::serve(req, addr, tree.clone())
+                    viz::serve(req, addr, data.clone(), tree.clone())
                 }))
             }
         }))
@@ -201,6 +204,10 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
 }
 
 fn main() -> Result<()> {
+    if env::var_os("RUST_LOG=info").is_none() {
+        env::set_var("RUST_LOG", "info");
+    }
+
     pretty_env_logger::init();
 
     let addr: SocketAddr = ([127, 0, 0, 1], 8080).into();

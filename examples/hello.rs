@@ -55,20 +55,18 @@ fn allow_head(cx: &Context) -> bool {
 async fn main() -> Result {
     pretty_env_logger::init();
 
-    viz::new()
-        .data(Arc::new(AtomicUsize::new(0)))
-        .routes(
-            router()
-                .mid(logger)
-                .at(
-                    "/",
-                    route()
-                        // .guard(allow_get)
-                        .guard(into_guard(allow_get) | into_guard(allow_head))
-                        .all(hello_world),
-                )
-                .at("/*", route().all(not_found)),
-        )
-        .listen("127.0.0.1:8000")
-        .await
+    let app = viz::new().data(Arc::new(AtomicUsize::new(0))).routes(
+        router()
+            .mid(logger)
+            .at(
+                "/",
+                route()
+                    // .guard(allow_get)
+                    .guard(into_guard(allow_get) | into_guard(allow_head))
+                    .all(hello_world),
+            )
+            .at("/*", route().all(not_found)),
+    );
+
+    app.listen("127.0.0.1:8000").await
 }

@@ -14,7 +14,7 @@ use viz_utils::{anyhow::anyhow, log};
 
 pub struct Server {
     tree: Arc<Tree>,
-    data: Option<Vec<Box<dyn DataFactory>>>,
+    data: Option<Vec<Arc<dyn DataFactory>>>,
 }
 
 impl Server {
@@ -31,7 +31,7 @@ impl Server {
     {
         self.data
             .get_or_insert_with(Vec::new)
-            .push(Box::new(Data::new(data)));
+            .push(Arc::new(Data::new(data)));
         self
     }
 
@@ -50,7 +50,7 @@ impl Server {
         let addr = incoming.local_addr();
         incoming.set_nodelay(true);
 
-        let data = Arc::new(self.data.unwrap_or_default());
+        let data = self.data.unwrap_or_default();
         let tree = self.tree;
         let srv =
             HyperServer::builder(incoming).serve(make_service_fn(move |stream: &AddrStream| {
@@ -74,7 +74,7 @@ impl Server {
 pub async fn serve(
     req: http::Request,
     addr: SocketAddr,
-    data: Arc<Vec<Box<dyn DataFactory>>>,
+    data: Vec<Arc<dyn DataFactory>>,
     tree: Arc<Tree>,
 ) -> Result<http::Response> {
     let mut cx = Context::from(req);
