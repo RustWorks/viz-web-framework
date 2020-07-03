@@ -2,13 +2,7 @@ use std::future::Future;
 
 use viz_utils::futures::future::BoxFuture;
 
-use crate::Context;
-use crate::Error;
-use crate::Extract;
-use crate::HandlerBase;
-use crate::HandlerCamp;
-use crate::Response;
-use crate::Result;
+use crate::{Context, Error, Extract, HandlerBase, HandlerCamp, Response, Result};
 
 macro_rules! peel {
     ($T0:ident, $($T:ident,)*) => (tuple! { $($T,)* })
@@ -62,7 +56,8 @@ macro_rules! tuple {
         impl<$($T),+> Extract for ($($T,)+)
         where
             $($T: Extract + Send,)+
-            $($T::Error: Into<Error> + Send,)+
+            // $($T::Error: Into<Error> + Send,)+
+            $($T::Error: Into<Error> + Into<Response> + Send + 'static,)+
         {
             type Error = Error;
 
@@ -73,7 +68,8 @@ macro_rules! tuple {
                         $(
                             match $T::extract(cx).await {
                                 Ok(v) => v,
-                                Err(e) => return Err(e.into()),
+                                // Err(e) => return Err(anyhow!(e)),
+                                Err(e) => return Err(Into::<Response>::into(e as $T::Error).into()),
                             },
                         )+
                     ))

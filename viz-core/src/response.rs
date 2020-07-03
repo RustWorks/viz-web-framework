@@ -1,15 +1,28 @@
 use std::{
     borrow::Cow,
+    error::Error as StdError,
+    fmt,
     ops::{Deref, DerefMut},
 };
 
-use crate::http;
-use crate::Error;
-use crate::Result;
+use crate::{http, Error, Result};
 
-#[derive(Debug)]
 pub struct Response {
     pub(crate) raw: http::Response,
+}
+
+impl StdError for Response {}
+
+impl fmt::Debug for Response {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Debug::fmt(&self, formatter)
+    }
+}
+
+impl fmt::Display for Response {
+    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
+        fmt::Display::fmt(&self, formatter)
+    }
 }
 
 impl Response {

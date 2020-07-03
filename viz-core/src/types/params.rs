@@ -4,6 +4,7 @@
 //! Some codes from https://github.com/ntex-rs/ntex/blob/master/ntex-router/src/de.rs
 
 use std::{
+    fmt::Display,
     iter::Peekable,
     ops::{Deref, DerefMut},
     slice::Iter,
@@ -15,19 +16,50 @@ use serde::{
     forward_to_deserialize_any, Deserialize,
 };
 
-use viz_utils::{futures::future::BoxFuture, log};
+use viz_utils::{futures::future::BoxFuture, log, thiserror::Error as ThisError};
 
-use crate::{Context, Error, Extract};
+use crate::{http, Context, Extract, Response};
+
+#[derive(ThisError, Debug, PartialEq)]
+pub enum ParamsError {
+    #[error("failed to read param: {0:?}")]
+    SingleRead(String),
+    #[error("failed to parse param: {0:?}")]
+    SingleParse(String),
+    #[error("failed to read params")]
+    Read,
+    #[error("failed to parse params")]
+    Parse,
+}
+
+impl Into<Response> for ParamsError {
+    fn into(self) -> Response {
+        (http::StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into()
+    }
+}
 
 #[derive(Clone, Debug, Deserialize)]
 pub struct Params<T = Vec<(String, String)>>(T);
 
 impl Params {
-    pub fn find<T: FromStr>(&self, name: &str) -> Result<T, T::Err> {
+    pub fn find<T: FromStr>(&self, name: &str) -> Result<T, ParamsError>
+    where
+        T: FromStr,
+        T::Err: Display,
+    {
         self.iter()
             .find(|p| p.0 == name)
-            .map(|p| p.1.parse())
-            .unwrap()
+            .ok_or_else(|| ParamsError::SingleRead(name.to_string()))?
+            .1
+            .parse()
+            .map_err(|e: T::Err| {
+                log::debug!(
+                    "Failed during Params extractor deserialization. \
+                         error: {}",
+                    e
+                );
+                ParamsError::SingleParse(name.to_string())
+            })
     }
 }
 
@@ -71,7 +103,7 @@ impl<T> Extract for Params<T>
 where
     T: DeserializeOwned + Send + Sync,
 {
-    type Error = Error;
+    type Error = ParamsError;
 
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
@@ -86,16 +118,18 @@ where
                                 .collect::<Vec<_>>(),
                         )
                     })
-                    .unwrap(),
+                    .ok_or_else(|| ParamsError::Read)?,
             ))
             .map(|inner| Params(inner))
             .map_err(|e| {
                 log::debug!(
                     "Failed during Params extractor deserialization. \
-                         Request path: {:?}",
-                    cx.path()
+                         Request path: {:?}, error: {}",
+                    cx.path(),
+                    e
                 );
-                e.into()
+                // e.into()
+                ParamsError::Parse
             })
         })
     }

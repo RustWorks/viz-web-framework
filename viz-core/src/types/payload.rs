@@ -1,8 +1,10 @@
 use bytes::{Buf, Bytes, BytesMut};
 
-use viz_utils::futures::stream::{Stream, StreamExt};
-use viz_utils::log;
-use viz_utils::thiserror::Error;
+use viz_utils::{
+    futures::stream::{Stream, StreamExt},
+    log,
+    thiserror::Error as ThisError,
+};
 
 use crate::http;
 use crate::Context;
@@ -12,7 +14,7 @@ use crate::Result;
 /// 1 MB
 pub const PAYLOAD_LIMIT: usize = 1 << 20;
 
-#[derive(Error, Debug)]
+#[derive(ThisError, Debug, PartialEq)]
 pub enum PayloadError {
     /// 400
     #[error("failed to read payload")]

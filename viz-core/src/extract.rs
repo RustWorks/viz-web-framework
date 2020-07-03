@@ -6,15 +6,12 @@
 //!   tower:    https://docs.rs/tower-web/0.3.7/tower_web/extract/trait.Extract.html
 //!   warp:     https://github.com/seanmonstar/warp/blob/master/src/generic.rs
 
-use viz_utils::futures::future::BoxFuture;
-use viz_utils::log;
+use viz_utils::{futures::future::BoxFuture, log};
 
-use crate::Context;
-use crate::Error;
-use crate::Result;
+use crate::{Context, Error, Response, Result};
 
 pub trait Extract: Sized {
-    type Error: Into<Error>;
+    type Error: Into<Error> + Into<Response>;
 
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>>;
 }
@@ -31,7 +28,7 @@ where
             Ok(match T::extract(cx).await {
                 Ok(v) => Some(v),
                 Err(e) => {
-                    log::debug!("Error for Option<T> extractor: {}", e.into());
+                    log::debug!("Error for Option<T> extractor: {}", Into::<Error>::into(e));
                     None
                 }
             })

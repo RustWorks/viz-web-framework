@@ -41,3 +41,6 @@ async fn handler(info: Info) -> String {
 * `Json<T>`
 
 * `Multipart<T>`
+
+* `Query<T>`
+

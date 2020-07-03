@@ -73,6 +73,7 @@ impl Extract for Info {
             if method == "PUT" {
                 return Err(anyhow!("Wrong HTTP Method!"));
             }
+
             Ok(Info {
                 method,
                 path: cx.path().to_string(),

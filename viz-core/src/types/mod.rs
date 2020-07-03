@@ -4,13 +4,15 @@ mod json;
 mod multipart;
 mod params;
 mod payload;
+mod query;
 
 pub use data::{Data, DataFactory};
 pub use form::{form, Form};
 pub use json::{json, Json};
 pub use multipart::{multipart, Multipart};
-pub use params::{Params, ParamsDeserializer};
+pub use params::{Params, ParamsDeserializer, ParamsError};
 pub use payload::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT};
+pub use query::Query;
 
 #[cfg(test)]
 mod tests {
@@ -113,6 +115,8 @@ mod tests {
             let l = get_length(&cx);
 
             let err = payload.check_header(m, l).err().unwrap();
+
+            assert_eq!(err, PayloadError::TooLarge);
 
             let res = Into::<Response>::into(err).raw;
 
