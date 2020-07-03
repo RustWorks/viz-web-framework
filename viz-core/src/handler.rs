@@ -58,11 +58,7 @@ where
                 Ok(args) => self.f.call(args).await.into(),
                 Err(e) => {
                     // e.into()
-                    let e = Into::<Error>::into(e);
-                    match e.downcast::<Response>() {
-                        Ok(r) => r.into(),
-                        Err(e) => e.into(),
-                    }
+                    Into::<Error>::into(e).downcast::<Response>().into()
                 }
             })
         })
@@ -123,11 +119,7 @@ where
                 Ok(args) => self.f.call(cx, args).await.into(),
                 Err(e) => {
                     // e.into()
-                    let e = Into::<Error>::into(e);
-                    match e.downcast::<Response>() {
-                        Ok(r) => r.into(),
-                        Err(e) => e.into(),
-                    }
+                    Into::<Error>::into(e).downcast::<Response>().into()
                 }
             })
         })
