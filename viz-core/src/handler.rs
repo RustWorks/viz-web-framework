@@ -113,14 +113,22 @@ impl<F, T> Handler for HandlerSuper<F, T>
 where
     F: for<'h> HandlerCamp<'h, T> + Send + Sync,
     T: Extract + Send + Sync + 'static,
-    T::Error: Into<Response> + Send,
+    // T::Error: Into<Response> + Send,
+    T::Error: Into<Response> + Into<Error> + Send,
 {
     #[inline]
     fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result<Response>> {
         Box::pin(async move {
             Ok(match T::extract(cx).await {
                 Ok(args) => self.f.call(cx, args).await.into(),
-                Err(e) => e.into(),
+                Err(e) => {
+                    // e.into()
+                    let e = Into::<Error>::into(e);
+                    match e.downcast::<Response>() {
+                        Ok(r) => r.into(),
+                        Err(e) => e.into(),
+                    }
+                }
             })
         })
     }
