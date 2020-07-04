@@ -1,20 +1,20 @@
 mod cookies;
-mod data;
 mod form;
 mod json;
 mod multipart;
 mod params;
 mod payload;
 mod query;
+mod state;
 
 pub use cookies::{ContextExt as _, Cookie, CookieJar, Cookies, CookiesError};
-pub use data::{ContextExt as _, Data, DataFactory};
 pub use form::{form, ContextExt as _, Form};
 pub use json::{json, Json};
 pub use multipart::{multipart, ContextExt as _, Multipart};
 pub use params::{ContextExt as _, Params, ParamsDeserializer, ParamsError};
 pub use payload::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT};
 pub use query::{ContextExt as _, Query};
+pub use state::{ContextExt as _, State, StateFactory};
 
 #[cfg(test)]
 mod tests {
@@ -367,14 +367,14 @@ mod tests {
             let mut req = http::Request::new(http::Body::empty());
 
             req.extensions_mut()
-                .insert::<Data<String>>(Data::new("Hey Viz".to_string()));
+                .insert::<State<String>>(State::new("Hey Viz".to_string()));
 
             let mut cx = Context::from(req);
 
-            let text: String = cx.data()?;
+            let text: String = cx.state()?;
             assert_eq!(text.as_str(), "Hey Viz");
 
-            let text = cx.extract::<Data<String>>().await?;
+            let text = cx.extract::<State<String>>().await?;
             assert_eq!(text.as_ref(), "Hey Viz");
 
             Ok::<_, Error>(())
@@ -387,13 +387,13 @@ mod tests {
             let num = Arc::new(AtomicUsize::new(0));
 
             req.extensions_mut()
-                .insert::<Data<Arc<AtomicUsize>>>(Data::new(num.clone()));
+                .insert::<State<Arc<AtomicUsize>>>(State::new(num.clone()));
 
             num.fetch_add(1, Ordering::SeqCst);
 
             let mut cx = Context::from(req);
 
-            let num_cloned = cx.extract::<Data<Arc<AtomicUsize>>>().await?;
+            let num_cloned = cx.extract::<State<Arc<AtomicUsize>>>().await?;
 
             assert_eq!(num_cloned.as_ref().load(Ordering::SeqCst), 1);
 

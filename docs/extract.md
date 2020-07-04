@@ -34,7 +34,7 @@ async fn handler(info: Info) -> String {
 
 ### Built-in Extractors
 
-* `Data<T>`
+* `State<T>`
 
 * `Form<T>`
 

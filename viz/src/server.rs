@@ -8,30 +8,30 @@ use hyper::{
     service::{make_service_fn, service_fn},
 };
 
-use viz_core::{http, Context, Data, DataFactory, Error, Params, Result};
+use viz_core::{http, Context, Error, Params, Result, State, StateFactory};
 use viz_router::{Method, Router, Tree};
 use viz_utils::{anyhow::anyhow, log};
 
 pub struct Server {
     tree: Arc<Tree>,
-    data: Option<Vec<Arc<dyn DataFactory>>>,
+    state: Option<Vec<Arc<dyn StateFactory>>>,
 }
 
 impl Server {
     pub fn new() -> Self {
         Self {
-            data: None,
+            state: None,
             tree: Arc::new(Tree::new()),
         }
     }
 
-    pub fn data<T>(mut self, data: T) -> Self
+    pub fn state<T>(mut self, state: T) -> Self
     where
         T: Clone + Send + Sync + 'static,
     {
-        self.data
+        self.state
             .get_or_insert_with(Vec::new)
-            .push(Arc::new(Data::new(data)));
+            .push(Arc::new(State::new(state)));
         self
     }
 
@@ -50,16 +50,16 @@ impl Server {
         let addr = incoming.local_addr();
         incoming.set_nodelay(true);
 
-        let data = self.data.unwrap_or_default();
+        let state = self.state.unwrap_or_default();
         let tree = self.tree;
         let srv =
             HyperServer::builder(incoming).serve(make_service_fn(move |stream: &AddrStream| {
                 let addr = stream.remote_addr();
-                let data = data.clone();
+                let state = state.clone();
                 let tree = tree.clone();
                 async move {
                     Ok::<_, Error>(service_fn(move |req| {
-                        serve(req, addr, data.clone(), tree.clone())
+                        serve(req, addr, state.clone(), tree.clone())
                     }))
                 }
             }));
@@ -74,13 +74,13 @@ impl Server {
 pub async fn serve(
     req: http::Request,
     addr: SocketAddr,
-    data: Vec<Arc<dyn DataFactory>>,
+    state: Vec<Arc<dyn StateFactory>>,
     tree: Arc<Tree>,
 ) -> Result<http::Response> {
     let mut cx = Context::from(req);
 
     cx.extensions_mut().insert(addr);
-    for t in data.iter() {
+    for t in state.iter() {
         t.create(cx.extensions_mut());
     }
 

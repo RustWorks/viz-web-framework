@@ -9,7 +9,13 @@ use viz_utils::{log, pretty_env_logger};
 const NOT_FOUND: &str = "404 - This is not the web page you are looking for.";
 
 async fn logger(cx: &mut Context) -> Result<Response> {
-    let num = cx.extract::<Data<Arc<AtomicUsize>>>().await?;
+    let num = cx.extract::<State<Arc<AtomicUsize>>>().await?;
+
+    num.as_ref().fetch_add(1, Ordering::SeqCst);
+
+    log::info!("IN  Mid: {} {} - {:?}", cx.method(), cx.path(), num);
+
+    let num = cx.state::<Arc<AtomicUsize>>()?;
 
     num.as_ref().fetch_add(1, Ordering::SeqCst);
 
@@ -33,7 +39,7 @@ async fn not_found() -> http::StatusCode {
     http::StatusCode::NOT_FOUND
 }
 
-async fn hello_world(num: Data<Arc<AtomicUsize>>) -> &'static str {
+async fn hello_world(num: State<Arc<AtomicUsize>>) -> &'static str {
     num.as_ref().fetch_sub(1, Ordering::SeqCst);
 
     log::info!("{:>8}Exec: Hello World! - {:?}", "", num);
@@ -55,7 +61,7 @@ fn allow_head(cx: &Context) -> bool {
 async fn main() -> Result {
     pretty_env_logger::init();
 
-    let app = viz::new().data(Arc::new(AtomicUsize::new(0))).routes(
+    let app = viz::new().state(Arc::new(AtomicUsize::new(0))).routes(
         router()
             .mid(logger)
             .at(

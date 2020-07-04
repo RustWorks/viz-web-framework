@@ -5,35 +5,35 @@ use viz_utils::{anyhow::anyhow, futures::future::BoxFuture, log};
 use crate::{http, Context, Error, Extract, Result};
 
 pub trait ContextExt {
-    fn data<T>(&self) -> Result<T, Error>
+    fn state<T>(&self) -> Result<T, Error>
     where
         T: Clone + Send + Sync + 'static;
 }
 
 impl ContextExt for Context {
-    fn data<T>(&self) -> Result<T, Error>
+    fn state<T>(&self) -> Result<T, Error>
     where
         T: Clone + Send + Sync + 'static,
     {
         self.extensions()
-            .get::<Data<T>>()
+            .get::<State<T>>()
             .cloned()
             .ok_or_else(|| {
                 log::debug!(
-                    "Failed to construct Data extractor. \
+                    "Failed to construct State extractor. \
                  Request path: {}",
                     self.path()
                 );
-                anyhow!("Data is not configured")
+                anyhow!("State is not configured")
             })
             .map(|v| v.into_inner())
     }
 }
 
 #[derive(Clone, Debug)]
-pub struct Data<T>(T);
+pub struct State<T>(T);
 
-impl<T> Data<T>
+impl<T> State<T>
 where
     T: Clone + Send + Sync + 'static,
 {
@@ -46,13 +46,13 @@ where
     }
 }
 
-impl<T> AsRef<T> for Data<T> {
+impl<T> AsRef<T> for State<T> {
     fn as_ref(&self) -> &T {
         &self.0
     }
 }
 
-impl<T> Deref for Data<T> {
+impl<T> Deref for State<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -60,17 +60,17 @@ impl<T> Deref for Data<T> {
     }
 }
 
-impl<T> DerefMut for Data<T> {
+impl<T> DerefMut for State<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
     }
 }
 
-pub trait DataFactory: Send + Sync + 'static {
+pub trait StateFactory: Send + Sync + 'static {
     fn create(&self, extensions: &mut http::Extensions) -> bool;
 }
 
-impl<T> DataFactory for Data<T>
+impl<T> StateFactory for State<T>
 where
     T: Clone + Send + Sync + 'static,
 {
@@ -84,7 +84,7 @@ where
     }
 }
 
-impl<T> Extract for Data<T>
+impl<T> Extract for State<T>
 where
     T: Clone + Send + Sync + 'static,
 {
@@ -93,13 +93,13 @@ where
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
         Box::pin(async move {
-            cx.extensions().get::<Data<T>>().cloned().ok_or_else(|| {
+            cx.extensions().get::<State<T>>().cloned().ok_or_else(|| {
                 log::debug!(
-                    "Failed to construct Data extractor. \
+                    "Failed to construct State extractor. \
                  Request path: {}",
                     cx.path()
                 );
-                anyhow!("Data is not configured")
+                anyhow!("State is not configured")
             })
         })
     }

@@ -8,13 +8,6 @@ pub fn new() -> Server {
 }
 
 pub mod prelude {
-    pub use viz_core::http;
-    pub use viz_core::Context;
-    pub use viz_core::Extract;
-    pub use viz_core::Response;
-    pub use viz_core::{into_guard, Guard};
-    pub use viz_core::{Data, Form, Json, Multipart, Params};
-    pub use viz_core::{Error, Result};
-
+    pub use viz_core::*;
     pub use viz_router::*;
 }
