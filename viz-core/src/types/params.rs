@@ -21,7 +21,7 @@ use viz_utils::{futures::future::BoxFuture, log, thiserror::Error as ThisError};
 use crate::{http, Context, Extract, Response, Result};
 
 pub trait ContextExt {
-    fn params<T>(&self) -> Result<Params<T>, ParamsError>
+    fn params<T>(&self) -> Result<T, ParamsError>
     where
         T: DeserializeOwned;
 
@@ -32,7 +32,7 @@ pub trait ContextExt {
 }
 
 impl ContextExt for Context {
-    fn params<T>(&self) -> Result<Params<T>, ParamsError>
+    fn params<T>(&self) -> Result<T, ParamsError>
     where
         T: DeserializeOwned,
     {
@@ -49,7 +49,7 @@ impl ContextExt for Context {
                 })
                 .ok_or_else(|| ParamsError::Read)?,
         ))
-        .map(|inner| Params(inner))
+        // .map(|inner| Params(inner))
         .map_err(|e| {
             log::debug!(
                 "Failed during Params extractor deserialization. \
@@ -155,7 +155,7 @@ impl Into<Params> for Vec<(&str, &str)> {
 
 impl<T> Extract for Params<T>
 where
-    T: DeserializeOwned + Send + Sync,
+    T: DeserializeOwned,
 {
     type Error = ParamsError;
 

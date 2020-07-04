@@ -37,7 +37,7 @@ impl Context {
         self.uri.path()
     }
 
-    pub fn query(&self) -> Option<&str> {
+    pub fn query_str(&self) -> Option<&str> {
         self.uri.query()
     }
 

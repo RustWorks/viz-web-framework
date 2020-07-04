@@ -1,18 +1,66 @@
 use bytes::buf::BufExt;
 use serde::de::DeserializeOwned;
 
-use viz_utils::futures::future::BoxFuture;
-use viz_utils::log;
-use viz_utils::serde::urlencoded;
+use viz_utils::{futures::future::BoxFuture, log, serde::urlencoded};
 
-use crate::get_length;
-use crate::get_mime;
-use crate::Context;
-use crate::Extract;
-use crate::Payload;
-use crate::PayloadCheck;
-use crate::PayloadError;
-use crate::PAYLOAD_LIMIT;
+use crate::{
+    get_length, get_mime, Context, Extract, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT,
+};
+
+pub trait ContextExt {
+    // fn form<T>(&self) -> Result<T, PayloadError>
+    fn form<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
+    where
+        T: DeserializeOwned + Send + Sync;
+}
+
+impl ContextExt for Context {
+    fn form<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
+    where
+        T: DeserializeOwned + Send + Sync,
+    {
+        Box::pin(async move {
+            // let mut payload = form::<T>();
+            let payload = form::<T>();
+
+            // TODO: read context's limits config
+            // payload.set_limit(limit);
+
+            let m = get_mime(self);
+            let l = get_length(self);
+
+            payload.check_header(m, l)?;
+
+            // payload.replace(
+            //     urlencoded::from_reader(
+            //         payload
+            //             .check_real_length(self.take_body().ok_or_else(|| PayloadError::Read)?)
+            //             .await?
+            //             .reader(),
+            //     )
+            //     // .map(|o| Form(o))
+            //     .map_err(|e| {
+            //         log::debug!("{}", e);
+            //         PayloadError::Parse
+            //     })?,
+            // );
+
+            urlencoded::from_reader(
+                payload
+                    .check_real_length(self.take_body().ok_or_else(|| PayloadError::Read)?)
+                    .await?
+                    .reader(),
+            )
+            // .map(|o| Form(o))
+            .map_err(|e| {
+                log::debug!("{}", e);
+                PayloadError::Parse
+            })
+
+            // Ok(payload.take())
+        })
+    }
+}
 
 pub struct Form<T>(pub T);
 
@@ -51,33 +99,7 @@ where
 
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
-        Box::pin(async move {
-            let mut payload = form();
-
-            // TODO: read context's limits config
-            // payload.set_limit(limit);
-
-            let m = get_mime(cx);
-            let l = get_length(cx);
-
-            payload.check_header(m, l)?;
-
-            payload.replace(
-                urlencoded::from_reader(
-                    payload
-                        .check_real_length(cx.take_body().ok_or_else(|| PayloadError::Read)?)
-                        .await?
-                        .reader(),
-                )
-                .map(|o| Form(o))
-                .map_err(|e| {
-                    log::debug!("{}", e);
-                    PayloadError::Parse
-                })?,
-            );
-
-            Ok(payload.take())
-        })
+        Box::pin(async move { cx.form().await.map(|v| Form(v)) })
     }
 }
 

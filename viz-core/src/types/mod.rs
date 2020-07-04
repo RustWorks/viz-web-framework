@@ -8,13 +8,13 @@ mod payload;
 mod query;
 
 pub use cookies::{ContextExt as _, Cookie, CookieJar, Cookies, CookiesError};
-pub use data::{Data, DataFactory};
-pub use form::{form, Form};
+pub use data::{ContextExt as _, Data, DataFactory};
+pub use form::{form, ContextExt as _, Form};
 pub use json::{json, Json};
-pub use multipart::{multipart, Multipart};
+pub use multipart::{multipart, ContextExt as _, Multipart};
 pub use params::{ContextExt as _, Params, ParamsDeserializer, ParamsError};
 pub use payload::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT};
-pub use query::Query;
+pub use query::{ContextExt as _, Query};
 
 #[cfg(test)]
 mod tests {
@@ -191,6 +191,41 @@ mod tests {
             Ok::<_, Error>(())
         })
         .is_ok());
+
+        assert!(block_on(async move {
+            let chunks: Vec<Result<_, std::io::Error>> = vec![
+                Ok("name"),
+                Ok("="),
+                Ok("%E4%BD%A0%E5%A5%BD%EF%BC%8C%E4%B8%96%E7%95%8C"),
+            ];
+
+            let stream = stream::iter(chunks);
+
+            let body = http::Body::wrap_stream(stream);
+
+            let mut req = http::Request::new(body);
+
+            req.headers_mut().insert(
+                http::header::CONTENT_TYPE,
+                mime::APPLICATION_WWW_FORM_URLENCODED.to_string().parse()?,
+            );
+            req.headers_mut()
+                .insert(http::header::CONTENT_LENGTH, "13".parse()?);
+
+            let mut cx = Context::from(req);
+
+            let lang: Lang = cx.form().await?;
+
+            assert_eq!(
+                lang,
+                Lang {
+                    name: "你好，世界".to_owned()
+                }
+            );
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
     }
 
     #[test]
@@ -246,6 +281,44 @@ mod tests {
             Ok::<_, Error>(())
         })
         .is_ok());
+
+        assert!(block_on(async move {
+            let chunks: Vec<Result<_, std::io::Error>> = vec![
+                Ok("--b78128d03bdc557f\r\n"),
+                Ok("Content-Disposition: form-data; name=\"crate\"\r\n"),
+                Ok("\r\n"),
+                Ok("form-data\r\n"),
+                Ok("--b78128d03bdc557f--\r\n"),
+            ];
+
+            let stream = stream::iter(chunks);
+
+            let body = http::Body::wrap_stream(stream);
+
+            let mut req = http::Request::new(body);
+
+            req.headers_mut().insert(
+                http::header::CONTENT_TYPE,
+                http::HeaderValue::from_static(
+                    r#"multipart/form-data; charset=utf-8; boundary="b78128d03bdc557f""#,
+                ),
+            );
+            req.headers_mut()
+                .insert(http::header::CONTENT_LENGTH, "13".parse()?);
+
+            let mut cx = Context::from(req);
+
+            let mut form = cx.multipart()?;
+
+            while let Some(mut field) = form.try_next().await? {
+                let buffer = field.bytes().await?;
+                assert_eq!(buffer.len(), 9);
+                assert_eq!(buffer, b"form-data".to_vec());
+            }
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
     }
 
     #[test]
@@ -264,14 +337,17 @@ mod tests {
 
             let mut cx = Context::from(req);
 
+            let info: Info = cx.params::<Info>()?;
+            assert_eq!(info.repo, "viz");
+            assert_eq!(info.id, 233);
+
             let repo: String = cx.param("repo")?;
             assert_eq!(repo, "viz");
 
             let id: usize = cx.param("id")?;
             assert_eq!(id, 233);
 
-            let info = cx.extract::<Params<Info>>().await?;
-
+            let info: Params<Info> = cx.extract::<Params<Info>>().await?;
             assert_eq!(info.repo, "viz");
             assert_eq!(info.id, 233);
 
@@ -295,8 +371,10 @@ mod tests {
 
             let mut cx = Context::from(req);
 
-            let text = cx.extract::<Data<String>>().await?;
+            let text: String = cx.data()?;
+            assert_eq!(text.as_str(), "Hey Viz");
 
+            let text = cx.extract::<Data<String>>().await?;
             assert_eq!(text.as_ref(), "Hey Viz");
 
             Ok::<_, Error>(())
@@ -375,6 +453,52 @@ mod tests {
 
             let cookie = cx.cookie("logged_in").unwrap();
             assert_eq!(cookie.value(), "true");
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
+    }
+
+    #[test]
+    fn test_query() {
+        assert!(block_on(async move {
+            #[derive(Debug, Deserialize, PartialEq)]
+            struct Args {
+                foo: String,
+                crab: usize,
+                logged_in: bool,
+            }
+
+            let mut req = http::Request::new(http::Body::empty());
+
+            *req.uri_mut() = "/?foo=bar&crab=1&logged_in=true".parse().unwrap();
+
+            let mut cx = Context::from(req);
+
+            assert_eq!(
+                cx.query_str().unwrap_or_default(),
+                "foo=bar&crab=1&logged_in=true"
+            );
+
+            let args = cx.query::<Args>()?;
+            assert_eq!(
+                args,
+                Args {
+                    foo: "bar".to_string(),
+                    crab: 1,
+                    logged_in: true
+                }
+            );
+
+            let args = cx.extract::<Query<Args>>().await?;
+            assert_eq!(
+                *args,
+                Args {
+                    foo: "bar".to_string(),
+                    crab: 1,
+                    logged_in: true
+                }
+            );
 
             Ok::<_, Error>(())
         })
