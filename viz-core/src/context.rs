@@ -1,6 +1,4 @@
-use std::{fmt::Display, str::FromStr};
-
-use crate::{http, Extract, Middlewares, Params, ParamsError, Response, Result};
+use crate::{http, Extract, Middlewares, Response, Result};
 
 pub struct Context {
     uri: http::Uri,
@@ -73,17 +71,6 @@ impl Context {
 
     pub fn middleware_mut(&mut self) -> &mut Middlewares {
         &mut self.middleware
-    }
-
-    pub fn params<T>(&self, name: &str) -> Result<T, ParamsError>
-    where
-        T: FromStr,
-        T::Err: Display,
-    {
-        self.extensions
-            .get::<Params>()
-            .ok_or_else(|| ParamsError::Read)?
-            .find(name)
     }
 
     pub async fn extract<T: Extract>(&mut self) -> Result<T, T::Error> {

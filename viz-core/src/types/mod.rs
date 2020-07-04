@@ -1,3 +1,4 @@
+mod cookies;
 mod data;
 mod form;
 mod json;
@@ -6,11 +7,12 @@ mod params;
 mod payload;
 mod query;
 
+pub use cookies::{ContextExt as _, Cookie, CookieJar, Cookies, CookiesError};
 pub use data::{Data, DataFactory};
 pub use form::{form, Form};
 pub use json::{json, Json};
 pub use multipart::{multipart, Multipart};
-pub use params::{Params, ParamsDeserializer, ParamsError};
+pub use params::{ContextExt as _, Params, ParamsDeserializer, ParamsError};
 pub use payload::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT};
 pub use query::Query;
 
@@ -32,34 +34,37 @@ mod tests {
 
     #[test]
     fn test_payload_error_into_response() {
-        block_on(async move {
+        assert!(block_on(async move {
             let e = PayloadError::TooLarge;
             let r: Response = e.into();
             assert_eq!(r.raw.status(), 413);
 
             let (_, body) = r.raw.into_parts();
-            assert_eq!(
-                hyper::body::to_bytes(body).await.unwrap(),
-                "payload is too large"
-            );
-        });
+            assert_eq!(hyper::body::to_bytes(body).await?, "payload is too large");
 
-        block_on(async move {
+            Ok::<_, Error>(())
+        })
+        .is_ok());
+
+        assert!(block_on(async move {
             let e = PayloadError::Parse;
             let r: Response = e.into();
             assert_eq!(r.raw.status(), 400);
 
             let (_, body) = r.raw.into_parts();
             assert_eq!(
-                hyper::body::to_bytes(body).await.unwrap(),
+                hyper::body::to_bytes(body).await?,
                 "failed to parse payload"
             );
-        });
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
     }
 
     #[test]
     fn test_payload_parse_json() {
-        block_on(async move {
+        assert!(block_on(async move {
             let chunks: Vec<Result<_, std::io::Error>> =
                 vec![Ok(r#"{"name""#), Ok(": "), Ok(r#""rustlang"}"#)];
 
@@ -71,14 +76,14 @@ mod tests {
 
             req.headers_mut().insert(
                 http::header::CONTENT_TYPE,
-                mime::APPLICATION_JSON.to_string().parse().unwrap(),
+                mime::APPLICATION_JSON.to_string().parse()?,
             );
             req.headers_mut()
-                .insert(http::header::CONTENT_LENGTH, "20".parse().unwrap());
+                .insert(http::header::CONTENT_LENGTH, "20".parse()?);
 
-            let mut cx: Context = req.into();
+            let mut cx = Context::from(req);
 
-            let data = cx.extract::<Json<Lang>>().await.unwrap();
+            let data = cx.extract::<Json<Lang>>().await?;
 
             assert_eq!(
                 *data,
@@ -86,9 +91,12 @@ mod tests {
                     name: "rustlang".to_owned()
                 }
             );
-        });
 
-        block_on(async move {
+            Ok::<_, Error>(())
+        })
+        .is_ok());
+
+        assert!(block_on(async move {
             let chunks: Vec<Result<_, std::io::Error>> =
                 vec![Ok(r#"{"name""#), Ok(": "), Ok(r#""rustlang""#)];
 
@@ -100,12 +108,12 @@ mod tests {
 
             req.headers_mut().insert(
                 http::header::CONTENT_TYPE,
-                mime::APPLICATION_JSON.to_string().parse().unwrap(),
+                mime::APPLICATION_JSON.to_string().parse()?,
             );
             req.headers_mut()
-                .insert(http::header::CONTENT_LENGTH, "20".parse().unwrap());
+                .insert(http::header::CONTENT_LENGTH, "20".parse()?);
 
-            let cx: Context = req.into();
+            let cx = Context::from(req);
 
             let mut payload = json::<Lang>();
 
@@ -122,15 +130,18 @@ mod tests {
 
             assert_eq!(res.status(), http::StatusCode::PAYLOAD_TOO_LARGE);
             assert_eq!(
-                hyper::body::to_bytes(res.into_parts().1).await.unwrap(),
+                hyper::body::to_bytes(res.into_parts().1).await?,
                 "payload is too large"
             );
-        });
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
     }
 
     #[test]
     fn test_payload_parse_form() {
-        block_on(async move {
+        assert!(block_on(async move {
             let chunks: Vec<Result<_, std::io::Error>> = vec![
                 Ok("name"),
                 Ok("="),
@@ -145,15 +156,12 @@ mod tests {
 
             req.headers_mut().insert(
                 http::header::CONTENT_TYPE,
-                mime::APPLICATION_WWW_FORM_URLENCODED
-                    .to_string()
-                    .parse()
-                    .unwrap(),
+                mime::APPLICATION_WWW_FORM_URLENCODED.to_string().parse()?,
             );
             req.headers_mut()
-                .insert(http::header::CONTENT_LENGTH, "13".parse().unwrap());
+                .insert(http::header::CONTENT_LENGTH, "13".parse()?);
 
-            let mut cx: Context = req.into();
+            let mut cx = Context::from(req);
 
             let mut payload = form::<Lang>();
 
@@ -166,8 +174,7 @@ mod tests {
                 urlencoded::from_reader(
                     payload
                         .check_real_length(cx.take_body().unwrap())
-                        .await
-                        .unwrap()
+                        .await?
                         .reader(),
                 )
                 .map(|o| Form(o))
@@ -180,7 +187,10 @@ mod tests {
                     name: "你好，世界".to_owned()
                 }
             );
-        });
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
     }
 
     #[test]
@@ -207,9 +217,9 @@ mod tests {
                 ),
             );
             req.headers_mut()
-                .insert(http::header::CONTENT_LENGTH, "13".parse().unwrap());
+                .insert(http::header::CONTENT_LENGTH, "13".parse()?);
 
-            let mut cx: Context = req.into();
+            let mut cx = Context::from(req);
 
             let payload = multipart();
 
@@ -217,7 +227,7 @@ mod tests {
 
             let l = get_length(&cx);
 
-            let m = payload.check_header(m, l).unwrap();
+            let m = payload.check_header(m, l)?;
 
             let charset = m.get_param(mime::CHARSET);
             let boundary = m.get_param(mime::BOUNDARY);
@@ -225,7 +235,7 @@ mod tests {
             assert_eq!(charset.unwrap(), "utf-8");
             assert_eq!(boundary.unwrap(), "b78128d03bdc557f");
 
-            let mut form = cx.extract::<Multipart>().await.unwrap();
+            let mut form = cx.extract::<Multipart>().await?;
 
             while let Some(mut field) = form.try_next().await? {
                 let buffer = field.bytes().await?;
@@ -252,9 +262,15 @@ mod tests {
             req.extensions_mut()
                 .insert::<Params>(vec![("repo", "viz"), ("id", "233")].into());
 
-            let mut cx: Context = req.into();
+            let mut cx = Context::from(req);
 
-            let info = cx.extract::<Params<Info>>().await.unwrap();
+            let repo: String = cx.param("repo")?;
+            assert_eq!(repo, "viz");
+
+            let id: usize = cx.param("id")?;
+            assert_eq!(id, 233);
+
+            let info = cx.extract::<Params<Info>>().await?;
 
             assert_eq!(info.repo, "viz");
             assert_eq!(info.id, 233);
@@ -277,9 +293,9 @@ mod tests {
             req.extensions_mut()
                 .insert::<Data<String>>(Data::new("Hey Viz".to_string()));
 
-            let mut cx: Context = req.into();
+            let mut cx = Context::from(req);
 
-            let text = cx.extract::<Data<String>>().await.unwrap();
+            let text = cx.extract::<Data<String>>().await?;
 
             assert_eq!(text.as_ref(), "Hey Viz");
 
@@ -297,15 +313,68 @@ mod tests {
 
             num.fetch_add(1, Ordering::SeqCst);
 
-            let mut cx: Context = req.into();
+            let mut cx = Context::from(req);
 
-            let num_cloned = cx.extract::<Data<Arc<AtomicUsize>>>().await.unwrap();
+            let num_cloned = cx.extract::<Data<Arc<AtomicUsize>>>().await?;
 
             assert_eq!(num_cloned.as_ref().load(Ordering::SeqCst), 1);
 
             num.fetch_sub(1, Ordering::SeqCst);
 
             assert_eq!(num.load(Ordering::SeqCst), 0);
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
+    }
+
+    #[test]
+    fn test_cookies() {
+        assert!(block_on(async move {
+            let mut req = http::Request::new(http::Body::empty());
+
+            req.headers_mut().insert(
+                http::header::COOKIE,
+                http::HeaderValue::from_static("foo=bar; logged_in=true"),
+            );
+
+            let mut cx = Context::from(req);
+
+            let cookies = cx.extract::<Cookies>().await?;
+
+            let cookie = cookies.get("foo").unwrap();
+            assert_eq!(cookie.value(), "bar");
+
+            let cookie = cookies.get("logged_in").unwrap();
+            assert_eq!(cookie.value(), "true");
+
+            Ok::<_, Error>(())
+        })
+        .is_ok());
+
+        assert!(block_on(async move {
+            let mut req = http::Request::new(http::Body::empty());
+
+            req.headers_mut().insert(
+                http::header::COOKIE,
+                http::HeaderValue::from_static("foo=bar; logged_in=true"),
+            );
+
+            let mut cx = Context::from(req);
+
+            let cookies = cx.cookies()?;
+
+            let cookie = cookies.get("foo").unwrap();
+            assert_eq!(cookie.value(), "bar");
+
+            let cookie = cookies.get("logged_in").unwrap();
+            assert_eq!(cookie.value(), "true");
+
+            let cookie = cx.cookie("foo").unwrap();
+            assert_eq!(cookie.value(), "bar");
+
+            let cookie = cx.cookie("logged_in").unwrap();
+            assert_eq!(cookie.value(), "true");
 
             Ok::<_, Error>(())
         })

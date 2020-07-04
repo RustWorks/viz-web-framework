@@ -384,7 +384,7 @@ impl Into<VizResponse> for UserError {
 }
 
 async fn show_user() -> Result<&'static str, UserError> {
-// async fn show_user() -> Result<&'static str> {
+    // async fn show_user() -> Result<&'static str> {
     // "Show user"
     Err(UserError::NotFound)
     // Err(anyhow!(UserError::NotFound))

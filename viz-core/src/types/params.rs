@@ -18,7 +18,61 @@ use serde::{
 
 use viz_utils::{futures::future::BoxFuture, log, thiserror::Error as ThisError};
 
-use crate::{http, Context, Extract, Response};
+use crate::{http, Context, Extract, Response, Result};
+
+pub trait ContextExt {
+    fn params<T>(&self) -> Result<Params<T>, ParamsError>
+    where
+        T: DeserializeOwned;
+
+    fn param<T>(&self, name: &str) -> Result<T, ParamsError>
+    where
+        T: FromStr,
+        T::Err: Display;
+}
+
+impl ContextExt for Context {
+    fn params<T>(&self) -> Result<Params<T>, ParamsError>
+    where
+        T: DeserializeOwned,
+    {
+        de::Deserialize::deserialize(ParamsDeserializer::new(
+            &self
+                .extensions()
+                .get::<Params>()
+                .map(|ps| {
+                    Params(
+                        ps.iter()
+                            .map(|p| (p.0.as_str(), p.1.as_str()))
+                            .collect::<Vec<_>>(),
+                    )
+                })
+                .ok_or_else(|| ParamsError::Read)?,
+        ))
+        .map(|inner| Params(inner))
+        .map_err(|e| {
+            log::debug!(
+                "Failed during Params extractor deserialization. \
+                         Request path: {:?}, error: {}",
+                self.path(),
+                e
+            );
+            // e.into()
+            ParamsError::Parse
+        })
+    }
+
+    fn param<T>(&self, name: &str) -> Result<T, ParamsError>
+    where
+        T: FromStr,
+        T::Err: Display,
+    {
+        self.extensions()
+            .get::<Params>()
+            .ok_or_else(|| ParamsError::Read)?
+            .find(name)
+    }
+}
 
 #[derive(ThisError, Debug, PartialEq)]
 pub enum ParamsError {
@@ -107,31 +161,7 @@ where
 
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
-        Box::pin(async move {
-            de::Deserialize::deserialize(ParamsDeserializer::new(
-                &cx.extensions()
-                    .get::<Params>()
-                    .map(|ps| {
-                        Params(
-                            ps.iter()
-                                .map(|p| (p.0.as_str(), p.1.as_str()))
-                                .collect::<Vec<_>>(),
-                        )
-                    })
-                    .ok_or_else(|| ParamsError::Read)?,
-            ))
-            .map(|inner| Params(inner))
-            .map_err(|e| {
-                log::debug!(
-                    "Failed during Params extractor deserialization. \
-                         Request path: {:?}, error: {}",
-                    cx.path(),
-                    e
-                );
-                // e.into()
-                ParamsError::Parse
-            })
-        })
+        Box::pin(async move { cx.params() })
     }
 }
 

@@ -6,6 +6,9 @@ description = "Viz Core"
 license = "Apache-2.0/MIT"
 edition = "2018"
 
+[features]
+# cookies = ["cookie"]
+
 [dependencies]
 viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
 
@@ -17,6 +20,7 @@ http = "0.2"
 mime = "0.3"
 hyper = { version = "0.13", features = ["stream"] }
 serde = { version = "1", features = ["derive"] }
+cookie = { version = "0.14", default-features = false, features = ["percent-encode", "secure"] }
 
 [dev-dependencies]
 futures-executor = "0.3"

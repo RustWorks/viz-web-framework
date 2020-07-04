@@ -44,3 +44,6 @@ async fn handler(info: Info) -> String {
 
 * `Query<T>`
 
+* `Params<T>`
+
+* `Cookies`
