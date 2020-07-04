@@ -32,7 +32,8 @@ use serde::{Deserialize, Serialize};
 use smol::{self, Async, Task};
 
 use viz_core::{
-    into_guard, Context as VizContext, Error, Extract, Params, Response as VizResponse, Result,
+    http, into_guard, Context as VizContext, Error, Extract, Params, Response as VizResponse,
+    Result,
 };
 
 use viz_router::{route, router};
@@ -47,6 +48,7 @@ use viz_utils::{
         stream::Stream,
     },
     log, pretty_env_logger,
+    thiserror::Error as ThisError,
 };
 
 // Standard Mustache action here
@@ -326,7 +328,6 @@ fn get_guard(_cx: &VizContext) -> bool {
 }
 
 async fn m_0(cx: &mut VizContext) -> Result<VizResponse> {
-    // println!("middleware 0");
     cx.next().await
 }
 
@@ -370,8 +371,23 @@ async fn create_user() -> &'static str {
     "Create user"
 }
 
-async fn show_user() -> &'static str {
-    "Show user"
+#[derive(ThisError, Debug)]
+enum UserError {
+    #[error("User Not Found")]
+    NotFound,
+}
+
+impl Into<VizResponse> for UserError {
+    fn into(self) -> VizResponse {
+        (http::StatusCode::NOT_FOUND, self.to_string()).into()
+    }
+}
+
+async fn show_user() -> Result<&'static str, UserError> {
+// async fn show_user() -> Result<&'static str> {
+    // "Show user"
+    Err(UserError::NotFound)
+    // Err(anyhow!(UserError::NotFound))
 }
 
 async fn update_user() -> &'static str {
