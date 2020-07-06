@@ -16,6 +16,12 @@ impl Default for RecoverMiddleware {
     }
 }
 
+impl RecoverMiddleware {
+    async fn recover<'a>(&'a self, cx: &'a mut Context) -> Result<Response> {
+        Ok(cx.next().await.into())
+    }
+}
+
 impl<'a> Middleware<'a, Context> for RecoverMiddleware {
     type Output = Result<Response>;
 
@@ -24,6 +30,6 @@ impl<'a> Middleware<'a, Context> for RecoverMiddleware {
         &'a self,
         cx: &'a mut Context,
     ) -> Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>> {
-        Box::pin(async move { Ok(cx.next().await.into()) })
+        Box::pin(self.recover(cx))
     }
 }
