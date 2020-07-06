@@ -10,9 +10,9 @@ HTTP StatusCode is `500` while responding `Error`
 
 #### 4xx or 5xx - Viz
 
-* `how!(err)`:
+* `how!(err)`: Generates an error
 
-* `reject!(err)`:
+* `reject!(err)`: Returns an error to response
 
 ```rust
 use viz_utils::thiserror::Error as ThisError;
@@ -24,6 +24,7 @@ enum UserError {
     NotFound,
 }
 
+#[must_use]
 impl Into<Response> for UserError {
     fn into(self) -> Response {
         (http::StatusCode::NOT_FOUND, self.to_string()).into()
@@ -50,11 +51,11 @@ async fn custom_error_3() -> Result<Response, UserError> {
 
 #### 500 - anyhow
 
-* `anyhow!(err)`:
+* `anyhow!(err)`: Generates an error
 
-* `bail!(err)`:
+* `bail!(err)`: Returns an error to response
 
-* `ensure!(expr, err)`:
+* `ensure!(expr, err)`: Returns an error with a condition to response
 
 ```rust
 use viz_utils::thiserror::Error as ThisError;
