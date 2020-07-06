@@ -8,7 +8,7 @@ use viz_utils::{log, pretty_env_logger, thiserror::Error as ThisError};
 
 const NOT_FOUND: &str = "404 - This is not the web page you are looking for.";
 
-async fn not_found_mid(cx: &mut Context) -> Result<Response> {
+async fn my_mid(cx: &mut Context) -> Result<Response> {
     let num = cx.extract::<State<Arc<AtomicUsize>>>().await?;
 
     num.as_ref().fetch_add(1, Ordering::SeqCst);
@@ -85,8 +85,9 @@ async fn main() -> Result {
 
     let app = viz::new().state(Arc::new(AtomicUsize::new(0))).routes(
         router()
-            .mid(LoggerMiddleware::new())
-            .mid(not_found_mid)
+            .mid(middleware::recover())
+            .mid(middleware::logger())
+            .mid(my_mid)
             .at(
                 "/",
                 route()

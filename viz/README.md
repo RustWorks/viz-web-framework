@@ -39,6 +39,11 @@
 
 * Powerful extractors
 
+## Middleware
+
+* recover
+* logger
+
 ## Todos
 
 * [ ] More friendly Routing

@@ -4,7 +4,7 @@ The `Result<Response>` is expanded into `Result<Response, Error>`.
 
 ### General Error
 
-HTTP StatusCode is `500` while responding `Error`
+HTTP Status Code is `500` while responding `Error`
 
 ### Custom Error to respond
 

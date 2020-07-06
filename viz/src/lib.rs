@@ -15,5 +15,5 @@ pub mod prelude {
     pub use viz_core::*;
     pub use viz_router::*;
 
-    pub use crate::middleware::*;
+    pub use crate::middleware;
 }
