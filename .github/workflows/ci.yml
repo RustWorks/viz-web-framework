@@ -10,6 +10,7 @@ env:
   RUST_BACKTRACE: 1
 
 jobs:
+  test:
     name: Test ${{ matrix.rust }}
     strategy:
       fail-fast: false
