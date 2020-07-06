@@ -4,51 +4,73 @@ use std::sync::{
 };
 
 use viz::prelude::*;
-use viz_utils::{log, pretty_env_logger};
+use viz_utils::{log, pretty_env_logger, thiserror::Error as ThisError};
 
 const NOT_FOUND: &str = "404 - This is not the web page you are looking for.";
 
-async fn logger(cx: &mut Context) -> Result<Response> {
+async fn not_found_mid(cx: &mut Context) -> Result<Response> {
     let num = cx.extract::<State<Arc<AtomicUsize>>>().await?;
 
     num.as_ref().fetch_add(1, Ordering::SeqCst);
 
-    log::info!("IN  Mid: {} {} - {:?}", cx.method(), cx.path(), num);
+    log::info!("IN  Mid: {} {} - {:?}", cx.method(), cx.path(), &num);
 
     let num = cx.state::<Arc<AtomicUsize>>()?;
 
     num.as_ref().fetch_add(1, Ordering::SeqCst);
 
-    log::info!("IN  Mid: {} {} - {:?}", cx.method(), cx.path(), num);
+    // log::info!("IN  Mid: {} {} - {:?}", cx.method(), cx.path(), num);
 
     let fut = cx.next().await;
 
     log::info!("OUT Mid: {} {}", cx.method(), cx.path());
 
-    fut.map(|mut res| {
-        if res.status() == http::StatusCode::NOT_FOUND {
-            *res.body_mut() = NOT_FOUND.into();
-        }
+    Ok(match fut {
+        Ok(mut res) => {
+            if res.status() == http::StatusCode::NOT_FOUND {
+                *res.body_mut() = NOT_FOUND.into();
+            }
 
-        res
+            res
+        }
+        Err(e) => e.into(),
     })
 }
 
+#[derive(ThisError, Debug)]
+enum UserError {
+    #[error("User Not Found")]
+    NotFound,
+}
+
+impl Into<Response> for UserError {
+    fn into(self) -> Response {
+        (http::StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into()
+    }
+}
+
 async fn not_found() -> http::StatusCode {
-    log::info!("{:>8}Exec: Not Found!", "");
+    log::info!("{:8}Exec: Not Found!", "");
     http::StatusCode::NOT_FOUND
 }
 
-async fn hello_world(num: State<Arc<AtomicUsize>>) -> &'static str {
+async fn hello_world(num: State<Arc<AtomicUsize>>) -> String {
     num.as_ref().fetch_sub(1, Ordering::SeqCst);
 
-    log::info!("{:>8}Exec: Hello World! - {:?}", "", num);
+    log::info!("{:8}Exec: Hello World! - {:?}", "", num);
 
-    "Hello, World!"
+    "Hello, World!".to_string()
+}
+
+async fn server_error() -> Result<Response> {
+    // async fn server_error() -> Result<Response, UserError> {
+    // Err(UserError::NotFound))
+    // Err(how!(UserError::NotFound))
+    reject!(UserError::NotFound)
 }
 
 fn allow_get(cx: &Context) -> bool {
-    log::info!("{:>9}Get: {}", "", cx.method() == http::Method::GET);
+    log::info!("{:>8} Get: {}", "", cx.method() == http::Method::GET);
     cx.method() == http::Method::GET
 }
 
@@ -63,7 +85,8 @@ async fn main() -> Result {
 
     let app = viz::new().state(Arc::new(AtomicUsize::new(0))).routes(
         router()
-            .mid(logger)
+            .mid(LoggerMiddleware::new())
+            .mid(not_found_mid)
             .at(
                 "/",
                 route()
@@ -71,6 +94,7 @@ async fn main() -> Result {
                     .guard(into_guard(allow_get) | into_guard(allow_head))
                     .all(hello_world),
             )
+            .at("/500", route().all(server_error))
             .at("/*", route().all(not_found)),
     );
 

@@ -1,4 +1,5 @@
 use std::{
+    any::TypeId,
     borrow::Cow,
     error::Error as StdError,
     fmt,
@@ -14,14 +15,21 @@ pub struct Response {
 impl StdError for Response {}
 
 impl fmt::Debug for Response {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Debug::fmt(&self, formatter)
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        f.debug_struct("Response")
+            .field("status", &self.status())
+            .field("header", &self.headers())
+            .finish()
     }
 }
 
 impl fmt::Display for Response {
-    fn fmt(&self, formatter: &mut fmt::Formatter) -> fmt::Result {
-        fmt::Display::fmt(&self, formatter)
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        println!("display {}", self.status());
+        f.debug_struct("Response")
+            .field("status", &self.status())
+            .field("header", &self.headers())
+            .finish()
     }
 }
 
@@ -61,19 +69,30 @@ impl From<http::Response> for Response {
 
 impl From<Error> for Response {
     fn from(e: Error) -> Self {
-        Self {
-            raw: http::Response::new(http::Body::from(e.to_string())),
-        }
+        let mut raw = http::Response::new(http::Body::from(e.to_string()));
+        *raw.status_mut() = http::StatusCode::INTERNAL_SERVER_ERROR;
+        Self { raw }
     }
 }
 
 impl<T, E> From<Result<T, E>> for Response
 where
     T: Into<Response>,
-    E: Into<Response>,
+    E: Into<Response> + Into<Error> + 'static,
 {
     fn from(r: Result<T, E>) -> Self {
-        r.map_or_else(Into::into, Into::into)
+        r.map_or_else(
+            |e| {
+                if TypeId::of::<Error>() == TypeId::of::<E>() {
+                    Into::<Error>::into(e)
+                        .downcast::<Response>()
+                        .map_or_else(Into::into, Into::into)
+                } else {
+                    e.into()
+                }
+            },
+            Into::into,
+        )
     }
 }
 

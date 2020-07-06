@@ -167,6 +167,7 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
         );
 
     let routes = router()
+        .mid(viz::middleware::LoggerMiddleware::new())
         .mid(m_0)
         // `/`
         .at("/", route().get(hello_world))
@@ -383,11 +384,8 @@ impl Into<VizResponse> for UserError {
     }
 }
 
-async fn show_user() -> Result<&'static str, UserError> {
-    // async fn show_user() -> Result<&'static str> {
-    // "Show user"
+async fn show_user() -> Result<VizResponse, UserError> {
     Err(UserError::NotFound)
-    // Err(anyhow!(UserError::NotFound))
 }
 
 async fn update_user() -> &'static str {

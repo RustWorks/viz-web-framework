@@ -4,7 +4,7 @@
 //!   warp:     https://docs.rs/crate/warp/0.2.2/source/src/generic.rs
 //!   tide:     https://github.com/http-rs/tide/pull/156
 
-use std::{future::Future, marker::PhantomData};
+use std::{any::TypeId, future::Future, marker::PhantomData};
 
 use viz_utils::futures::future::BoxFuture;
 
@@ -58,7 +58,14 @@ where
                 Ok(args) => self.f.call(args).await.into(),
                 Err(e) => {
                     // e.into()
-                    Into::<Error>::into(e).downcast::<Response>().into()
+
+                    if TypeId::of::<Error>() == TypeId::of::<T::Error>() {
+                        Into::<Error>::into(e)
+                            .downcast::<Response>()
+                            .map_or_else(Into::into, Into::into)
+                    } else {
+                        e.into()
+                    }
                 }
             })
         })
@@ -119,7 +126,14 @@ where
                 Ok(args) => self.f.call(cx, args).await.into(),
                 Err(e) => {
                     // e.into()
-                    Into::<Error>::into(e).downcast::<Response>().into()
+
+                    if TypeId::of::<Error>() == TypeId::of::<T::Error>() {
+                        Into::<Error>::into(e)
+                            .downcast::<Response>()
+                            .map_or_else(Into::into, Into::into)
+                    } else {
+                        e.into()
+                    }
                 }
             })
         })

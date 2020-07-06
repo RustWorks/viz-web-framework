@@ -11,7 +11,7 @@ use viz_utils::{futures::future::BoxFuture, log};
 use crate::{Context, Error, Response, Result};
 
 pub trait Extract: Sized {
-    type Error: Into<Error> + Into<Response>;
+    type Error: Into<Response> + Into<Error>;
 
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>>;
 }

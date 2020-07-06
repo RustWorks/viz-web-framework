@@ -29,4 +29,22 @@ pub mod http {
 
     pub type Request<T = Body> = ::http::Request<T>;
     pub type Response<T = Body> = ::http::Response<T>;
+
+    /// Responds a custom error to response.
+    #[macro_export]
+    macro_rules! reject {
+        ($err:expr) => {
+            return Err(how!($err));
+        };
+    }
+
+    /// Converts a custom error to [`Response`] and then converts to [`Error`].
+    #[macro_export]
+    macro_rules! how {
+        ($err:expr) => {
+            Into::<Error>::into(Into::<Response>::into($err))
+        };
+    }
+
+    pub use crate::anyhow::{anyhow, bail, ensure};
 }

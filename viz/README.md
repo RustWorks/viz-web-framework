@@ -43,7 +43,6 @@
 
 * [ ] More friendly Routing
 * [ ] Configuration
-* [ ] Data State
 * [ ] Sessions
 * [ ] Basic middlewares: `logger`, `cors`, `serve static files`
 * [ ] Websocket
@@ -51,6 +50,8 @@
 * [ ] TLS
 * [ ] GraphQL?
 * [ ] RPC?
+* [x] Error handling
+* [x] Data State
 
 ## License
 
