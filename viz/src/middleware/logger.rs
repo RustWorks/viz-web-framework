@@ -66,6 +66,6 @@ impl<'a> Middleware<'a, Context> for LoggerMiddleware {
         &'a self,
         cx: &'a mut Context,
     ) -> Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>> {
-        Box::pin(async move { self.log(cx).await })
+        Box::pin(self.log(cx))
     }
 }
