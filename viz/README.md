@@ -29,7 +29,7 @@
 
 ## 🦀 Features
 
-* **Safety** `#![deny(unsafe_code)]`
+* **Safety** `#![forbid(unsafe_code)]`
 
 * Robust `routing`
 
@@ -50,8 +50,8 @@
 * [ ] TLS
 * [ ] GraphQL?
 * [ ] RPC?
-* [x] Error handling
 * [x] Data State
+* [x] Error handling
 
 ## License
 

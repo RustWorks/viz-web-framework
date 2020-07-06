@@ -12,6 +12,12 @@ impl LoggerMiddleware {
     }
 }
 
+impl Default for LoggerMiddleware {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl LoggerMiddleware {
     async fn log<'a>(&'a self, cx: &'a mut Context) -> Result<Response> {
         let start = Instant::now();

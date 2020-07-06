@@ -17,6 +17,12 @@ pub struct Server {
     state: Option<Vec<Arc<dyn StateFactory>>>,
 }
 
+impl Default for Server {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Server {
     pub fn new() -> Self {
         Self {
