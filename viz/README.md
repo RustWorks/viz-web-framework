@@ -21,6 +21,10 @@
   <a href="https://crates.io/crates/viz">
     <img src="https://img.shields.io/crates/d/viz.svg?style=flat-square"
       alt="Download" /></a>
+  <!-- Discord -->
+  <a href="https://discord.gg/cjX2KX">
+     <img src="https://img.shields.io/discord/699908392105541722?logo=discord&style=flat-square"
+     alt="Discord"></a>
   <!-- Twitter -->
   <a href="https://twitter.com/_fundon">
     <img src="https://img.shields.io/badge/twitter-@__fundon-blue.svg?style=flat-square"
