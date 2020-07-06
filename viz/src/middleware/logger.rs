@@ -19,7 +19,7 @@ impl Default for LoggerMiddleware {
 }
 
 impl LoggerMiddleware {
-    async fn log<'a>(&'a self, cx: &'a mut Context) -> Result<Response> {
+    async fn log(&self, cx: &mut Context) -> Result<Response> {
         let start = Instant::now();
         let method = cx.method().to_string();
         let path = cx.uri().path().to_owned();

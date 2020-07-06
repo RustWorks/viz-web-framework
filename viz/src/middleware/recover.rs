@@ -17,7 +17,7 @@ impl Default for RecoverMiddleware {
 }
 
 impl RecoverMiddleware {
-    async fn recover<'a>(&'a self, cx: &'a mut Context) -> Result<Response> {
+    async fn recover(&self, cx: &mut Context) -> Result<Response> {
         Ok(cx.next().await.into())
     }
 }
