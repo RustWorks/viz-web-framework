@@ -19,7 +19,7 @@ impl Default for LoggerMiddleware {
 }
 
 impl LoggerMiddleware {
-    async fn log(&self, cx: &mut Context) -> Result<Response> {
+    async fn run(&self, cx: &mut Context) -> Result<Response> {
         let start = Instant::now();
         let method = cx.method().to_string();
         let path = cx.uri().path().to_owned();
@@ -66,6 +66,6 @@ impl<'a> Middleware<'a, Context> for LoggerMiddleware {
         &'a self,
         cx: &'a mut Context,
     ) -> Pin<Box<dyn Future<Output = Self::Output> + Send + 'a>> {
-        Box::pin(self.log(cx))
+        Box::pin(self.run(cx))
     }
 }

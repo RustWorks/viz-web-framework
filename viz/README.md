@@ -45,6 +45,7 @@
 
 ## Middleware
 
+* request_id
 * recover
 * logger
 

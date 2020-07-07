@@ -85,6 +85,7 @@ async fn main() -> Result {
 
     let app = viz::new().state(Arc::new(AtomicUsize::new(0))).routes(
         router()
+            .mid(middleware::request_id())
             .mid(middleware::recover())
             .mid(middleware::logger())
             .mid(my_mid)
@@ -99,5 +100,5 @@ async fn main() -> Result {
             .at("/*", route().all(not_found)),
     );
 
-    app.listen("127.0.0.1:8000").await
+    app.listen("127.0.0.1:9090").await
 }

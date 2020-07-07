@@ -18,3 +18,4 @@ viz-router = { path = "../viz-router", version = "0.1.0-alpha" }
 viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
 
 hyper = { version = "0.13", features = ["stream", "tcp"] }
+uuid = { version = "0.8", features = ["v4"] }
