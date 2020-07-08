@@ -1,4 +1,7 @@
-#![deny(unsafe_code)]
+#![forbid(unsafe_code)]
+#![warn(missing_docs, missing_debug_implementations, rust_2018_idioms)]
+
+//! Viz Router
 
 use std::collections::HashMap;
 
