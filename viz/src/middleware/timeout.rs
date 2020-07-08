@@ -3,7 +3,7 @@ use std::{future::Future, pin::Pin, time::Duration};
 use async_io::Timer;
 
 use viz_utils::{
-    futures::future::{select, Either, FutureExt},
+    futures::future::{select, Either},
     log,
 };
 
@@ -31,7 +31,7 @@ impl TimeoutMiddleware {
         let method = cx.method().to_owned();
         let path = cx.path().to_owned();
 
-        match select(cx.next().boxed(), self.timeout(method, path).boxed()).await {
+        match select(Box::pin(cx.next()), Box::pin(self.timeout(method, path))).await {
             Either::Left((x, _)) => x,
             Either::Right((y, _)) => y,
         }
