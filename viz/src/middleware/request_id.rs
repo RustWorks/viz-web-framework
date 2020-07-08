@@ -11,6 +11,7 @@ fn generate_id() -> Result<String> {
 }
 
 pub struct RequestIDMiddleware {
+    // Header Name is must be lower-case.
     header: &'static str,
     generator: Box<dyn Send + Sync + 'static + Fn() -> Result<String>>,
 }

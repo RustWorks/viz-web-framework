@@ -19,3 +19,4 @@ viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
 
 hyper = { version = "0.13", features = ["stream", "tcp"] }
 uuid = { version = "0.8", features = ["v4"] }
+async-io = "0.1"

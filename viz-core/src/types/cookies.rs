@@ -31,6 +31,8 @@ impl ContextExt for Context {
             {
                 jar
                     // .signed(&key)
+                    // or
+                    // .private(&key)
                     .add_original(Cookie::parse_encoded(pair.trim().to_string()).map_err(|e| {
                         log::debug!("failed to parse cookies: {}", e);
                         CookiesError::Parse

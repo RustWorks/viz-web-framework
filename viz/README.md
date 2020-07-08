@@ -45,6 +45,7 @@
 
 ## Middleware
 
+* timeout
 * request_id
 * recover
 * logger

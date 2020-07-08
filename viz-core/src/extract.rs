@@ -19,6 +19,7 @@ pub trait Extract: Sized {
 impl<T> Extract for Option<T>
 where
     T: Extract,
+    T::Error: Into<Error>,
 {
     type Error = T::Error;
 
@@ -28,7 +29,7 @@ where
             Ok(match T::extract(cx).await {
                 Ok(v) => Some(v),
                 Err(e) => {
-                    log::debug!("Error for Option<T> extractor: {}", Into::<Error>::into(e));
+                    log::debug!("Error for Option<T> extractor: {}", e.into());
                     None
                 }
             })
