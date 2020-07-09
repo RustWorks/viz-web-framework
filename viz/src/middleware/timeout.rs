@@ -31,14 +31,19 @@ impl TimeoutMiddleware {
         let method = cx.method().to_owned();
         let path = cx.path().to_owned();
 
-        match select(Box::pin(cx.next()), Box::pin(self.timeout(method, path))).await {
+        match select(
+            Box::pin(cx.next()),
+            Box::pin(Self::timeout(self.delay, method, path)),
+        )
+        .await
+        {
             Either::Left((x, _)) => x,
             Either::Right((y, _)) => y,
         }
     }
 
-    async fn timeout(&self, method: http::Method, path: String) -> Result<Response> {
-        Timer::new(self.delay).await;
+    async fn timeout(delay: Duration, method: http::Method, path: String) -> Result<Response> {
+        Timer::new(delay).await;
 
         log::debug!("Timeout: {} {}", method, path);
 

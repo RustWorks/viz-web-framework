@@ -10,7 +10,7 @@ async fn middle(cx: &mut Context) -> Result<Response> {
 }
 ```
 
-### Implement `Middleware` for struct
+### Implement `Middleware` for Struct
 
 ```rust
 struct Middle {}
