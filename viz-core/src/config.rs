@@ -18,8 +18,11 @@ pub struct Config {
     #[serde(default)]
     pub limits: Limits,
 
-    #[serde(skip)]
+    #[serde(skip_deserializing)]
     pub env: Env,
+
+    #[serde(default)]
+    pub extras: Map<String, Value>,
 }
 
 impl Config {
@@ -27,6 +30,7 @@ impl Config {
         Self {
             limits: Limits::default(),
             env: Env::default(),
+            extras: Map::new(),
         }
     }
 
@@ -46,7 +50,6 @@ impl Config {
 
         config.env = e;
 
-        dbg!(&config);
         Ok(config)
     }
 }
@@ -56,6 +59,7 @@ impl Default for Config {
         Self {
             limits: Limits::default(),
             env: Env::default(),
+            extras: Map::default(),
         }
     }
 }

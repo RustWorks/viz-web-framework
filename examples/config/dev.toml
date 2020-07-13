@@ -1,3 +1,6 @@
 [limits]
 json = 8_000_000
 form = 1_000_000
+
+[extras]
+hello = 'world'
