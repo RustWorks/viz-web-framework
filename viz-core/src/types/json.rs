@@ -1,19 +1,55 @@
+use std::{
+    fmt,
+    ops::{Deref, DerefMut},
+};
+
 use bytes::buf::BufExt;
 use serde::de::DeserializeOwned;
 
-use viz_utils::futures::future::BoxFuture;
-use viz_utils::log;
-use viz_utils::serde::json;
+use viz_utils::{futures::future::BoxFuture, log, serde::json};
 
-use crate::get_length;
-use crate::get_mime;
-use crate::Context;
-use crate::Extract;
-use crate::Payload;
-use crate::PayloadCheck;
-use crate::PayloadError;
-use crate::PAYLOAD_LIMIT;
+use crate::{
+    config::ContextExt as _, get_length, get_mime, Context, Extract, Payload, PayloadCheck,
+    PayloadError,
+};
 
+/// Context Extends
+pub trait ContextExt {
+    fn json<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
+    where
+        T: DeserializeOwned + Send + Sync;
+}
+
+impl ContextExt for Context {
+    fn json<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
+    where
+        T: DeserializeOwned + Send + Sync,
+    {
+        Box::pin(async move {
+            let mut payload = json::<T>();
+
+            payload.set_limit(self.config().limits.json);
+
+            let m = get_mime(self);
+            let l = get_length(self);
+
+            payload.check_header(m, l)?;
+
+            json::from_reader(
+                payload
+                    .check_real_length(self.take_body().ok_or_else(|| PayloadError::Read)?)
+                    .await?
+                    .reader(),
+            )
+            .map_err(|e| {
+                log::debug!("{}", e);
+                PayloadError::Parse
+            })
+        })
+    }
+}
+
+/// Json Extractor
 pub struct Json<T>(pub T);
 
 impl<T> Json<T> {
@@ -23,7 +59,7 @@ impl<T> Json<T> {
     }
 }
 
-impl<T> std::ops::Deref for Json<T> {
+impl<T> Deref for Json<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -31,7 +67,7 @@ impl<T> std::ops::Deref for Json<T> {
     }
 }
 
-impl<T> std::ops::DerefMut for Json<T> {
+impl<T> DerefMut for Json<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
     }
@@ -43,6 +79,12 @@ impl<T> PayloadCheck for Json<T> {
     }
 }
 
+impl<T: fmt::Debug> fmt::Debug for Json<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        T::fmt(&self, f)
+    }
+}
+
 impl<T> Extract for Json<T>
 where
     T: DeserializeOwned + Send + Sync,
@@ -51,33 +93,7 @@ where
 
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
-        Box::pin(async move {
-            let mut payload = json();
-
-            // @TODO: read context's limits config
-            // payload.set_limit(limit);
-
-            let m = get_mime(cx);
-            let l = get_length(cx);
-
-            payload.check_header(m, l)?;
-
-            payload.replace(
-                json::from_reader(
-                    payload
-                        .check_real_length(cx.take_body().ok_or_else(|| PayloadError::Read)?)
-                        .await?
-                        .reader(),
-                )
-                .map(|o| Json(o))
-                .map_err(|e| {
-                    log::debug!("{}", e);
-                    PayloadError::Parse
-                })?,
-            );
-
-            Ok(payload.take())
-        })
+        Box::pin(async move { cx.json().await.map(|v| Json(v)) })
     }
 }
 
@@ -85,7 +101,7 @@ pub fn json<T>() -> Payload<Json<T>>
 where
     T: DeserializeOwned,
 {
-    Payload::new(PAYLOAD_LIMIT, None)
+    Payload::new()
 }
 
 fn is_json(m: &mime::Mime) -> bool {

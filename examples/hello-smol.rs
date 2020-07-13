@@ -32,8 +32,8 @@ use serde::{Deserialize, Serialize};
 use smol::{self, Async, Task};
 
 use viz_core::{
-    http, into_guard, Context as VizContext, Error, Extract, Params, Response as VizResponse,
-    Result,
+    http, into_guard, Config, Context as VizContext, Error, Extract, Params,
+    Response as VizResponse, Result,
 };
 
 use viz_router::{route, router};
@@ -186,19 +186,21 @@ async fn listen(listener: Async<TcpListener>) -> Result<()> {
 
     routes.finish(&mut tree);
 
-    let data = Vec::new();
+    let state = Vec::new();
     let tree = Arc::new(tree);
+    let config = Arc::new(Config::new());
 
     // Start a hyper server.
     Server::builder(SmolListener::new(listener))
         .executor(SmolExecutor)
         .serve(make_service_fn(move |stream: &SmolStream| {
             let addr = stream.remote_addr();
-            let data = data.clone();
+            let config = config.clone();
+            let state = state.clone();
             let tree = tree.clone();
             async move {
                 Ok::<_, Error>(service_fn(move |req| {
-                    viz::serve(req, addr, data.clone(), tree.clone())
+                    viz::serve(req, addr, state.clone(), config.clone(), tree.clone())
                 }))
             }
         }))

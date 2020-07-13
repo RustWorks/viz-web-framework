@@ -4,6 +4,7 @@ use viz_utils::{futures::future::BoxFuture, log, serde::urlencoded};
 
 use crate::{Context, Extract, PayloadError, Result};
 
+/// Context Extends
 pub trait ContextExt {
     fn query<T>(&self) -> Result<T, PayloadError>
     where
@@ -22,6 +23,7 @@ impl ContextExt for Context {
     }
 }
 
+/// Query Extractor
 #[derive(Debug)]
 pub struct Query<T>(pub T);
 

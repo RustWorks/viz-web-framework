@@ -1,14 +1,17 @@
+use std::ops::{Deref, DerefMut};
+
 use bytes::buf::BufExt;
 use serde::de::DeserializeOwned;
 
 use viz_utils::{futures::future::BoxFuture, log, serde::urlencoded};
 
 use crate::{
-    get_length, get_mime, Context, Extract, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT,
+    config::ContextExt as _, get_length, get_mime, Context, Extract, Payload, PayloadCheck,
+    PayloadError, PAYLOAD_LIMIT,
 };
 
+/// Context Extends
 pub trait ContextExt {
-    // fn form<T>(&self) -> Result<T, PayloadError>
     fn form<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
     where
         T: DeserializeOwned + Send + Sync;
@@ -20,11 +23,9 @@ impl ContextExt for Context {
         T: DeserializeOwned + Send + Sync,
     {
         Box::pin(async move {
-            // let mut payload = form::<T>();
-            let payload = form::<T>();
+            let mut payload = form::<T>();
 
-            // TODO: read context's limits config
-            // payload.set_limit(limit);
+            payload.set_limit(self.config().limits.form);
 
             let m = get_mime(self);
             let l = get_length(self);
@@ -62,6 +63,7 @@ impl ContextExt for Context {
     }
 }
 
+/// Form Extractor
 pub struct Form<T>(pub T);
 
 impl<T> Form<T> {
@@ -71,7 +73,7 @@ impl<T> Form<T> {
     }
 }
 
-impl<T> std::ops::Deref for Form<T> {
+impl<T> Deref for Form<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -79,7 +81,7 @@ impl<T> std::ops::Deref for Form<T> {
     }
 }
 
-impl<T> std::ops::DerefMut for Form<T> {
+impl<T> DerefMut for Form<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
     }
@@ -107,7 +109,7 @@ pub fn form<T>() -> Payload<Form<T>>
 where
     T: DeserializeOwned,
 {
-    Payload::new(PAYLOAD_LIMIT, None)
+    Payload::new()
 }
 
 fn is_form(m: &mime::Mime) -> bool {

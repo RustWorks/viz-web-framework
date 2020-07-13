@@ -1,9 +1,3 @@
-//!
-//! Thanks:
-//!   ntex:     https://docs.rs/ntex/0.1.14/ntex/web/trait.Handler.html
-//!   warp:     https://docs.rs/crate/warp/0.2.2/source/src/generic.rs
-//!   tide:     https://github.com/http-rs/tide/pull/156
-
 use std::{any::TypeId, future::Future, marker::PhantomData};
 
 use viz_utils::futures::future::BoxFuture;

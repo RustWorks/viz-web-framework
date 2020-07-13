@@ -3,8 +3,10 @@ use std::sync::{
     Arc,
 };
 
+use serde::{Deserialize, Serialize};
+
 use viz::prelude::*;
-use viz_utils::{log, pretty_env_logger, thiserror::Error as ThisError};
+use viz_utils::{log, pretty_env_logger, serde::json, thiserror::Error as ThisError};
 
 const NOT_FOUND: &str = "404 - This is not the web page you are looking for.";
 
@@ -79,6 +81,16 @@ fn allow_head(cx: &Context) -> bool {
     cx.method() == http::Method::HEAD
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+struct User {
+    id: usize,
+    name: String,
+}
+
+async fn create_user(user: Json<User>) -> Result<String> {
+    json::to_string_pretty(&*user).map_err(|e| anyhow!(e))
+}
+
 #[tokio::main]
 async fn main() -> Result {
     pretty_env_logger::init();
@@ -97,6 +109,7 @@ async fn main() -> Result {
                     .guard(into_guard(allow_get) | into_guard(allow_head))
                     .all(hello_world),
             )
+            .at("/users", route().post(create_user))
             .at("/500", route().all(server_error))
             .at("/*", route().all(not_found)),
     );

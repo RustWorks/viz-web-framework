@@ -62,4 +62,3 @@ impl<'a> Middleware<'a, Context> for TimeoutMiddleware {
         Box::pin(self.run(cx))
     }
 }
-

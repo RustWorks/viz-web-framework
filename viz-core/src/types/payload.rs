@@ -12,8 +12,9 @@ use crate::Response;
 use crate::Result;
 
 /// 1 MB
-pub const PAYLOAD_LIMIT: usize = 1 << 20;
+pub const PAYLOAD_LIMIT: usize = 1024 * 1024;
 
+/// Payload Error
 #[derive(ThisError, Debug, PartialEq)]
 pub enum PayloadError {
     /// 400
@@ -56,41 +57,33 @@ pub trait PayloadCheck {
     fn check_type(m: &mime::Mime) -> bool;
 }
 
+/// Payload Body
 pub struct Payload<T>
 where
     T: PayloadCheck,
 {
-    limit: usize,
+    limit: Option<usize>,
     inner: Option<T>,
-    check_type: Option<Box<dyn Fn(&mime::Mime) -> bool + Send + Sync>>,
 }
 
 impl<T> Payload<T>
 where
     T: PayloadCheck,
 {
-    pub fn new(
-        limit: usize,
-        check_type: Option<Box<dyn Fn(&mime::Mime) -> bool + Send + Sync>>,
-    ) -> Self {
+    pub fn new() -> Self {
         Self {
-            limit,
-            check_type,
+            limit: None,
             inner: None,
         }
     }
 
-    pub fn set_check_type(
-        &mut self,
-        c: Box<dyn Fn(&mime::Mime) -> bool + Send + Sync>,
-    ) -> &mut Self {
-        self.check_type.replace(c);
+    pub fn set_limit(&mut self, limit: usize) -> &mut Self {
+        self.limit.replace(limit);
         self
     }
 
-    pub fn set_limit(&mut self, limit: usize) -> &mut Self {
-        self.limit = limit;
-        self
+    pub fn limit(&self) -> usize {
+        self.limit.unwrap_or(PAYLOAD_LIMIT)
     }
 
     pub fn replace(&mut self, data: T) {
@@ -102,14 +95,11 @@ where
     }
 
     fn check_content_type(&self, m: &mime::Mime) -> bool {
-        match self.check_type {
-            Some(ref f) => f(m),
-            None => T::check_type(m),
-        }
+        T::check_type(m)
     }
 
     fn check_content_length(&self, l: usize) -> bool {
-        l <= self.limit
+        l <= self.limit()
     }
 
     pub fn check_header(
@@ -117,11 +107,7 @@ where
         m: Option<mime::Mime>,
         l: Option<usize>,
     ) -> Result<mime::Mime, PayloadError> {
-        if m.is_none() {
-            return Err(PayloadError::UnsupportedMediaType);
-        }
-
-        let m = m.unwrap();
+        let m = m.ok_or_else(|| PayloadError::UnsupportedMediaType)?;
 
         if !self.check_content_type(&m) {
             return Err(PayloadError::UnsupportedMediaType);
@@ -149,7 +135,7 @@ where
                 log::debug!("{}", e);
                 PayloadError::Read
             })?;
-            if (body.len() + chunk.len()) > self.limit {
+            if (body.len() + chunk.len()) > self.limit() {
                 return Err(PayloadError::TooLarge);
             } else {
                 body.extend_from_slice(&chunk);

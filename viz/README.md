@@ -64,6 +64,17 @@
 * [x] Data State
 * [x] Error handling
 
+## Thanks
+
+Some ideas from them:
+
+* [Actix Web](https://docs.rs/actix-web/)
+* [Ntex](https://docs.rs/ntex/)
+* [Rocket](https://docs.rs/rocket/)
+* [Tide](https://docs.rs/tide/)
+* [Tower Web](https://docs.rs/tower-web/)
+* [Warp](https://docs.rs/warp/)
+
 ## License
 
 <sup>

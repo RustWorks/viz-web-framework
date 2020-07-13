@@ -21,6 +21,10 @@ hyper = { version = "0.13", default-features = false, features = ["tcp", "stream
 tokio = { version = "0.2", features = ["full"] }
 smol = "0.1"
 
+[profile.release]
+lto = true
+opt-level = 3
+
 [[example]]
 name = "hello"
 path = "hello.rs"

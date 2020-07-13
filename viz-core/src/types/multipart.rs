@@ -3,20 +3,20 @@ pub use form_data::FormData;
 use viz_utils::futures::future::BoxFuture;
 
 use crate::{
-    get_length, get_mime, http, Context, Extract, Payload, PayloadCheck, PayloadError, Result,
-    PAYLOAD_LIMIT,
+    config::ContextExt as _, get_length, get_mime, http, Context, Extract, Payload, PayloadCheck,
+    PayloadError, Result,
 };
 
+/// Context Extends
 pub trait ContextExt {
     fn multipart(&mut self) -> Result<Multipart, PayloadError>;
 }
 
 impl ContextExt for Context {
     fn multipart(&mut self) -> Result<Multipart, PayloadError> {
-        let payload = multipart();
+        let mut payload = multipart();
 
-        // @TODO: read context's limits config
-        // payload.set_limit(limit);
+        payload.set_limit(self.config().limits.multipart);
 
         let m = get_mime(self);
         let l = get_length(self);
@@ -37,6 +37,7 @@ impl ContextExt for Context {
     }
 }
 
+/// Multipart Extractor
 pub type Multipart<T = http::Body> = FormData<T>;
 
 impl PayloadCheck for Multipart {
@@ -55,8 +56,7 @@ impl Extract for Multipart {
 }
 
 pub fn multipart() -> Payload<Multipart> {
-    // Limit 16 MB
-    Payload::new(PAYLOAD_LIMIT * 16, None)
+    Payload::new()
 }
 
 fn is_multipart(m: &mime::Mime) -> bool {
