@@ -2,5 +2,8 @@
 json = 8_000_000
 form = 1_000_000
 
+[cookies]
+secret_key = 'the main key is here'
+
 [extras]
 hello = 'world'

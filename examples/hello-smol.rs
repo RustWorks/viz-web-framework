@@ -32,7 +32,7 @@ use serde::{Deserialize, Serialize};
 use smol::{self, Async, Task};
 
 use viz_core::{
-    http, into_guard, Config, Context as VizContext, Error, Extract, Params,
+    http, into_guard, config::Config, Context as VizContext, Error, Extract, Params,
     Response as VizResponse, Result,
 };
 

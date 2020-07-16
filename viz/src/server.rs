@@ -8,7 +8,7 @@ use hyper::{
     service::{make_service_fn, service_fn},
 };
 
-use viz_core::{http, Config, Context, Error, Params, Result, State, StateFactory};
+use viz_core::{config::Config, http, Context, Error, Params, Result, State, StateFactory};
 use viz_router::{Method, Router, Tree};
 use viz_utils::{anyhow::anyhow, log};
 

@@ -10,7 +10,6 @@ pub use anyhow::Error;
 /// Result
 pub type Result<T = (), E = anyhow::Error> = anyhow::Result<T, E>;
 
-mod config;
 mod context;
 mod extract;
 mod guard;
@@ -20,7 +19,8 @@ mod middleware;
 mod response;
 mod types;
 
-pub use config::{Config, ContextExt};
+pub mod config;
+
 pub use context::Context;
 pub use extract::Extract;
 pub use guard::{into_guard, Guard};

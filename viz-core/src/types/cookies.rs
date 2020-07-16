@@ -1,10 +1,12 @@
-use std::sync::{Arc, RwLock};
+use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
 
-pub use cookie::{Cookie, CookieJar};
+pub use cookie::{Cookie, CookieJar, Key, PrivateJar, SignedJar};
 
 use viz_utils::{futures::future::BoxFuture, log, thiserror::Error as ThisError};
 
 use crate::{http, Context, Extract, Response, Result};
+
+use crate::config::{ContextExt as _, Cookies as ConfigCookies};
 
 pub trait ContextExt {
     fn cookies(&mut self) -> Result<Cookies, CookiesError>;
@@ -29,18 +31,17 @@ impl ContextExt for Context {
                 })?
                 .split(';')
             {
-                jar
-                    // .signed(&key)
-                    // or
-                    // .private(&key)
-                    .add_original(Cookie::parse_encoded(pair.trim().to_string()).map_err(|e| {
-                        log::debug!("failed to parse cookies: {}", e);
-                        CookiesError::Parse
-                    })?);
+                jar.add_original(Cookie::parse_encoded(pair.trim().to_string()).map_err(|e| {
+                    log::debug!("failed to parse cookies: {}", e);
+                    CookiesError::Parse
+                })?)
             }
         }
 
-        let cookies = Cookies::from(jar);
+        let cookies = Cookies::from((
+            Key::derive_from(self.config().cookies.secret_key.as_bytes()),
+            jar,
+        ));
 
         self.extensions_mut().insert::<Cookies>(cookies.clone());
 
@@ -66,18 +67,40 @@ impl Into<Response> for CookiesError {
     }
 }
 
-#[derive(Clone, Debug)]
-pub struct Cookies(Arc<RwLock<CookieJar>>);
+#[derive(Clone)]
+pub struct Cookies {
+    key: Key,
+    inner: Arc<RwLock<CookieJar>>,
+}
 
 impl Cookies {
+    pub fn read(&self) -> RwLockReadGuard<'_, CookieJar> {
+        self.inner.read().unwrap()
+    }
+
+    pub fn write(&self) -> RwLockWriteGuard<'_, CookieJar> {
+        self.inner.write().unwrap()
+    }
+
     pub fn get(&self, name: &str) -> Option<Cookie<'_>> {
-        self.0.read().unwrap().get(name).cloned()
+        self.read().get(name).cloned()
+    }
+
+    pub fn get_with_singed(&self, name: &str) -> Option<Cookie<'_>> {
+        self.write().signed(&self.key).get(name)
+    }
+
+    pub fn get_with_private(&self, name: &str) -> Option<Cookie<'_>> {
+        self.write().private(&self.key).get(name)
     }
 }
 
-impl From<CookieJar> for Cookies {
-    fn from(c: CookieJar) -> Self {
-        Cookies(Arc::new(RwLock::new(c)))
+impl From<(Key, CookieJar)> for Cookies {
+    fn from(kc: (Key, CookieJar)) -> Self {
+        Cookies {
+            key: kc.0,
+            inner: Arc::new(RwLock::new(kc.1)),
+        }
     }
 }
 
