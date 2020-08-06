@@ -30,11 +30,16 @@ impl fmt::Debug for Env {
 }
 
 impl Env {
+    /// Viz environment name
     pub const NAME: &'static str = "VIZ_ENV";
+    /// Development mode
     pub const DEV: &'static str = "development";
+    /// Production mode
     pub const PROD: &'static str = "production";
+    /// Test mode
     pub const TEST: &'static str = "test";
 
+    /// Gets current mode
     pub fn get() -> Env {
         env::var(Self::NAME).map(From::from).unwrap_or_default()
     }

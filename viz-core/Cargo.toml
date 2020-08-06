@@ -24,7 +24,7 @@ cookie = { version = "0.14", default-features = false, features = ["percent-enco
 toml = "0.5"
 
 async-io = "0.1"
-blocking = "0.4"
+blocking = "0.5"
 
 [dev-dependencies]
 futures-executor = "0.3"

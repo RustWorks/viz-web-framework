@@ -2,12 +2,16 @@ use serde::{Deserialize, Serialize};
 
 use crate::PAYLOAD_LIMIT;
 
+/// Limits Settings
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Limits {
+    /// Form Limit
     #[serde(default = "form_limit")]
     pub form: usize,
+    /// JSON Limit
     #[serde(default = "json_limit")]
     pub json: usize,
+    /// Mulitpart Limit
     #[serde(default = "multipart_limit")]
     pub multipart: usize,
 }

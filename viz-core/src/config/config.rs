@@ -1,34 +1,39 @@
 use std::{env, fs, sync::Arc};
 
-use blocking::block_on;
 use serde::{Deserialize, Serialize};
 use toml::{
     self,
     value::{Map, Value},
 };
 
-use viz_utils::futures::future::BoxFuture;
+use viz_utils::{futures::future::BoxFuture, log};
 
 use crate::{Context, Error, Extract, Result};
 
 use super::{Cookies, Env, Limits};
 
+/// Config
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
+    /// Limits
     #[serde(default)]
     pub limits: Limits,
 
+    /// Cookies
     #[serde(default)]
     pub cookies: Cookies,
 
+    /// Env
     #[serde(skip_deserializing)]
     pub env: Env,
 
+    /// Extras
     #[serde(default)]
     pub extras: Map<String, Value>,
 }
 
 impl Config {
+    /// Loads config file
     pub async fn load() -> Result<Config> {
         let path = env::current_dir()?;
 
@@ -37,15 +42,15 @@ impl Config {
         let config_path = path.join("config").join(e.to_string() + ".toml");
 
         let mut config = if config_path.exists() {
-            block_on(async { Ok::<_, Error>(toml::from_str(&fs::read_to_string(config_path)?)?) })
-                .unwrap_or_default()
+            toml::from_str(&fs::read_to_string(config_path)?).unwrap_or_default()
         } else {
             Config::default()
         };
 
         config.env = e;
 
-        dbg!(&config);
+        log::info!("{:#?}", config);
+
         Ok(config)
     }
 }
@@ -62,6 +67,7 @@ impl Default for Config {
 }
 
 impl Config {
+    /// Creates new Config instance
     pub fn new() -> Self {
         Self::default()
     }
@@ -76,7 +82,9 @@ impl Extract for Arc<Config> {
     }
 }
 
+/// Extends Context
 pub trait ContextExt {
+    /// Gets application config
     fn config(&self) -> Arc<Config>;
 }
 

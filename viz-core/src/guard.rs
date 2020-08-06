@@ -30,13 +30,6 @@ where
     }
 }
 
-pub fn into_guard<F>(f: F) -> Box<dyn Guard>
-where
-    F: Into<Box<dyn Guard>>,
-{
-    f.into()
-}
-
 impl BitAnd for Box<dyn Guard> {
     type Output = Self;
 
@@ -59,6 +52,13 @@ impl BitXor for Box<dyn Guard> {
     fn bitxor(self, rhs: Self) -> Self::Output {
         Box::new(move |cx: &Context| self.check(cx) ^ rhs.check(cx))
     }
+}
+
+pub fn into_guard<F>(f: F) -> Box<dyn Guard>
+where
+    F: Into<Box<dyn Guard>>,
+{
+    f.into()
 }
 
 #[cfg(test)]

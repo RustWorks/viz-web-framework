@@ -38,10 +38,7 @@ impl ContextExt for Context {
             }
         }
 
-        let cookies = Cookies::from((
-            Key::derive_from(self.config().cookies.secret_key.as_bytes()),
-            jar,
-        ));
+        let cookies = Cookies::from((Key::from(self.config().cookies.secret_key.as_bytes()), jar));
 
         self.extensions_mut().insert::<Cookies>(cookies.clone());
 
