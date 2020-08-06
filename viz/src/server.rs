@@ -33,7 +33,7 @@ impl Server {
         }
     }
 
-    pub fn state<T>(mut self, state: T) -> Self
+    pub fn state<T>(&mut self, state: T) -> &mut Self
     where
         T: Clone + Send + Sync + 'static,
     {
@@ -43,15 +43,19 @@ impl Server {
         self
     }
 
-    pub fn routes(mut self, router: Router) -> Self {
+    pub fn routes(&mut self, router: Router) -> &mut Self {
         router.finish(Arc::get_mut(&mut self.tree).unwrap());
         self
     }
 
-    pub async fn listen<A: ToString>(mut self, addr: A) -> Result {
+    pub async fn config(&mut self) -> Arc<Config> {
         log::info!("loading config");
-        self.config.replace(Arc::new(Config::load().await?));
+        self.config
+            .replace(Arc::new(Config::load().await.unwrap_or_default()));
+        self.config.clone().unwrap()
+    }
 
+    pub async fn listen<A: ToString>(mut self, addr: A) -> Result {
         let addr = addr
             .to_string()
             .parse::<SocketAddr>()
@@ -92,9 +96,8 @@ pub async fn serve(
     tree: Arc<Tree>,
 ) -> Result<http::Response> {
     let mut cx = Context::from(req);
-
-    cx.extensions_mut().insert(config);
     cx.extensions_mut().insert(addr);
+    cx.extensions_mut().insert(config);
     for t in state.iter() {
         t.create(cx.extensions_mut());
     }

@@ -53,7 +53,6 @@
 ## Todos
 
 * [ ] More friendly Routing
-* [ ] Configuration
 * [ ] Sessions
 * [ ] Basic middlewares: `logger`, `cors`, `serve static files`
 * [ ] Websocket
@@ -61,6 +60,7 @@
 * [ ] TLS
 * [ ] GraphQL?
 * [ ] RPC?
+* [x] Configuration
 * [x] Data State
 * [x] Error handling
 

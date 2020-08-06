@@ -95,7 +95,13 @@ async fn create_user(user: Json<User>) -> Result<String> {
 async fn main() -> Result {
     pretty_env_logger::init();
 
-    let app = viz::new().state(Arc::new(AtomicUsize::new(0))).routes(
+    let mut app = viz::new();
+
+    let config = app.config().await;
+
+    dbg!(config);
+
+    app.state(Arc::new(AtomicUsize::new(0))).routes(
         router()
             .mid(middleware::timeout())
             .mid(middleware::request_id())
