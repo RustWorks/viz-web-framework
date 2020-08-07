@@ -26,6 +26,6 @@ pub fn timeout() -> TimeoutMiddleware {
     TimeoutMiddleware::default()
 }
 
-pub fn session<Store>() -> SessionMiddleware<Store> {
-    SessionMiddleware::default()
+pub fn session<Store: sessions::Storable>(store: Store) -> SessionMiddleware<Store> {
+    SessionMiddleware::new(store)
 }

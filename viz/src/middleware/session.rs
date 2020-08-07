@@ -14,18 +14,6 @@ pub struct SessionMiddleware<Store> {
     secure: bool,
 }
 
-impl Default for SessionMiddleware {
-    fn default() -> Self {
-        Self {
-            store: MemoryStore::new(),
-            from: SessionFrom::default(),
-            name: "sid",
-            domain: "",
-            secure: true,
-        }
-    }
-}
-
 pub enum SessionFrom {
     Cookie,
     Header,
@@ -39,6 +27,16 @@ impl Default for SessionFrom {
 }
 
 impl<Store: Storable> SessionMiddleware<Store> {
+    pub fn new(store: Store) -> Self {
+        Self {
+            store,
+            from: SessionFrom::default(),
+            name: "sid".to_string(),
+            domain: "".to_string(),
+            secure: true,
+        }
+    }
+
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         cx.next().await
     }
