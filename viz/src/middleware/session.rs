@@ -16,8 +16,14 @@ pub struct SessionMiddleware<Store> {
 
 pub enum SessionFrom {
     Cookie,
-    Query,
     Header,
+    Query,
+}
+
+impl Default for SessionFrom {
+    fn default() -> Self {
+        SessionFrom::Cookie
+    }
 }
 
 impl<Store: Storable> SessionMiddleware<Store> {
