@@ -4,7 +4,7 @@ use viz_utils::log;
 
 use viz_core::{http, Context, Middleware, Response, Result};
 
-use sessions::{Session, SessionStatus, Storable};
+use sessions::{MemoryStore, Session, SessionStatus, Storable};
 
 pub struct SessionMiddleware<Store> {
     store: Store,
@@ -12,6 +12,18 @@ pub struct SessionMiddleware<Store> {
     name: String,
     domain: String,
     secure: bool,
+}
+
+impl Default for SessionMiddleware {
+    fn default() -> Self {
+        Self {
+            store: MemoryStore::new(),
+            from: SessionFrom::default(),
+            name: "sid",
+            domain: "",
+            secure: true,
+        }
+    }
 }
 
 pub enum SessionFrom {
