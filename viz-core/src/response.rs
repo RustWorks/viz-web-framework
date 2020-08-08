@@ -8,6 +8,7 @@ use std::{
 
 use crate::{http, Error, Result};
 
+/// Viz Response
 pub struct Response {
     pub(crate) raw: http::Response,
 }
@@ -15,7 +16,7 @@ pub struct Response {
 impl StdError for Response {}
 
 impl fmt::Debug for Response {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Response")
             .field("status", &self.status())
             .field("header", &self.headers())
@@ -24,7 +25,7 @@ impl fmt::Debug for Response {
 }
 
 impl fmt::Display for Response {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         println!("display {}", self.status());
         f.debug_struct("Response")
             .field("status", &self.status())
@@ -34,10 +35,47 @@ impl fmt::Display for Response {
 }
 
 impl Response {
+    /// Creates a response
     pub fn new() -> Self {
         Self {
             raw: http::Response::new(http::Body::empty()),
         }
+    }
+
+    /// Responds Text
+    pub fn text(data: impl Into<http::Body>) -> Self {
+        let mut raw = http::Response::new(data.into());
+        raw.headers_mut().insert(
+            http::header::CONTENT_TYPE,
+            http::HeaderValue::from_static(mime::TEXT_PLAIN.as_ref()),
+        );
+        Self { raw }
+    }
+
+    /// Responds HTML
+    pub fn html(data: impl Into<http::Body>) -> Self {
+        let mut raw = http::Response::new(data.into());
+        raw.headers_mut().insert(
+            http::header::CONTENT_TYPE,
+            http::HeaderValue::from_static(mime::TEXT_HTML.as_ref()),
+        );
+        Self { raw }
+    }
+
+    /// Responds JSON
+    pub fn json(data: impl Into<http::Body>) -> Self {
+        let mut raw = http::Response::new(data.into());
+        raw.headers_mut().insert(
+            http::header::CONTENT_TYPE,
+            http::HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
+        );
+        Self { raw }
+    }
+
+    /// Sets status for response
+    pub fn with_status(mut self, status: http::StatusCode) -> Self {
+        *self.status_mut() = status;
+        self
     }
 }
 
