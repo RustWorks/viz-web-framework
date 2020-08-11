@@ -59,6 +59,12 @@ impl<T> Json<T> {
     }
 }
 
+impl<T> AsRef<T> for Json<T> {
+    fn as_ref(&self) -> &T {
+        &self.0
+    }
+}
+
 impl<T> Deref for Json<T> {
     type Target = T;
 

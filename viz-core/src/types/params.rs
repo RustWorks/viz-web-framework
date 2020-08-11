@@ -117,6 +117,13 @@ impl Params {
     }
 }
 
+impl<T> Params<T> {
+    /// Deconstruct to an inner value
+    pub fn into_inner(self) -> T {
+        self.0
+    }
+}
+
 impl<T> AsRef<T> for Params<T> {
     fn as_ref(&self) -> &T {
         &self.0

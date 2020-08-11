@@ -41,6 +41,7 @@ where
         Self(t)
     }
 
+    /// Deconstruct to an inner value
     pub fn into_inner(self) -> T {
         self.0
     }

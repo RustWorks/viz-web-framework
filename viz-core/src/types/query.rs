@@ -1,3 +1,5 @@
+use std::ops::{Deref, DerefMut};
+
 use serde::de::DeserializeOwned;
 
 use viz_utils::{futures::future::BoxFuture, log, serde::urlencoded};
@@ -27,7 +29,20 @@ impl ContextExt for Context {
 #[derive(Debug)]
 pub struct Query<T>(pub T);
 
-impl<T> std::ops::Deref for Query<T> {
+impl<T> Query<T> {
+    /// Deconstruct to an inner value
+    pub fn into_inner(self) -> T {
+        self.0
+    }
+}
+
+impl<T> AsRef<T> for Query<T> {
+    fn as_ref(&self) -> &T {
+        &self.0
+    }
+}
+
+impl<T> Deref for Query<T> {
     type Target = T;
 
     fn deref(&self) -> &T {
@@ -35,7 +50,7 @@ impl<T> std::ops::Deref for Query<T> {
     }
 }
 
-impl<T> std::ops::DerefMut for Query<T> {
+impl<T> DerefMut for Query<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
     }
