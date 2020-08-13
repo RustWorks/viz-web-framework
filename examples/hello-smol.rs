@@ -225,7 +225,7 @@ fn main() -> Result<()> {
     for _ in 0..num_cpus::get().max(1) {
         thread::spawn(|| smol::run(future::pending::<()>()));
     }
-    smol::block_on(listen(Async::<TcpListener>::bind(&addr)?))
+    smol::block_on(listen(Async::<TcpListener>::bind(addr)?))
 
     // Single-Threaded
     // smol::run(listen(Async::<TcpListener>::bind(&addr)?))
