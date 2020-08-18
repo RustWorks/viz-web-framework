@@ -11,7 +11,7 @@ viz-core = { path = "../viz-core" }
 viz-router = { path = "../viz-router" }
 viz-utils = { path = "../viz-utils" }
 
-serde = { version = "1", features = ["derive"] }
+serde = { version = "1.0", features = ["derive"] }
 ramhorns = "0.9"
 bytes = "0.5"
 num_cpus = "1"

@@ -103,6 +103,7 @@ where
     }
 }
 
+/// Creates a JSON payload
 pub fn json<T>() -> Payload<Json<T>>
 where
     T: DeserializeOwned,

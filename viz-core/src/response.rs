@@ -6,6 +6,8 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
+use viz_utils::serde;
+
 use crate::{http, Error, Result};
 
 /// Viz Response
@@ -26,7 +28,6 @@ impl fmt::Debug for Response {
 
 impl fmt::Display for Response {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        println!("display {}", self.status());
         f.debug_struct("Response")
             .field("status", &self.status())
             .field("header", &self.headers())
@@ -189,5 +190,14 @@ where
         let mut res = t.1.into();
         *res.status_mut() = t.0;
         res
+    }
+}
+
+impl From<serde::json::Value> for Response {
+    fn from(v: serde::json::Value) -> Self {
+        match serde::json::to_vec(&v) {
+            Ok(d) => Self::json(d),
+            Err(e) => Into::<Error>::into(e).into(),
+        }
     }
 }
