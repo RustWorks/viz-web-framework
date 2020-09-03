@@ -19,8 +19,6 @@ use std::{
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
-    // Multi-Threaded
-    thread,
 };
 
 use hyper::{
@@ -29,7 +27,7 @@ use hyper::{
 };
 use ramhorns::{Content, Template};
 use serde::{Deserialize, Serialize};
-use smol::{self, Async, Task};
+use smol::{self, Async};
 
 use viz_core::{
     config::Config, http, into_guard, Context as VizContext, Error, Extract, Params,
@@ -41,9 +39,7 @@ use viz_router::{route, router};
 use viz_utils::{
     anyhow::anyhow,
     futures::{
-        // Multi-Threaded
-        future::{self, BoxFuture},
-        // future::BoxFuture,
+        future::BoxFuture,
         io::{AsyncRead, AsyncWrite},
         stream::Stream,
     },
@@ -216,19 +212,11 @@ fn main() -> Result<()> {
 
     pretty_env_logger::init();
 
-    let addr: SocketAddr = ([127, 0, 0, 1], 8080).into();
+    let addr: SocketAddr = ([127, 0, 0, 1], 9090).into();
 
     log::info!("Listening on http://{}", addr);
 
-    // Start HTTP server.
-    // Multi-Threaded
-    for _ in 0..num_cpus::get().max(1) {
-        thread::spawn(|| smol::run(future::pending::<()>()));
-    }
     smol::block_on(listen(Async::<TcpListener>::bind(addr)?))
-
-    // Single-Threaded
-    // smol::run(listen(Async::<TcpListener>::bind(&addr)?))
 }
 
 /// Spawns futures.
@@ -237,7 +225,7 @@ struct SmolExecutor;
 
 impl<F: Future + Send + 'static> hyper::rt::Executor<F> for SmolExecutor {
     fn execute(&self, fut: F) {
-        Task::spawn(async { drop(fut.await) }).detach();
+        smol::spawn(async { drop(fut.await) }).detach();
     }
 }
 
