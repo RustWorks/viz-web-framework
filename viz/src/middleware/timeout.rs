@@ -9,12 +9,15 @@ use viz_utils::{
 
 use viz_core::{http, Context, Middleware, Response, Result};
 
-// 0.256s
+/// Timeout Middleware
+#[derive(Debug)]
 pub struct TimeoutMiddleware {
+    /// 0.256s
     delay: Duration,
 }
 
 impl TimeoutMiddleware {
+    /// Creates Timeout Middleware
     pub fn new(delay: Duration) -> Self {
         Self { delay }
     }
