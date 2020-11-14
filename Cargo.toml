@@ -6,5 +6,5 @@ members = [
   "viz-router",
   "viz-utils",
 
-  "examples",
+  "examples"
 ]

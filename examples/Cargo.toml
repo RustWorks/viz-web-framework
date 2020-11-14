@@ -5,6 +5,14 @@ authors = ["Fangdun Cai <cfddream@gmail.com>"]
 edition = "2018"
 publish = false
 
+[[example]]
+name = "hello"
+path = "hello.rs"
+
+[[example]]
+name = "hello-smol"
+path = "hello-smol.rs"
+
 [dev-dependencies]
 viz = { path = "../viz" }
 viz-core = { path = "../viz-core" }
@@ -20,15 +28,3 @@ futures = "0.3"
 hyper = { version = "0.13", default-features = false, features = ["tcp", "stream"] }
 tokio = { version = "0.2", features = ["full"] }
 smol = "0.4"
-
-[profile.release]
-lto = true
-opt-level = 3
-
-[[example]]
-name = "hello"
-path = "hello.rs"
-
-[[example]]
-name = "hello-smol"
-path = "hello-smol.rs"
