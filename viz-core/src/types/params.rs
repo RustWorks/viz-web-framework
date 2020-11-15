@@ -93,7 +93,7 @@ impl Into<Response> for ParamsError {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct Params<T = Vec<(String, String)>>(T);
+pub struct Params<T = Vec<(String, String)>>(pub T);
 
 impl Params {
     pub fn find<T: FromStr>(&self, name: &str) -> Result<T, ParamsError>
