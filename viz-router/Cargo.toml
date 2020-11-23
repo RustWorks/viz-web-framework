@@ -12,6 +12,6 @@ viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
 path-tree = "0.1"
 
 [dev-dependencies]
-hyper = "0.13"
 futures-executor = "0.3"
 serde = { version = "1", features = ["derive"] }
+hyper = { git = "https://github.com/hyperium/hyper.git", version = "0.14.0-dev" }

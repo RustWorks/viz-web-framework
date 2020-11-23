@@ -21,7 +21,7 @@ mod tests {
     use viz_utils::futures::stream::{self, TryStreamExt};
     use viz_utils::serde::urlencoded;
 
-    use bytes::buf::BufExt;
+    use bytes::buf::Buf;
     use futures_executor::block_on;
     use serde::Deserialize;
 

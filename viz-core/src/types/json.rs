@@ -3,7 +3,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use bytes::buf::BufExt;
+use bytes::buf::Buf;
 use serde::de::DeserializeOwned;
 
 use viz_utils::{futures::future::BoxFuture, log, serde::json};
