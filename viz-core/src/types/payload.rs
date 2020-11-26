@@ -126,7 +126,7 @@ where
 
     pub async fn check_real_length<S>(&self, mut stream: S) -> Result<impl Buf, PayloadError>
     where
-        S: Stream<Item = Result<Bytes, hyper::error::Error>> + Unpin,
+        S: Stream<Item = Result<Bytes, hyper::Error>> + Unpin,
     {
         let mut body = BytesMut::new();
 
