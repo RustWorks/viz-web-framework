@@ -25,6 +25,6 @@ bytes = "0.6"
 num_cpus = "1"
 futures = "0.3"
 
-hyper = { git = "https://github.com/hyperium/hyper.git", version = "0.14.0-dev", features = ["stream", "tcp"] }
+hyper = { git = "https://github.com/hyperium/hyper.git", version = "0.14.0-dev", features = ["http1", "http2", "stream", "tcp", "server"] }
 tokio = { version = "0.3", features = ["full"] }
-smol = "0.4"
+smol = "1.0"

@@ -245,12 +245,14 @@ impl hyper::server::accept::Accept for SmolListener {
     type Error = Error;
 
     fn poll_accept(
-        mut self: Pin<&mut Self>,
+        self: Pin<&mut Self>,
         cx: &mut Context,
     ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
-        let poll = Pin::new(&mut self.listener.incoming()).poll_next(cx);
-        let stream = futures::ready!(poll).unwrap()?;
+        let incoming = self.listener.incoming();
+        smol::pin!(incoming);
+        let stream = smol::ready!(incoming.poll_next(cx)).unwrap()?;
         let addr = stream.get_ref().peer_addr()?;
+
         Poll::Ready(Some(Ok(SmolStream::new(addr, stream))))
     }
 }
@@ -285,9 +287,10 @@ impl tokio::io::AsyncRead for SmolStream {
     fn poll_read(
         self: Pin<&mut Self>,
         cx: &mut Context<'_>,
-        buf: &mut [u8],
-    ) -> Poll<io::Result<usize>> {
-        Pin::new(&mut self.stream()).poll_read(cx, buf)
+        buf: &mut tokio::io::ReadBuf<'_>,
+    ) -> Poll<io::Result<()>> {
+        let _ = Pin::new(&mut self.stream()).poll_read(cx, buf.initialized_mut())?;
+        Poll::Ready(Ok(()))
     }
 }
 
