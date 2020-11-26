@@ -2,12 +2,12 @@ use std::{future::Future, pin::Pin, time::Duration};
 
 use async_io::Timer;
 
+use viz_core::{http, Context, Middleware, Response, Result};
+
 use viz_utils::{
     futures::future::{select, Either},
     log,
 };
-
-use viz_core::{http, Context, Middleware, Response, Result};
 
 /// Timeout Middleware
 #[derive(Debug)]

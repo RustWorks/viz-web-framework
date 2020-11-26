@@ -2,6 +2,7 @@ use std::{future::Future, pin::Pin};
 
 use viz_core::{Context, Middleware, Response, Result};
 
+#[derive(Debug)]
 pub struct RecoverMiddleware;
 
 impl RecoverMiddleware {

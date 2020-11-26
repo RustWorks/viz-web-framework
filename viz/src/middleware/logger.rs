@@ -1,9 +1,10 @@
 use std::{future::Future, pin::Pin, time::Instant};
 
-use viz_utils::log;
-
 use viz_core::{http, Context, Middleware, Response, Result};
 
+use viz_utils::log;
+
+#[derive(Debug)]
 pub struct LoggerMiddleware;
 
 impl LoggerMiddleware {

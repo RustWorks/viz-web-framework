@@ -55,7 +55,7 @@ impl Server {
         self.config.clone().unwrap()
     }
 
-    pub async fn listen<A: ToString>(mut self, addr: A) -> Result {
+    pub async fn listen<A: ToString>(self, addr: A) -> Result {
         let addr = addr
             .to_string()
             .parse::<SocketAddr>()

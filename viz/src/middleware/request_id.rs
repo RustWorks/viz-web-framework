@@ -1,8 +1,8 @@
 use std::{future::Future, pin::Pin};
 
-use viz_utils::anyhow::anyhow;
-
 use viz_core::{http, Context, Middleware, Response, Result};
+
+use viz_utils::anyhow::anyhow;
 
 const HEADER: &str = "x-request-id";
 

@@ -1,8 +1,8 @@
 use std::{future::Future, pin::Pin};
 
-use viz_utils::log;
-
 use viz_core::{http, Context, Middleware, Response, Result};
+
+use viz_utils::log;
 
 use sessions::{MemoryStore, Session, SessionStatus, Storable};
 
