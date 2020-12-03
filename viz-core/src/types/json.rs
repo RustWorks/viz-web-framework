@@ -35,11 +35,11 @@ impl ContextExt for Context {
 
             payload.check_header(m, l)?;
 
-            json::from_reader(
+            json::from_slice(
                 payload
                     .check_real_length(self.take_body().ok_or_else(|| PayloadError::Read)?)
                     .await?
-                    .reader(),
+                    .bytes(),
             )
             .map_err(|e| {
                 log::debug!("{}", e);
