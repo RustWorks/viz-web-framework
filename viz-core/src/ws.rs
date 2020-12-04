@@ -18,7 +18,7 @@ use tokio_tungstenite::{
 
 use viz_utils::{
     futures::{
-        future::{self, BoxFuture, FutureExt, TryFutureExt},
+        future::{self, FutureExt, TryFutureExt},
         ready,
         sink::Sink,
         stream::Stream,
@@ -35,30 +35,27 @@ pub trait ContextExt {
 
 impl ContextExt for crate::Context {
     fn ws(&mut self) -> Result<Ws, crate::Response> {
-        //Box::pin(async move {
         let headers = self.headers();
-        let key = headers
+        headers
             .typed_get::<Upgrade>()
             .filter(|upgrade| upgrade == &Upgrade::websocket())
             .and(headers.typed_get::<Connection>())
             .filter(|connection| connection.contains(http::header::UPGRADE))
             .and(headers.typed_get::<SecWebsocketVersion>())
             .filter(|version| version == &SecWebsocketVersion::V13)
-            .and(headers.typed_get::<SecWebsocketKey>());
-
-        key.map(|key| Ws {
-            body: self.take_body().unwrap(),
-            config: None,
-            key,
-        })
-        .ok_or_else(|| {
-            (
-                http::StatusCode::BAD_REQUEST,
-                "invalid websocket upgrade request",
-            )
-                .into()
-        })
-        //})
+            .and(headers.typed_get::<SecWebsocketKey>())
+            .map(|key| Ws {
+                body: self.take_body().unwrap(),
+                config: None,
+                key,
+            })
+            .ok_or_else(|| {
+                (
+                    http::StatusCode::BAD_REQUEST,
+                    "invalid websocket upgrade request",
+                )
+                    .into()
+            })
     }
 }
 
