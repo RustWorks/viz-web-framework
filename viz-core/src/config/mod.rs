@@ -1,3 +1,5 @@
+//! Application Configuration
+
 mod config;
 mod cookies;
 mod env;

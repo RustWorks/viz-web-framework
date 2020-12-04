@@ -160,8 +160,7 @@ where
 mod test {
     use futures_executor::block_on;
 
-    use viz_utils::anyhow::anyhow;
-    use viz_utils::futures::future::BoxFuture;
+    use viz_utils::{anyhow::anyhow, futures::future::BoxFuture};
 
     use crate::*;
 

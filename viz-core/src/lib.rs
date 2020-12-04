@@ -20,6 +20,7 @@ mod response;
 mod types;
 
 pub mod config;
+pub mod ws;
 
 pub use context::Context;
 pub use extract::Extract;

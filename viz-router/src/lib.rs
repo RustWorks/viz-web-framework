@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 use viz_core::Middlewares;
 
+/// Tree
 pub type Tree = HashMap<Method, PathTree<Middlewares>>;
 
 mod handler;
