@@ -55,7 +55,6 @@
 * [ ] More friendly Routing
 * [ ] Sessions
 * [ ] Basic middlewares: `logger`, `cors`, `serve static files`
-* [ ] Websocket
 * [ ] Template engines
 * [ ] TLS
 * [ ] GraphQL?
@@ -63,6 +62,7 @@
 * [x] Configuration
 * [x] Data State
 * [x] Error handling
+* [x] Websocket
 
 ## Thanks
 

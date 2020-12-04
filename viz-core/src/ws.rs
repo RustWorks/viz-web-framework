@@ -8,14 +8,17 @@ use std::{
     task::{Context, Poll},
 };
 
-use headers::{Connection, HeaderMapExt, SecWebsocketAccept, SecWebsocketKey, Upgrade};
+use headers::{
+    Connection, HeaderMapExt, SecWebsocketAccept, SecWebsocketKey, SecWebsocketVersion, Upgrade,
+};
 use tokio_tungstenite::{
     tungstenite::protocol::{self, WebSocketConfig},
     WebSocketStream,
 };
+
 use viz_utils::{
     futures::{
-        future::{self, FutureExt, TryFutureExt},
+        future::{self, BoxFuture, FutureExt, TryFutureExt},
         ready,
         sink::Sink,
         stream::Stream,
@@ -23,7 +26,41 @@ use viz_utils::{
     log,
 };
 
-use crate::Response;
+use crate::Error;
+
+/// Context Extends
+pub trait ContextExt {
+    fn ws(&mut self) -> Result<Ws, crate::Response>;
+}
+
+impl ContextExt for crate::Context {
+    fn ws(&mut self) -> Result<Ws, crate::Response> {
+        //Box::pin(async move {
+        let headers = self.headers();
+        let key = headers
+            .typed_get::<Upgrade>()
+            .filter(|upgrade| upgrade == &Upgrade::websocket())
+            .and(headers.typed_get::<Connection>())
+            .filter(|connection| connection.contains(http::header::UPGRADE))
+            .and(headers.typed_get::<SecWebsocketVersion>())
+            .filter(|version| version == &SecWebsocketVersion::V13)
+            .and(headers.typed_get::<SecWebsocketKey>());
+
+        key.map(|key| Ws {
+            body: self.take_body().unwrap(),
+            config: None,
+            key,
+        })
+        .ok_or_else(|| {
+            (
+                http::StatusCode::BAD_REQUEST,
+                "invalid websocket upgrade request",
+            )
+                .into()
+        })
+        //})
+    }
+}
 
 /// Extracted by the [`ws`](ws) filter, and used to finish an upgrade.
 pub struct Ws {
@@ -36,7 +73,7 @@ impl Ws {
     /// Finish the upgrade, passing a function to handle the `WebSocket`.
     ///
     /// The passed function must return a `Future`.
-    pub fn on_upgrade<F, U>(self, func: F) -> Response
+    pub fn on_upgrade<F, U>(self, func: F) -> crate::Response
     where
         F: FnOnce(WebSocket) -> U + Send + 'static,
         U: Future<Output = ()> + Send + 'static,
@@ -87,12 +124,12 @@ struct WsResponse<F> {
     on_upgrade: F,
 }
 
-impl<F, U> From<WsResponse<F>> for Response
+impl<F, U> From<WsResponse<F>> for crate::Response
 where
     F: FnOnce(WebSocket) -> U + Send + 'static,
     U: Future<Output = ()> + Send + 'static,
 {
-    fn from(v: WsResponse<F>) -> Response {
+    fn from(v: WsResponse<F>) -> crate::Response {
         let on_upgrade = v.on_upgrade;
         let config = v.ws.config;
 
@@ -320,17 +357,3 @@ impl Into<Vec<u8>> for Message {
         self.into_bytes()
     }
 }
-
-// ===== Rejections =====
-
-/// Connection header did not include 'upgrade'
-#[derive(Debug)]
-pub struct MissingConnectionUpgrade;
-
-impl ::std::fmt::Display for MissingConnectionUpgrade {
-    fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
-        write!(f, "Connection header did not include 'upgrade'")
-    }
-}
-
-impl ::std::error::Error for MissingConnectionUpgrade {}

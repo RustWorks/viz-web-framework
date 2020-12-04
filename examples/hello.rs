@@ -1,14 +1,32 @@
-use std::sync::{
-    atomic::{AtomicUsize, Ordering},
-    Arc,
+use std::{
+    collections::HashMap,
+    sync::{
+        atomic::{AtomicUsize, Ordering},
+        Arc,
+    },
 };
 
 use serde::{Deserialize, Serialize};
+use tokio::sync::{mpsc, RwLock};
 
 use viz::prelude::*;
-use viz_utils::{log, pretty_env_logger, serde::json, thiserror::Error as ThisError};
+use viz_utils::{
+    futures::{FutureExt, StreamExt},
+    log, pretty_env_logger,
+    serde::json,
+    thiserror::Error as ThisError,
+};
 
 const NOT_FOUND: &str = "404 - This is not the web page you are looking for.";
+
+/// Our global unique user id counter.
+static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
+
+/// Our state of currently connected users.
+///
+/// - Key is their id
+/// - Value is a sender of `warp::ws::Message`
+type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Result<Message, Error>>>>>;
 
 async fn my_mid(cx: &mut Context) -> Result<Response> {
     let num = cx.extract::<State<Arc<AtomicUsize>>>().await?;
@@ -91,6 +109,147 @@ async fn create_user(user: Json<User>) -> Result<String> {
     json::to_string_pretty(&*user).map_err(|e| anyhow!(e))
 }
 
+async fn echo(cx: &mut Context) -> Response {
+    match cx.ws() {
+        Ok(ws) => {
+            ws.on_upgrade(|websocket| {
+                // Just echo all messages back...
+                let (tx, rx) = websocket.split();
+                rx.forward(tx).map(|result| {
+                    if let Err(e) = result {
+                        eprintln!("websocket error: {:?}", e);
+                    }
+                })
+            })
+        }
+        Err(rs) => rs,
+    }
+}
+
+async fn chat(cx: &mut Context) -> Result<Response> {
+    let users = cx.state::<Users>()?;
+    Ok(match cx.ws() {
+        Ok(ws) => ws.on_upgrade(move |socket| user_connected(socket, users)),
+        Err(rs) => rs,
+    })
+}
+
+async fn user_connected(ws: WebSocket, users: Users) {
+    // Use a counter to assign a new unique ID for this user.
+    let my_id = NEXT_USER_ID.fetch_add(1, Ordering::Relaxed);
+
+    eprintln!("new chat user: {}", my_id);
+
+    // Split the socket into a sender and receive of messages.
+    let (user_ws_tx, mut user_ws_rx) = ws.split();
+
+    // Use an unbounded channel to handle buffering and flushing of messages
+    // to the websocket...
+    let (tx, rx) = mpsc::unbounded_channel();
+    tokio::task::spawn(rx.forward(user_ws_tx).map(|result| {
+        if let Err(e) = result {
+            eprintln!("websocket send error: {}", e);
+        }
+    }));
+
+    // Save the sender in our list of connected users.
+    users.write().await.insert(my_id, tx);
+
+    // Return a `Future` that is basically a state machine managing
+    // this specific user's connection.
+
+    // Make an extra clone to give to our disconnection handler...
+    let users2 = users.clone();
+
+    // Every time the user sends a message, broadcast it to
+    // all other users...
+    while let Some(result) = user_ws_rx.next().await {
+        let msg = match result {
+            Ok(msg) => msg,
+            Err(e) => {
+                eprintln!("websocket error(uid={}): {}", my_id, e);
+                break;
+            }
+        };
+        user_message(my_id, msg, &users).await;
+    }
+
+    // user_ws_rx stream will keep processing as long as the user stays
+    // connected. Once they disconnect, then...
+    user_disconnected(my_id, &users2).await;
+}
+
+async fn user_message(my_id: usize, msg: Message, users: &Users) {
+    // Skip any non-Text messages...
+    let msg = if let Ok(s) = msg.to_str() {
+        s
+    } else {
+        return;
+    };
+
+    let new_msg = format!("<User#{}>: {}", my_id, msg);
+
+    // New message from this user, send it to everyone else (except same uid)...
+    for (&uid, tx) in users.read().await.iter() {
+        if my_id != uid {
+            if let Err(_disconnected) = tx.send(Ok(Message::text(new_msg.clone()))) {
+                // The tx is disconnected, our `user_disconnected` code
+                // should be happening in another task, nothing more to
+                // do here.
+            }
+        }
+    }
+}
+
+async fn user_disconnected(my_id: usize, users: &Users) {
+    eprintln!("good bye user: {}", my_id);
+
+    // Stream closed up, so remove from the user list
+    users.write().await.remove(&my_id);
+}
+
+static INDEX_HTML: &str = r#"<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>Warp Chat</title>
+    </head>
+    <body>
+        <h1>Warp chat</h1>
+        <div id="chat">
+            <p><em>Connecting...</em></p>
+        </div>
+        <input type="text" id="text" />
+        <button type="button" id="send">Send</button>
+        <script type="text/javascript">
+        const chat = document.getElementById('chat');
+        const text = document.getElementById('text');
+        const uri = 'ws://' + location.host + '/chat/';
+        const ws = new WebSocket(uri);
+        function message(data) {
+            const line = document.createElement('p');
+            line.innerText = data;
+            chat.appendChild(line);
+        }
+        ws.onopen = function() {
+            chat.innerHTML = '<p><em>Connected!</em></p>';
+        };
+        ws.onmessage = function(msg) {
+            message(msg.data);
+        };
+        ws.onclose = function() {
+            chat.getElementsByTagName('em')[0].innerText = 'Disconnected!';
+        };
+        send.onclick = function() {
+            const msg = text.value;
+            ws.send(msg);
+            text.value = '';
+            message('<You>: ' + msg);
+        };
+        </script>
+    </body>
+</html>
+"#;
+
 #[tokio::main]
 async fn main() -> Result {
     pretty_env_logger::init();
@@ -101,24 +260,34 @@ async fn main() -> Result {
 
     dbg!(config);
 
-    app.state(Arc::new(AtomicUsize::new(0))).routes(
-        router()
-            .mid(middleware::timeout())
-            .mid(middleware::request_id())
-            .mid(middleware::recover())
-            .mid(middleware::logger())
-            .mid(my_mid)
-            .at(
-                "/",
-                route()
-                    // .guard(allow_get)
-                    .guard(into_guard(allow_get) | into_guard(allow_head))
-                    .all(hello_world),
-            )
-            .at("/users", route().post(create_user))
-            .at("/500", route().all(server_error))
-            .at("/*", route().all(not_found)),
-    );
+    let users = Users::default();
+
+    app.state(Arc::new(AtomicUsize::new(0)))
+        .state(users)
+        .routes(
+            router()
+                .mid(middleware::timeout())
+                .mid(middleware::request_id())
+                .mid(middleware::recover())
+                .mid(middleware::logger())
+                .mid(my_mid)
+                .at(
+                    "/",
+                    route()
+                        // .guard(allow_get)
+                        .guard(into_guard(allow_get) | into_guard(allow_head))
+                        .all(hello_world),
+                )
+                .at("/users", route().post(create_user))
+                .at("/500", route().all(server_error))
+                .at("/echo", route().get2(echo))
+                .at(
+                    "/chat",
+                    route().get(|| async { Response::html(INDEX_HTML) }),
+                )
+                .at("/chat/", route().get2(chat))
+                .at("/*", route().all(not_found)),
+        );
 
     app.listen("127.0.0.1:8080").await
 }
