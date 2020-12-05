@@ -109,21 +109,16 @@ async fn create_user(user: Json<User>) -> Result<String> {
     json::to_string_pretty(&*user).map_err(|e| anyhow!(e))
 }
 
-async fn echo(cx: &mut Context) -> Response {
-    match cx.ws() {
-        Ok(ws) => {
-            ws.on_upgrade(|websocket| {
-                // Just echo all messages back...
-                let (tx, rx) = websocket.split();
-                rx.forward(tx).map(|result| {
-                    if let Err(e) = result {
-                        eprintln!("websocket error: {:?}", e);
-                    }
-                })
-            })
-        }
-        Err(rs) => rs,
-    }
+async fn echo(ws: Ws) -> Response {
+    ws.on_upgrade(|websocket| {
+        // Just echo all messages back...
+        let (tx, rx) = websocket.split();
+        rx.forward(tx).map(|result| {
+            if let Err(e) = result {
+                eprintln!("websocket error: {:?}", e);
+            }
+        })
+    })
 }
 
 async fn chat(cx: &mut Context) -> Result<Response> {
@@ -280,7 +275,7 @@ async fn main() -> Result {
                 )
                 .at("/users", route().post(create_user))
                 .at("/500", route().all(server_error))
-                .at("/echo", route().get2(echo))
+                .at("/echo", route().get(echo))
                 .at(
                     "/chat",
                     route().get(|| async { Response::html(INDEX_HTML) }),

@@ -18,7 +18,7 @@ use tokio_tungstenite::{
 
 use viz_utils::{
     futures::{
-        future::{self, FutureExt, TryFutureExt},
+        future::{self, BoxFuture, FutureExt, TryFutureExt},
         ready,
         sink::Sink,
         stream::Stream,
@@ -26,7 +26,7 @@ use viz_utils::{
     log,
 };
 
-use crate::Error;
+use crate::{Error, Extract};
 
 /// Context Extends
 pub trait ContextExt {
@@ -56,6 +56,15 @@ impl ContextExt for crate::Context {
                 )
                     .into()
             })
+    }
+}
+
+impl Extract for Ws {
+    type Error = crate::Response;
+
+    #[inline]
+    fn extract<'a>(cx: &'a mut crate::Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+        Box::pin(async move { cx.ws() })
     }
 }
 
