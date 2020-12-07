@@ -1,3 +1,4 @@
+//! WebSockets
 //! Thanks: https://github.com/seanmonstar/warp
 
 use std::{
@@ -44,10 +45,11 @@ impl ContextExt for crate::Context {
             .and(headers.typed_get::<SecWebsocketVersion>())
             .filter(|version| version == &SecWebsocketVersion::V13)
             .and(headers.typed_get::<SecWebsocketKey>())
-            .map(|key| Ws {
-                body: self.take_body().unwrap(),
-                config: None,
+            .zip(self.take_body())
+            .map(|(key, body)| Ws {
                 key,
+                body,
+                config: None,
             })
             .ok_or_else(|| {
                 (
@@ -141,13 +143,6 @@ where
 
         let mut res = http::Response::new(v.ws.body);
 
-        *res.status_mut() = http::StatusCode::SWITCHING_PROTOCOLS;
-
-        res.headers_mut().typed_insert(Connection::upgrade());
-        res.headers_mut().typed_insert(Upgrade::websocket());
-        res.headers_mut()
-            .typed_insert(SecWebsocketAccept::from(v.ws.key));
-
         let fut = hyper::upgrade::on(&mut res)
             .and_then(move |upgraded| {
                 log::trace!("websocket upgrade complete");
@@ -161,6 +156,13 @@ where
             });
 
         ::tokio::task::spawn(fut);
+
+        *res.status_mut() = http::StatusCode::SWITCHING_PROTOCOLS;
+
+        res.headers_mut().typed_insert(Connection::upgrade());
+        res.headers_mut().typed_insert(Upgrade::websocket());
+        res.headers_mut()
+            .typed_insert(SecWebsocketAccept::from(v.ws.key));
 
         res.into()
     }
@@ -187,20 +189,20 @@ impl WebSocket {
     }
 
     /// Gracefully close this websocket.
-    pub async fn close(mut self) -> Result<(), crate::Error> {
+    pub async fn close(mut self) -> Result<(), Error> {
         future::poll_fn(|cx| Pin::new(&mut self).poll_close(cx)).await
     }
 }
 
 impl Stream for WebSocket {
-    type Item = Result<Message, crate::Error>;
+    type Item = Result<Message, Error>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match ready!(Pin::new(&mut self.inner).poll_next(cx)) {
             Some(Ok(item)) => Poll::Ready(Some(Ok(Message { inner: item }))),
             Some(Err(e)) => {
                 log::debug!("websocket poll error: {}", e);
-                Poll::Ready(Some(Err(crate::Error::new(e))))
+                Poll::Ready(Some(Err(Error::new(e))))
             }
             None => {
                 log::trace!("websocket closed");
@@ -211,12 +213,12 @@ impl Stream for WebSocket {
 }
 
 impl Sink<Message> for WebSocket {
-    type Error = crate::Error;
+    type Error = Error;
 
     fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         match ready!(Pin::new(&mut self.inner).poll_ready(cx)) {
             Ok(()) => Poll::Ready(Ok(())),
-            Err(e) => Poll::Ready(Err(crate::Error::new(e))),
+            Err(e) => Poll::Ready(Err(Error::new(e))),
         }
     }
 
@@ -225,7 +227,7 @@ impl Sink<Message> for WebSocket {
             Ok(()) => Ok(()),
             Err(e) => {
                 log::debug!("websocket start_send error: {}", e);
-                Err(crate::Error::new(e))
+                Err(Error::new(e))
             }
         }
     }
@@ -233,7 +235,7 @@ impl Sink<Message> for WebSocket {
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         match ready!(Pin::new(&mut self.inner).poll_flush(cx)) {
             Ok(()) => Poll::Ready(Ok(())),
-            Err(e) => Poll::Ready(Err(crate::Error::new(e))),
+            Err(e) => Poll::Ready(Err(Error::new(e))),
         }
     }
 
@@ -242,7 +244,7 @@ impl Sink<Message> for WebSocket {
             Ok(()) => Poll::Ready(Ok(())),
             Err(err) => {
                 log::debug!("websocket close error: {}", err);
-                Poll::Ready(Err(crate::Error::new(err)))
+                Poll::Ready(Err(Error::new(err)))
             }
         }
     }
