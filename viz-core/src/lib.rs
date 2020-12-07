@@ -18,9 +18,11 @@ mod macros;
 mod middleware;
 mod response;
 mod types;
-mod ws;
 
 pub mod config;
+
+pub mod sse;
+pub mod ws;
 
 pub use context::Context;
 pub use extract::Extract;
@@ -29,7 +31,6 @@ pub use handler::{Handler, HandlerBase, HandlerCamp, HandlerSuper, HandlerWrappe
 pub use middleware::{DynMiddleware, Middleware, Middlewares};
 pub use response::Response;
 pub use types::*;
-pub use ws::*;
 
 pub mod http {
     pub use ::http::*;

@@ -63,6 +63,7 @@
 * [x] Data State
 * [x] Error handling
 * [x] Websocket
+* [x] Server-Sent Events
 
 ## Thanks
 

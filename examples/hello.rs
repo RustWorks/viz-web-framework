@@ -1,5 +1,6 @@
 use std::{
     collections::HashMap,
+    convert::Infallible,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -8,6 +9,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 use tokio::sync::{mpsc, RwLock};
+use tokio::time::{interval, Duration};
 
 use viz::prelude::*;
 use viz_utils::{
@@ -16,6 +18,9 @@ use viz_utils::{
     serde::json,
     thiserror::Error as ThisError,
 };
+
+use sse::*;
+use ws::*;
 
 const NOT_FOUND: &str = "404 - This is not the web page you are looking for.";
 
@@ -107,6 +112,21 @@ struct User {
 
 async fn create_user(user: Json<User>) -> Result<String> {
     json::to_string_pretty(&*user).map_err(|e| anyhow!(e))
+}
+
+fn sse_counter(counter: u64) -> Result<impl sse::ServerSentEvent, Infallible> {
+    Ok(sse::data(counter))
+}
+
+async fn ticks() -> Response {
+    let mut counter: u64 = 0;
+    // create server event source
+    let event_stream = interval(Duration::from_secs(1)).map(move |_| {
+        counter += 1;
+        sse_counter(counter)
+    });
+    // reply using server-sent events
+    sse::reply(event_stream)
 }
 
 async fn echo(ws: Ws) -> Response {
@@ -275,6 +295,7 @@ async fn main() -> Result {
                 )
                 .at("/users", route().post(create_user))
                 .at("/500", route().all(server_error))
+                .at("/ticks", route().get(ticks))
                 .at("/echo", route().get(echo))
                 .at(
                     "/chat",

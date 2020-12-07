@@ -30,11 +30,11 @@ use viz_utils::{
 use crate::{Error, Extract};
 
 /// Context Extends
-pub trait ContextExt {
+pub trait WsContextExt {
     fn ws(&mut self) -> Result<Ws, crate::Response>;
 }
 
-impl ContextExt for crate::Context {
+impl WsContextExt for crate::Context {
     fn ws(&mut self) -> Result<Ws, crate::Response> {
         let headers = self.headers();
         headers
