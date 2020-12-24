@@ -1,19 +1,25 @@
 use std::{
     collections::HashMap,
     convert::Infallible,
+    pin::Pin,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
     },
+    task::{Context as TaskContext, Poll},
 };
 
+use async_stream::stream;
+use pin_project::pin_project;
 use serde::{Deserialize, Serialize};
-use tokio::sync::{mpsc, RwLock};
-use tokio::time::{interval, Duration};
+use tokio::{
+    sync::{mpsc, RwLock},
+    time::{interval, Duration, Instant, Interval},
+};
 
 use viz::prelude::*;
 use viz_utils::{
-    futures::{FutureExt, StreamExt},
+    futures::{pin_mut, stream::Stream, FutureExt, StreamExt},
     log, pretty_env_logger,
     serde::json,
     thiserror::Error as ThisError,
@@ -114,17 +120,41 @@ async fn create_user(user: Json<User>) -> Result<String> {
     json::to_string_pretty(&*user).map_err(|e| anyhow!(e))
 }
 
-fn sse_counter(counter: u64) -> Result<impl sse::ServerSentEvent, Infallible> {
+fn sse_counter(counter: u64) -> Result<impl ServerSentEvent, Infallible> {
     Ok(sse::data(counter))
+}
+
+#[pin_project]
+struct IntervalCounter<F> {
+    interval: Pin<Box<Interval>>,
+    f: F,
+}
+
+impl<F, T> Stream for IntervalCounter<F>
+where
+    T: ServerSentEvent,
+    F: FnMut(Instant) -> Result<T, Infallible>,
+{
+    type Item = Result<T, Infallible>;
+
+    fn poll_next(mut self: Pin<&mut Self>, cx: &mut TaskContext<'_>) -> Poll<Option<Self::Item>> {
+        match self.interval.as_mut().poll_tick(cx) {
+            Poll::Pending => Poll::Pending,
+            Poll::Ready(i) => Poll::Ready(Some((self.f)(i))),
+        }
+    }
 }
 
 async fn ticks() -> Response {
     let mut counter: u64 = 0;
     // create server event source
-    let event_stream = interval(Duration::from_secs(1)).map(move |_| {
-        counter += 1;
-        sse_counter(counter)
-    });
+    let event_stream = IntervalCounter {
+        interval: Box::pin(interval(Duration::from_secs(1))),
+        f: move |_| {
+            counter += 1;
+            sse_counter(counter)
+        },
+    };
     // reply using server-sent events
     sse::reply(event_stream)
 }
@@ -161,7 +191,13 @@ async fn user_connected(ws: WebSocket, users: Users) {
     // Use an unbounded channel to handle buffering and flushing of messages
     // to the websocket...
     let (tx, rx) = mpsc::unbounded_channel();
-    tokio::task::spawn(rx.forward(user_ws_tx).map(|result| {
+    let stream = stream! {
+        pin_mut!(rx);
+        while let Some(value) = rx.recv().await {
+            yield value;
+        }
+    };
+    tokio::task::spawn(stream.forward(user_ws_tx).map(|result| {
         if let Err(e) = result {
             eprintln!("websocket send error: {}", e);
         }

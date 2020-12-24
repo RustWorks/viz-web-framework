@@ -41,19 +41,21 @@ impl WsContextExt for crate::Context {
             .typed_get::<Upgrade>()
             .filter(|upgrade| upgrade == &Upgrade::websocket())
             .and(headers.typed_get::<Connection>())
-            .filter(|connection| connection.contains(http::header::UPGRADE))
+            .filter(|connection| connection.contains(hyper::header::UPGRADE))
             .and(headers.typed_get::<SecWebsocketVersion>())
             .filter(|version| version == &SecWebsocketVersion::V13)
             .and(headers.typed_get::<SecWebsocketKey>())
             .zip(self.take_body())
-            .map(|(key, body)| Ws {
+            .zip(self.extensions_mut().remove::<hyper::upgrade::OnUpgrade>())
+            .map(|((key, body), on_upgrade)| Ws {
                 key,
                 body,
+                on_upgrade,
                 config: None,
             })
             .ok_or_else(|| {
                 (
-                    http::StatusCode::BAD_REQUEST,
+                    hyper::StatusCode::BAD_REQUEST,
                     "invalid websocket upgrade request",
                 )
                     .into()
@@ -73,8 +75,9 @@ impl Extract for Ws {
 /// Extracted by the [`ws`](ws) filter, and used to finish an upgrade.
 pub struct Ws {
     body: ::hyper::Body,
-    config: Option<WebSocketConfig>,
     key: SecWebsocketKey,
+    config: Option<WebSocketConfig>,
+    on_upgrade: ::hyper::upgrade::OnUpgrade,
 }
 
 impl Ws {
@@ -141,7 +144,8 @@ where
         let on_upgrade = v.on_upgrade;
         let config = v.ws.config;
 
-        let mut res = http::Response::new(v.ws.body);
+        let mut res = hyper::Response::new(v.ws.body);
+        res.extensions_mut().insert(v.ws.on_upgrade);
 
         let fut = hyper::upgrade::on(&mut res)
             .and_then(move |upgraded| {
@@ -157,7 +161,7 @@ where
 
         ::tokio::task::spawn(fut);
 
-        *res.status_mut() = http::StatusCode::SWITCHING_PROTOCOLS;
+        *res.status_mut() = hyper::StatusCode::SWITCHING_PROTOCOLS;
 
         res.headers_mut().typed_insert(Connection::upgrade());
         res.headers_mut().typed_insert(Upgrade::websocket());

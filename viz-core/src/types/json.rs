@@ -39,7 +39,7 @@ impl ContextExt for Context {
                 payload
                     .check_real_length(self.take_body().ok_or_else(|| PayloadError::Read)?)
                     .await?
-                    .bytes(),
+                    .chunk(),
             )
             .map_err(|e| {
                 log::debug!("{}", e);

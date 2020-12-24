@@ -14,4 +14,4 @@ path-tree = "0.1"
 [dev-dependencies]
 futures-executor = "0.3"
 serde = { version = "1", features = ["derive"] }
-hyper = { git = "https://github.com/hyperium/hyper.git", version = "0.14.0-dev" }
+hyper = "0.14"
