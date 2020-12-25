@@ -41,12 +41,12 @@ impl WsContextExt for crate::Context {
             .typed_get::<Upgrade>()
             .filter(|upgrade| upgrade == &Upgrade::websocket())
             .and(headers.typed_get::<Connection>())
-            .filter(|connection| connection.contains(hyper::header::UPGRADE))
+            .filter(|connection| connection.contains(::hyper::header::UPGRADE))
             .and(headers.typed_get::<SecWebsocketVersion>())
             .filter(|version| version == &SecWebsocketVersion::V13)
             .and(headers.typed_get::<SecWebsocketKey>())
             .zip(self.take_body())
-            .zip(self.extensions_mut().remove::<hyper::upgrade::OnUpgrade>())
+            .zip(self.extensions_mut().remove::<::hyper::upgrade::OnUpgrade>())
             .map(|((key, body), on_upgrade)| Ws {
                 key,
                 body,
@@ -55,7 +55,7 @@ impl WsContextExt for crate::Context {
             })
             .ok_or_else(|| {
                 (
-                    hyper::StatusCode::BAD_REQUEST,
+                    ::hyper::StatusCode::BAD_REQUEST,
                     "invalid websocket upgrade request",
                 )
                     .into()
@@ -144,10 +144,10 @@ where
         let on_upgrade = v.on_upgrade;
         let config = v.ws.config;
 
-        let mut res = hyper::Response::new(v.ws.body);
+        let mut res = ::hyper::Response::new(v.ws.body);
         res.extensions_mut().insert(v.ws.on_upgrade);
 
-        let fut = hyper::upgrade::on(&mut res)
+        let fut = ::hyper::upgrade::on(&mut res)
             .and_then(move |upgraded| {
                 log::trace!("websocket upgrade complete");
                 WebSocket::from_raw_socket(upgraded, protocol::Role::Server, config).map(Ok)
@@ -161,7 +161,7 @@ where
 
         ::tokio::task::spawn(fut);
 
-        *res.status_mut() = hyper::StatusCode::SWITCHING_PROTOCOLS;
+        *res.status_mut() = ::hyper::StatusCode::SWITCHING_PROTOCOLS;
 
         res.headers_mut().typed_insert(Connection::upgrade());
         res.headers_mut().typed_insert(Upgrade::websocket());
@@ -178,12 +178,12 @@ where
 /// Close messages need to be handled explicitly: usually by closing the `Sink` end of the
 /// `WebSocket`.
 pub struct WebSocket {
-    inner: WebSocketStream<hyper::upgrade::Upgraded>,
+    inner: WebSocketStream<::hyper::upgrade::Upgraded>,
 }
 
 impl WebSocket {
     pub(crate) async fn from_raw_socket(
-        upgraded: hyper::upgrade::Upgraded,
+        upgraded: ::hyper::upgrade::Upgraded,
         role: protocol::Role,
         config: Option<protocol::WebSocketConfig>,
     ) -> Self {
