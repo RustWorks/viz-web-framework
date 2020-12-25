@@ -46,11 +46,12 @@ impl WsContextExt for crate::Context {
             .filter(|version| version == &SecWebsocketVersion::V13)
             .and(headers.typed_get::<SecWebsocketKey>())
             .zip(self.take_body())
-            .zip(self.extensions_mut().remove::<::hyper::upgrade::OnUpgrade>())
-            .map(|((key, body), on_upgrade)| Ws {
+            .map(|(key, body)| Ws {
                 key,
                 body,
-                on_upgrade,
+                on_upgrade: self
+                    .extensions_mut()
+                    .remove::<::hyper::upgrade::OnUpgrade>(),
                 config: None,
             })
             .ok_or_else(|| {
@@ -77,7 +78,7 @@ pub struct Ws {
     body: ::hyper::Body,
     key: SecWebsocketKey,
     config: Option<WebSocketConfig>,
-    on_upgrade: ::hyper::upgrade::OnUpgrade,
+    on_upgrade: Option<::hyper::upgrade::OnUpgrade>,
 }
 
 impl Ws {
@@ -140,12 +141,14 @@ where
     F: FnOnce(WebSocket) -> U + Send + 'static,
     U: Future<Output = ()> + Send + 'static,
 {
-    fn from(v: WsResponse<F>) -> crate::Response {
+    fn from(mut v: WsResponse<F>) -> crate::Response {
         let on_upgrade = v.on_upgrade;
         let config = v.ws.config;
 
         let mut res = ::hyper::Response::new(v.ws.body);
-        res.extensions_mut().insert(v.ws.on_upgrade);
+        if let Some(on_upgrade) = v.ws.on_upgrade.take() {
+            res.extensions_mut().insert(on_upgrade);
+        }
 
         let fut = ::hyper::upgrade::on(&mut res)
             .and_then(move |upgraded| {
