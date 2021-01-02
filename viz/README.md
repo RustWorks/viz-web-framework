@@ -45,10 +45,12 @@
 
 ## Middleware
 
-* timeout
-* request_id
-* recover
 * logger
+* recover
+* request_id
+* timeout
+* cookies
+* session
 
 ## Todos
 
