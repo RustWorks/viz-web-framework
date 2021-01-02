@@ -25,7 +25,7 @@ serde = { version = "1.0", features = ["derive"] }
 cookie = { version = "0.14", default-features = false, features = ["percent-encode", "secure"] }
 tokio = { version = "1.0", default-features = false, features = ["rt", "time"] }
 #tokio-tungstenite = "0.12"
-tokio-tungstenite = { git = "https://github.com/aknuds1/tokio-tungstenite.git", rev = "21c3d35" }
+tokio-tungstenite = { git = "https://github.com/aknuds1/tokio-tungstenite.git", rev = "5c557a2" }
 pin-project = "1.0"
 
 [dev-dependencies]
