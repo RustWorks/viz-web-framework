@@ -1,13 +1,6 @@
-use std::{
-    convert::TryInto,
-    future::Future,
-    pin::Pin,
-    sync::{atomic::Ordering, Arc},
-    time::Duration,
-};
+use std::{convert::TryInto, future::Future, pin::Pin, sync::Arc, time::Duration};
 
 use viz_core::{
-    http,
     types::Cookie,
     types::{CookieContextExt, State},
     Context, Middleware, Response, Result,
@@ -18,6 +11,7 @@ use viz_utils::log;
 pub use sessions::*;
 
 /// Session Middleware
+#[derive(Debug)]
 pub struct SessionMiddleware {
     /// Session's `Config`
     config: Arc<Config>,
@@ -51,7 +45,6 @@ impl SessionMiddleware {
         let res = cx.next().await?;
 
         let session = cx.session();
-        dbg!(&session);
 
         let session_status = session.status();
         if session_status > 0 {
@@ -66,13 +59,9 @@ impl SessionMiddleware {
             } = self.config.cookie();
 
             let mut cookie = Cookie::new(name, session.id()?);
-            dbg!(&cookie);
 
             if let Some(domain) = domain {
                 cookie.set_domain(domain);
-            }
-            if let Some(path) = path {
-                cookie.set_path(path);
             }
 
             cookie.set_max_age(Some(
@@ -83,6 +72,8 @@ impl SessionMiddleware {
                 }
                 .try_into()?,
             ));
+
+            cookie.set_path(path);
             cookie.set_secure(*secure);
             cookie.set_http_only(*http_only);
             cookie.set_same_site(*same_site);

@@ -17,13 +17,11 @@ impl CookiesMiddleware {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         log::trace!("Cookies Middleware");
 
-        dbg!(cx.cookies()?);
+        cx.cookies()?;
 
         let mut res = cx.next().await?;
 
         let cookies = cx.cookies()?;
-
-        dbg!(&cookies);
 
         let jar = cookies.read();
 

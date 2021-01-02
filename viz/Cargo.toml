@@ -17,8 +17,8 @@ viz-core = { path = "../viz-core", version = "0.1.0-alpha" }
 viz-router = { path = "../viz-router", version = "0.1.0-alpha" }
 viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
 
-#sessions = { version = "0.1.5", features = ["memory"] }
-sessions = { version = "0.1.5", features = ["redis"] }
+#sessions = { version = "0.1.6", features = ["memory"] }
+sessions = { version = "0.1.6", features = ["redis"] }
 
 hyper = { version = "0.14", features = ["client", "http1", "http2", "server", "stream", "tcp"] }
 uuid = { version = "0.8", features = ["v4"] }
