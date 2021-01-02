@@ -1,14 +1,16 @@
 mod logger;
 mod recover;
 mod request_id;
-mod session;
 mod timeout;
+mod cookies;
+
+pub mod session;
 
 pub use logger::LoggerMiddleware;
 pub use recover::RecoverMiddleware;
 pub use request_id::RequestIDMiddleware;
-pub use session::SessionMiddleware;
 pub use timeout::TimeoutMiddleware;
+pub use cookies::CookiesMiddleware;
 
 pub fn logger() -> LoggerMiddleware {
     LoggerMiddleware::default()
@@ -26,6 +28,6 @@ pub fn timeout() -> TimeoutMiddleware {
     TimeoutMiddleware::default()
 }
 
-pub fn session<Store: sessions::Storable>(store: Store) -> SessionMiddleware<Store> {
-    SessionMiddleware::new(store)
+pub fn cookies() -> CookiesMiddleware {
+    CookiesMiddleware::default()
 }

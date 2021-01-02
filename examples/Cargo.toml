@@ -1,7 +1,7 @@
 [package]
 name = "examples"
 version = "0.1.0-alpha"
-authors = ["Fangdun Cai <cfddream@gmail.com>"]
+authors = ["Fangdun Sai <cfddream@gmail.com>"]
 edition = "2018"
 publish = false
 
@@ -20,6 +20,7 @@ viz-router = { path = "../viz-router" }
 viz-utils = { path = "../viz-utils" }
 
 serde = { version = "1.0", features = ["derive"] }
+nanoid = "0.3"
 ramhorns = "0.9"
 bytes = "1.0"
 num_cpus = "1"
@@ -30,3 +31,6 @@ tokio = { version = "1.0", features = ["full"] }
 async-stream = "0.3"
 pin-project = "1.0"
 smol = "1.0"
+
+[dependencies]
+redis = "0.19.0"

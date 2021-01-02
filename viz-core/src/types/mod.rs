@@ -7,14 +7,14 @@ mod payload;
 mod query;
 mod state;
 
-pub use cookies::{ContextExt as _, Cookie, CookieJar, Cookies, CookiesError};
-pub use form::{form, ContextExt as _, Form};
+pub use cookies::{ContextExt as CookieContextExt, Cookie, CookieJar, Cookies, CookiesError};
+pub use form::{form, ContextExt as FormContextExt, Form};
 pub use json::{json, Json};
-pub use multipart::{multipart, ContextExt as _, Multipart};
-pub use params::{ContextExt as _, Params, ParamsDeserializer, ParamsError};
+pub use multipart::{multipart, ContextExt as MultipartContextExt, Multipart};
+pub use params::{ContextExt as ParamsContextExt, Params, ParamsDeserializer, ParamsError};
 pub use payload::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT};
-pub use query::{ContextExt as _, Query};
-pub use state::{ContextExt as _, State, StateFactory};
+pub use query::{ContextExt as QueryContextExt, Query};
+pub use state::{ContextExt as StateContextExt, State, StateFactory};
 
 #[cfg(test)]
 mod tests {
@@ -26,6 +26,7 @@ mod tests {
     use serde::Deserialize;
 
     use crate::*;
+    use types::*;
 
     #[derive(Debug, PartialEq, Deserialize)]
     struct Lang {

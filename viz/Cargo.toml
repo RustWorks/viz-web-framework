@@ -1,7 +1,7 @@
 [package]
 name = "viz"
 version = "0.1.0-alpha"
-authors = ["Fangdun Cai <cfddream@gmail.com>"]
+authors = ["Fangdun Sai <cfddream@gmail.com>"]
 description = "Fast, flexible, minimalist web framework for Rust"
 homepage = "https://viz.rs"
 documentation = "https://docs.rs/viz"
@@ -17,7 +17,8 @@ viz-core = { path = "../viz-core", version = "0.1.0-alpha" }
 viz-router = { path = "../viz-router", version = "0.1.0-alpha" }
 viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
 
-sessions = { git = "https://github.com/viz-rs/sessions.git", branch = "smol", features = ["memory-store"] }
+#sessions = { version = "0.1.5", features = ["memory"] }
+sessions = { version = "0.1.5", features = ["redis"] }
 
 hyper = { version = "0.14", features = ["client", "http1", "http2", "server", "stream", "tcp"] }
 uuid = { version = "0.8", features = ["v4"] }

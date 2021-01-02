@@ -1,4 +1,7 @@
-use std::sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use std::{
+    fmt,
+    sync::{Arc, RwLock, RwLockReadGuard, RwLockWriteGuard},
+};
 
 pub use cookie::{Cookie, CookieJar, Key, PrivateJar, SignedJar};
 
@@ -83,12 +86,24 @@ impl Cookies {
         self.read().get(name).cloned()
     }
 
+    pub fn add(&self, cookie: Cookie<'_>) {
+        self.write().add(cookie.into_owned())
+    }
+
     pub fn get_with_singed(&self, name: &str) -> Option<Cookie<'_>> {
         self.write().signed(&self.key).get(name)
     }
 
+    pub fn add_with_singed(&self, cookie: Cookie<'_>) {
+        self.write().signed(&self.key).add(cookie.into_owned())
+    }
+
     pub fn get_with_private(&self, name: &str) -> Option<Cookie<'_>> {
         self.write().private(&self.key).get(name)
+    }
+
+    pub fn add_with_private(&self, cookie: Cookie<'_>) {
+        self.write().private(&self.key).add(cookie.into_owned())
     }
 }
 
@@ -107,5 +122,14 @@ impl Extract for Cookies {
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
         Box::pin(async move { cx.cookies() })
+    }
+}
+
+impl fmt::Debug for Cookies {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Cookies")
+            .field("key", &"..")
+            .field("inner", &self.inner)
+            .finish()
     }
 }

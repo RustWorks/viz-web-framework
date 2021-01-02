@@ -2,6 +2,8 @@ use std::{future::Future, pin::Pin};
 
 use viz_core::{Context, Middleware, Response, Result};
 
+use viz_utils::log;
+
 #[derive(Debug)]
 pub struct RecoverMiddleware;
 
@@ -19,6 +21,7 @@ impl Default for RecoverMiddleware {
 
 impl RecoverMiddleware {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
+        log::trace!("Recover Middleware");
         Ok(cx.next().await.into())
     }
 }

@@ -31,6 +31,7 @@ use crate::{Error, Extract};
 
 /// Context Extends
 pub trait WsContextExt {
+    /// Get Ws
     fn ws(&mut self) -> Result<Ws, crate::Response>;
 }
 

@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 use smol::{self, Async};
 
 use viz_core::{
-    config::Config, http, into_guard, Context as VizContext, Error, Extract, Params,
+    config::Config, http, into_guard, types::Params, Context as VizContext, Error, Extract,
     Response as VizResponse, Result,
 };
 

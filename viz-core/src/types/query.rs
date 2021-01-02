@@ -4,7 +4,7 @@ use serde::de::DeserializeOwned;
 
 use viz_utils::{futures::future::BoxFuture, log, serde::urlencoded};
 
-use crate::{Context, Extract, PayloadError, Result};
+use crate::{Context, Extract, types::PayloadError, Result};
 
 /// Context Extends
 pub trait ContextExt {

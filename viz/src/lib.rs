@@ -16,6 +16,7 @@ pub fn new() -> Server {
 
 pub mod prelude {
     pub use viz_core::*;
+    pub use types::*;
     pub use viz_router::*;
 
     pub use crate::middleware;

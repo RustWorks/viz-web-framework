@@ -17,9 +17,9 @@ mod handler;
 mod macros;
 mod middleware;
 mod response;
-mod types;
 
 pub mod config;
+pub mod types;
 
 pub mod sse;
 pub mod ws;
@@ -30,7 +30,6 @@ pub use guard::{into_guard, Guard};
 pub use handler::{Handler, HandlerBase, HandlerCamp, HandlerSuper, HandlerWrapper};
 pub use middleware::{DynMiddleware, Middleware, Middlewares};
 pub use response::Response;
-pub use types::*;
 
 pub mod http {
     pub use ::http::*;

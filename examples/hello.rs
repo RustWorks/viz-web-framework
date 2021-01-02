@@ -25,6 +25,8 @@ use viz_utils::{
     thiserror::Error as ThisError,
 };
 
+use redis::Client as RedisClient;
+
 use sse::*;
 use ws::*;
 
@@ -118,6 +120,22 @@ struct User {
 
 async fn create_user(user: Json<User>) -> Result<String> {
     json::to_string_pretty(&*user).map_err(|e| anyhow!(e))
+}
+
+async fn login(session: State<middleware::session::Session>) -> Result<String> {
+    session.set::<String>("name", String::from("viz"));
+    session.save().await?;
+    Ok("Session Logined".to_string())
+}
+
+async fn renew(mut session: State<middleware::session::Session>) -> Result<String> {
+    session.renew().await?;
+    Ok("Session Renewed".to_string())
+}
+
+async fn logout(session: State<middleware::session::Session>) -> Result<String> {
+    session.destroy().await?;
+    Ok("Session Logouted".to_string())
 }
 
 fn sse_counter(counter: u64) -> Result<impl ServerSentEvent, Infallible> {
@@ -317,10 +335,22 @@ async fn main() -> Result {
         .state(users)
         .routes(
             router()
-                .mid(middleware::timeout())
-                .mid(middleware::request_id())
-                .mid(middleware::recover())
                 .mid(middleware::logger())
+                .mid(middleware::recover())
+                .mid(middleware::request_id())
+                .mid(middleware::timeout())
+                .mid(middleware::cookies())
+                .mid(middleware::session::SessionMiddleware::new(
+                    middleware::session::Config {
+                        cookie: middleware::session::CookieOptions::new(),
+                        // storage: Arc::new(middleware::session::MemoryStorage::default()),
+                        storage: Arc::new(middleware::session::RedisStorage::new(
+                            RedisClient::open("redis://127.0.0.1")?,
+                        )),
+                        generate: Box::new(|| nanoid::nanoid!(32)),
+                        verify: Box::new(|sid: &str| sid.len() == 32),
+                    },
+                ))
                 .mid(my_mid)
                 .at(
                     "/",
@@ -330,6 +360,9 @@ async fn main() -> Result {
                         .all(hello_world),
                 )
                 .at("/users", route().post(create_user))
+                .at("/login", route().post(login))
+                .at("/renew", route().post(renew))
+                .at("/logout", route().get(logout))
                 .at("/500", route().all(server_error))
                 .at("/ticks", route().get(ticks))
                 .at("/echo", route().get(echo))

@@ -1,48 +1,100 @@
-use std::{future::Future, pin::Pin};
+use std::{
+    convert::TryInto,
+    future::Future,
+    pin::Pin,
+    sync::{atomic::Ordering, Arc},
+    time::Duration,
+};
 
-use viz_core::{http, Context, Middleware, Response, Result};
+use viz_core::{
+    http,
+    types::Cookie,
+    types::{CookieContextExt, State},
+    Context, Middleware, Response, Result,
+};
 
 use viz_utils::log;
 
-use sessions::{MemoryStore, Session, SessionStatus, Storable};
+pub use sessions::*;
 
-pub struct SessionMiddleware<Store> {
-    store: Store,
-    from: SessionFrom,
-    name: String,
-    domain: String,
-    secure: bool,
+/// Session Middleware
+pub struct SessionMiddleware {
+    /// Session's `Config`
+    config: Arc<Config>,
 }
 
-pub enum SessionFrom {
-    Cookie,
-    Header,
-    Query,
-}
-
-impl Default for SessionFrom {
-    fn default() -> Self {
-        SessionFrom::Cookie
-    }
-}
-
-impl<Store: Storable> SessionMiddleware<Store> {
-    pub fn new(store: Store) -> Self {
+impl SessionMiddleware {
+    /// Create a new session middleware
+    pub fn new(config: Config) -> Self {
         Self {
-            store,
-            from: SessionFrom::default(),
-            name: "sid".to_string(),
-            domain: "".to_string(),
-            secure: true,
+            config: Arc::new(config),
         }
     }
 
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        cx.next().await
+        log::trace!("Session Middleware");
+
+        let id = cx
+            .cookie(&self.config.cookie.name)
+            .map(|c| c.value().to_string())
+            .filter(|s| self.config.verify(s))
+            .unwrap_or_else(|| self.config.generate());
+
+        let session = Session::new(&id, 0, self.config.clone());
+
+        if let Some(d) = self.config.get(&id).await? {
+            session.set_data(d)?;
+        }
+
+        cx.extensions_mut().insert(State::new(session));
+
+        let res = cx.next().await?;
+
+        let session = cx.session();
+        dbg!(&session);
+
+        let session_status = session.status();
+        if session_status > 0 {
+            let CookieOptions {
+                name,
+                max_age,
+                domain,
+                path,
+                secure,
+                http_only,
+                same_site,
+            } = self.config.cookie();
+
+            let mut cookie = Cookie::new(name, session.id()?);
+            dbg!(&cookie);
+
+            if let Some(domain) = domain {
+                cookie.set_domain(domain);
+            }
+            if let Some(path) = path {
+                cookie.set_path(path);
+            }
+
+            cookie.set_max_age(Some(
+                if session_status == 3 {
+                    Duration::new(0, 0)
+                } else {
+                    *max_age
+                }
+                .try_into()?,
+            ));
+            cookie.set_secure(*secure);
+            cookie.set_http_only(*http_only);
+            cookie.set_same_site(*same_site);
+
+            cx.cookies()?.add(cookie);
+        }
+
+        Ok(res)
     }
 }
 
-impl<'a, Store: Storable> Middleware<'a, Context> for SessionMiddleware<Store> {
+impl<'a> Middleware<'a, Context> for SessionMiddleware {
     type Output = Result<Response>;
 
     #[must_use]
@@ -60,6 +112,6 @@ pub trait ContextExt {
 
 impl ContextExt for Context {
     fn session(&self) -> &Session {
-        self.extensions().get::<Session>().unwrap()
+        self.extensions().get::<State<Session>>().unwrap()
     }
 }

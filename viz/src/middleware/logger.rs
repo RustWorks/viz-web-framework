@@ -21,6 +21,8 @@ impl Default for LoggerMiddleware {
 
 impl LoggerMiddleware {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
+        log::trace!("Logger Middleware");
+
         let start = Instant::now();
         let method = cx.method().to_string();
         let path = cx.uri().path().to_owned();

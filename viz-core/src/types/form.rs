@@ -6,8 +6,9 @@ use serde::de::DeserializeOwned;
 use viz_utils::{futures::future::BoxFuture, log, serde::urlencoded};
 
 use crate::{
-    config::ContextExt as _, get_length, get_mime, Context, Extract, Payload, PayloadCheck,
-    PayloadError, PAYLOAD_LIMIT,
+    config::ContextExt as _,
+    types::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT},
+    Context, Extract,
 };
 
 /// Context Extends

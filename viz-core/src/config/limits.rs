@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::PAYLOAD_LIMIT;
+use crate::types::PAYLOAD_LIMIT;
 
 /// Limits Settings
 #[derive(Debug, Deserialize, Serialize)]

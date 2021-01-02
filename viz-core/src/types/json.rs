@@ -9,8 +9,9 @@ use serde::de::DeserializeOwned;
 use viz_utils::{futures::future::BoxFuture, log, serde::json};
 
 use crate::{
-    config::ContextExt as _, get_length, get_mime, Context, Extract, Payload, PayloadCheck,
-    PayloadError,
+    config::ContextExt as _,
+    types::{get_length, get_mime, Payload, PayloadCheck, PayloadError},
+    Context, Extract,
 };
 
 /// Context Extends

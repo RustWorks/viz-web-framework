@@ -31,6 +31,8 @@ impl Default for TimeoutMiddleware {
 
 impl TimeoutMiddleware {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
+        log::trace!("Timeout Middleware");
+
         let method = cx.method().to_owned();
         let path = cx.path().to_owned();
 

@@ -53,8 +53,6 @@
 ## Todos
 
 * [ ] More friendly Routing
-* [ ] Sessions
-* [ ] Basic middlewares: `logger`, `cors`, `serve static files`
 * [ ] Template engines
 * [ ] TLS
 * [ ] GraphQL?
@@ -64,6 +62,17 @@
 * [x] Error handling
 * [x] Websocket
 * [x] Server-Sent Events
+* [x] Sessions
+* [ ] Middlewares
+    * [x] `logger`
+    * [x] `recover`
+    * [x] `request_id`
+    * [x] `timeout`
+    * [x] `cookies`
+    * [x] `session`
+    * [ ] `cors`
+    * [ ] `serve static files`
+
 
 ## Thanks
 
