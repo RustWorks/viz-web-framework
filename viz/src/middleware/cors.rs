@@ -3,6 +3,7 @@
 
 use std::{
     collections::HashSet, convert::TryFrom, future::Future, hash::Hash, pin::Pin, str::FromStr,
+    time::Duration,
 };
 
 use viz_core::{
@@ -14,7 +15,7 @@ use viz_core::{
         },
         headers::{
             AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlExposeHeaders,
-            HeaderMap, HeaderMapExt,
+            HeaderMap, HeaderMapExt, Origin,
         },
         Method, StatusCode,
     },
@@ -48,6 +49,7 @@ impl Into<Response> for CorsError {
 }
 
 /// CORS Middleware
+#[derive(Debug)]
 pub struct CorsMiddleware {
     allow_credentials: bool,
     allow_headers: HashSet<HeaderName>,
@@ -131,6 +133,44 @@ impl CorsMiddleware {
         HeaderName: TryFrom<I::Item>,
     {
         self.exposed_headers.extend(to_headers_iter(headers));
+        self
+    }
+
+    /// Sets the `Access-Control-Max-Age` header.
+    pub fn max_age(mut self, seconds: Duration) -> Self {
+        self.max_age = Some(seconds.as_secs());
+        self
+    }
+
+    /// Sets that *any* `Origin` header is allowed.
+    pub fn allow_any_origin(mut self) -> Self {
+        self.allow_origins = None;
+        self
+    }
+
+    /// Add an origin to the existing list of allowed `Origin`s.
+    pub fn allow_origin() {}
+
+    /// Add multiple origins to the existing list of allowed `Origin`s.
+    pub fn allow_origins<I>(mut self, origins: I) -> Self
+    where
+        I: IntoIterator,
+        I::Item: IntoOrigin,
+    {
+        let iter = origins
+            .into_iter()
+            .map(IntoOrigin::into_origin)
+            .map(|origin| {
+                origin
+                    .to_string()
+                    .parse()
+                    .expect("Origin is always a valid HeaderValue")
+            });
+
+        self.allow_origins
+            .get_or_insert_with(HashSet::new)
+            .extend(iter);
+
         self
     }
 
@@ -266,4 +306,18 @@ where
         .map(|m| TryFrom::try_from(m).ok())
         .filter(|m| m.is_some())
         .map(|m| m.unwrap())
+}
+
+pub trait IntoOrigin {
+    fn into_origin(self) -> Origin;
+}
+
+impl<'a> IntoOrigin for &'a str {
+    fn into_origin(self) -> Origin {
+        let mut parts = self.splitn(2, "://");
+        let scheme = parts.next().expect("missing scheme");
+        let rest = parts.next().expect("missing scheme");
+
+        Origin::try_from_parts(scheme, rest, None).expect("invalid Origin")
+    }
 }
