@@ -51,6 +51,7 @@
 * timeout
 * cookies
 * session
+* cors
 
 ## Todos
 
@@ -72,7 +73,7 @@
     * [x] `timeout`
     * [x] `cookies`
     * [x] `session`
-    * [ ] `cors`
+    * [x] `cors`
     * [ ] `serve static files`
 
 

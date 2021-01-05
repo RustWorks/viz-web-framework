@@ -31,8 +31,10 @@ pub use handler::{Handler, HandlerBase, HandlerCamp, HandlerSuper, HandlerWrappe
 pub use middleware::{DynMiddleware, Middleware, Middlewares};
 pub use response::Response;
 
+#[allow(missing_docs)]
 pub mod http {
     pub use ::http::*;
+    pub use headers;
     pub use hyper::Body;
 
     pub type Request<T = Body> = ::http::Request<T>;

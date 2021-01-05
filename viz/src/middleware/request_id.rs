@@ -10,13 +10,16 @@ fn generate_id() -> Result<String> {
     Ok(uuid::Uuid::new_v4().to_string())
 }
 
+/// RequestID Middleware
 pub struct RequestIDMiddleware {
-    // Header Name is must be lower-case.
+    /// Header Name is must be lower-case.
     header: &'static str,
+    /// Generates request id
     generator: Box<dyn Send + Sync + 'static + Fn() -> Result<String>>,
 }
 
 impl RequestIDMiddleware {
+    /// Creates new `RequestIDMiddleware`
     pub fn new<F>(header: &'static str, generator: F) -> Self
     where
         F: Send + Sync + 'static + Fn() -> Result<String>,
