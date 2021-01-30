@@ -4,6 +4,7 @@ mod request_id;
 mod timeout;
 mod cookies;
 
+pub mod auth;
 pub mod cors;
 pub mod session;
 

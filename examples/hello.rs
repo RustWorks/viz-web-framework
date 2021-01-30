@@ -1,25 +1,23 @@
 use std::{
     collections::HashMap,
     convert::Infallible,
-    pin::Pin,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
     },
-    task::{Context as TaskContext, Poll},
 };
 
 use async_stream::stream;
-use pin_project::pin_project;
 use serde::{Deserialize, Serialize};
 use tokio::{
     sync::{mpsc, RwLock},
-    time::{interval, Duration, Instant, Interval},
+    time::{interval, Duration},
 };
+use tokio_stream::wrappers::IntervalStream;
 
 use viz::prelude::*;
 use viz_utils::{
-    futures::{pin_mut, stream::Stream, FutureExt, StreamExt},
+    futures::{pin_mut, FutureExt, StreamExt},
     log, pretty_env_logger,
     serde::json,
     thiserror::Error as ThisError,
@@ -138,41 +136,19 @@ async fn logout(session: State<middleware::session::Session>) -> Result<String> 
     Ok("Session Logouted".to_string())
 }
 
-fn sse_counter(counter: u64) -> Result<impl ServerSentEvent, Infallible> {
-    Ok(sse::data(counter))
-}
-
-#[pin_project]
-struct IntervalCounter<F> {
-    interval: Pin<Box<Interval>>,
-    f: F,
-}
-
-impl<F, T> Stream for IntervalCounter<F>
-where
-    T: ServerSentEvent,
-    F: FnMut(Instant) -> Result<T, Infallible>,
-{
-    type Item = Result<T, Infallible>;
-
-    fn poll_next(mut self: Pin<&mut Self>, cx: &mut TaskContext<'_>) -> Poll<Option<Self::Item>> {
-        match self.interval.as_mut().poll_tick(cx) {
-            Poll::Pending => Poll::Pending,
-            Poll::Ready(i) => Poll::Ready(Some((self.f)(i))),
-        }
-    }
+fn sse_counter(counter: u64) -> Result<Event, Infallible> {
+    Ok(sse::Event::default().data(counter.to_string()))
 }
 
 async fn ticks() -> Response {
     let mut counter: u64 = 0;
     // create server event source
-    let event_stream = IntervalCounter {
-        interval: Box::pin(interval(Duration::from_secs(1))),
-        f: move |_| {
-            counter += 1;
-            sse_counter(counter)
-        },
-    };
+    let interval = interval(Duration::from_secs(1));
+    let stream = IntervalStream::new(interval);
+    let event_stream = stream.map(move |_| {
+        counter += 1;
+        sse_counter(counter)
+    });
     // reply using server-sent events
     sse::reply(event_stream)
 }
@@ -340,6 +316,14 @@ async fn main() -> Result {
                 .mid(middleware::request_id())
                 .mid(middleware::timeout())
                 .mid(middleware::cookies())
+                .mid(
+                    middleware::auth::BasicMiddleware::new().users(
+                        [("viz".to_string(), "rust".to_string())]
+                            .iter()
+                            .cloned()
+                            .collect(),
+                    ),
+                )
                 .mid(middleware::session::SessionMiddleware::new(
                     middleware::session::Config {
                         cookie: middleware::session::CookieOptions::new(),

@@ -245,7 +245,7 @@ impl CorsMiddleware {
                 if let Some(headers) = cx.header(ACCESS_CONTROL_REQUEST_HEADERS) {
                     let headers = headers.to_str().map_err(|_| CorsError::MethodNotAllowed)?;
                     for header in headers.split(',') {
-                        if !self.is_header_allowed(header) {
+                        if !self.is_header_allowed(header.trim()) {
                             return Err(CorsError::HeaderNotAllowed.into());
                         }
                     }

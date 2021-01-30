@@ -52,6 +52,7 @@
 * cookies
 * session
 * cors
+* auth
 
 ## Todos
 
@@ -67,6 +68,7 @@
 * [x] Server-Sent Events
 * [x] Sessions
 * [ ] Middlewares
+    * [x] `auth`
     * [x] `logger`
     * [x] `recover`
     * [x] `request_id`
@@ -74,7 +76,9 @@
     * [x] `cookies`
     * [x] `session`
     * [x] `cors`
+    * [ ] `jwt`
     * [ ] `serve static files`
+    * [ ] `compression`
 
 
 ## Thanks

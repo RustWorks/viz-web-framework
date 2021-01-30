@@ -3,7 +3,7 @@ json = 8_000_000
 form = 1_000_000
 
 [cookies]
-secret_key = 'the main key is here'
+secret_key = 'WdYqiCCJ6rtH8rp9c4Np8u7cQvNBjvQXjgVRkgPrxgYvDxfKeRJQJyTkKrCEoanA'
 
 [extras]
 hello = 'world'
