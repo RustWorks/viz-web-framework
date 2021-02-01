@@ -7,6 +7,7 @@ mod cookies;
 pub mod auth;
 pub mod cors;
 pub mod session;
+pub mod compression;
 
 pub use logger::LoggerMiddleware;
 pub use recover::RecoverMiddleware;

@@ -12,6 +12,9 @@ license = "MIT/Apache-2.0"
 readme = "README.md"
 edition = "2018"
 
+[features]
+compression = []
+
 [dependencies]
 viz-core = { path = "../viz-core", version = "0.1.0-alpha" }
 viz-router = { path = "../viz-router", version = "0.1.0-alpha" }
@@ -23,3 +26,9 @@ sessions = { version = "0.1.6", features = ["redis"] }
 hyper = { version = "0.14", features = ["client", "http1", "http2", "server", "stream", "tcp"] }
 uuid = { version = "0.8", features = ["v4"] }
 async-io = "0.1"
+
+# compression
+async-compression = { version = "0.3.7", features = ["brotli", "deflate", "gzip", "tokio"] }
+bytes = "1.0.1"
+tokio-util = { version = "0.6.2", features = ["io"] }
+pin-project = "1.0.4"

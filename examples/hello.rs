@@ -335,6 +335,7 @@ async fn main() -> Result {
                         verify: Box::new(|sid: &str| sid.len() == 32),
                     },
                 ))
+                .mid(middleware::compression::brotli())
                 .mid(my_mid)
                 .at(
                     "/",

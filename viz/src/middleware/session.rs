@@ -1,3 +1,5 @@
+//! Session
+
 use std::{convert::TryInto, future::Future, pin::Pin, sync::Arc, time::Duration};
 
 use viz_core::{

@@ -53,6 +53,7 @@
 * session
 * cors
 * auth
+* compression
 
 ## Todos
 
@@ -76,9 +77,9 @@
     * [x] `cookies`
     * [x] `session`
     * [x] `cors`
+    * [x] `compression`
     * [ ] `jwt`
     * [ ] `serve static files`
-    * [ ] `compression`
 
 
 ## Thanks
