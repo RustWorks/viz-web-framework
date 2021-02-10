@@ -43,6 +43,16 @@ impl Response {
         }
     }
 
+    /// Gets raw response
+    pub fn raw(&self) -> &http::Response {
+        &self.raw
+    }
+
+    /// Get mut raw response
+    pub fn raw_mut(&mut self) -> &mut http::Response {
+        &mut self.raw
+    }
+
     /// Responds Text
     pub fn text(data: impl Into<http::Body>) -> Self {
         let mut raw = http::Response::new(data.into());
