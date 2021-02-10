@@ -17,6 +17,7 @@ use viz_core::{
 use viz_router::{Method, Router, Tree};
 use viz_utils::{anyhow::anyhow, log};
 
+/// Viz Server
 pub struct Server {
     tree: Arc<Tree>,
     config: Option<Arc<Config>>,
