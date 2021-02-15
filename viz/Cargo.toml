@@ -1,6 +1,6 @@
 [package]
 name = "viz"
-version = "0.1.0-alpha"
+version = "0.1.0-alpha.1"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Fast, flexible, minimalist web framework for Rust"
 homepage = "https://viz.rs"
@@ -16,19 +16,19 @@ edition = "2018"
 compression = []
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0-alpha" }
-viz-router = { path = "../viz-router", version = "0.1.0-alpha" }
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
+viz-core = { path = "../viz-core", version = "0.1.0-alpha.1" }
+viz-router = { path = "../viz-router", version = "0.1.0-alpha.1" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.1" }
 
 #sessions = { version = "0.1.6", features = ["memory"] }
-sessions = { version = "0.1.6", features = ["redis"] }
+sessions = { version = "0.1.7", features = ["redis"] }
 
 hyper = { version = "0.14", features = ["client", "http1", "http2", "server", "stream", "tcp"] }
 uuid = { version = "0.8", features = ["v4"] }
 async-io = "0.1"
 
 # compression
-async-compression = { version = "0.3.7", features = ["brotli", "deflate", "gzip", "tokio"] }
-bytes = "1.0.1"
-tokio-util = { version = "0.6.2", features = ["io"] }
-pin-project = "1.0.4"
+async-compression = { version = "0.3", features = ["brotli", "deflate", "gzip", "tokio"] }
+bytes = "1.0"
+tokio-util = { version = "0.6", features = ["io"] }
+pin-project = "1.0"

@@ -1,6 +1,6 @@
 [package]
 name = "viz-core"
-version = "0.1.0-alpha"
+version = "0.1.0-alpha.1"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Core"
 license = "Apache-2.0/MIT"
@@ -10,7 +10,7 @@ edition = "2018"
 # cookies = ["cookie"]
 
 [dependencies]
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.1" }
 
 handle = "1"
 
