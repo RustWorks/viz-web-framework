@@ -14,7 +14,7 @@ viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.1" }
 
 handle = "1"
 
-form-data = { git = "https://github.com/viz-rs/form-data.git", version = "0.1.0-dev" }
+form-data = "0.1.0-dev"
 bytes = "1.0"
 http = "0.2"
 headers = "0.3"
