@@ -1,4 +1,7 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    fmt,
+    ops::{Deref, DerefMut},
+};
 
 use viz_utils::{anyhow::anyhow, futures::future::BoxFuture, log};
 
@@ -30,7 +33,7 @@ impl ContextExt for Context {
     }
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone)]
 pub struct State<T>(T);
 
 impl<T> State<T>
@@ -64,6 +67,12 @@ impl<T> Deref for State<T> {
 impl<T> DerefMut for State<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
+    }
+}
+
+impl<T: fmt::Debug> fmt::Debug for State<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        T::fmt(&self, f)
     }
 }
 

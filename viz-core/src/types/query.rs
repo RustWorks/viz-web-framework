@@ -1,10 +1,13 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    fmt,
+    ops::{Deref, DerefMut},
+};
 
 use serde::de::DeserializeOwned;
 
 use viz_utils::{futures::future::BoxFuture, log, serde::urlencoded};
 
-use crate::{Context, Extract, types::PayloadError, Result};
+use crate::{types::PayloadError, Context, Extract, Result};
 
 /// Context Extends
 pub trait ContextExt {
@@ -26,7 +29,7 @@ impl ContextExt for Context {
 }
 
 /// Query Extractor
-#[derive(Debug)]
+#[derive(Clone)]
 pub struct Query<T>(pub T);
 
 impl<T> Query<T> {
@@ -53,6 +56,12 @@ impl<T> Deref for Query<T> {
 impl<T> DerefMut for Query<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
+    }
+}
+
+impl<T: fmt::Debug> fmt::Debug for Query<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        T::fmt(&self, f)
     }
 }
 
