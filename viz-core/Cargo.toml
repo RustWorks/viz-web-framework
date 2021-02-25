@@ -10,7 +10,7 @@ edition = "2018"
 default = []
 
 sse = ["tokio/time"]
-ws = ["tokio-tungstenite", "pin-project"]
+ws = ["tokio/rt", "tokio-tungstenite", "pin-project"]
 
 [dependencies]
 viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.2" }
