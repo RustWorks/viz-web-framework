@@ -18,7 +18,7 @@ pub mod prelude {
     pub use types::*;
 }
 
-#[cfg(any(feature = "middleware", feature = "middleware-full"))]
+#[cfg(feature = "middleware")]
 pub use viz_middleware as middleware;
 
 pub use viz_utils as utils;

@@ -1,28 +1,17 @@
 [package]
 name = "viz-middleware"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Middleware"
 license = "Apache-2.0/MIT"
 edition = "2018"
 
 [features]
-default = []
-
-basic = [
+default = [
   "logger",
   "recover",
   "request_id",
   "timeout"
-]
-
-full = [
-  "basic",
-  "cookies",
-  "session",
-  "auth",
-  "cors",
-  "compression"
 ]
 
 logger = []
@@ -43,8 +32,8 @@ compression = [
 ]
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0-alpha.1" }
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.1" }
+viz-core = { path = "../viz-core", version = "0.1.0-alpha.3" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.3" }
 
 uuid = { version = "0.8", features = ["v4"], optional = true }
 

@@ -1,6 +1,6 @@
 [package]
 name = "viz-core"
-version = "0.1.0-alpha.2"
+version = "0.1.0-alpha.3"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Core"
 license = "Apache-2.0/MIT"
@@ -13,7 +13,7 @@ sse = ["tokio/time"]
 ws = ["tokio/rt", "tokio-tungstenite", "pin-project"]
 
 [dependencies]
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.2" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.3" }
 
 handle = "1"
 

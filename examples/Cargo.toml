@@ -10,7 +10,7 @@ name = "hello"
 path = "hello.rs"
 
 [dev-dependencies]
-viz = { path = "../viz", features = ["middleware-full", "sse", "ws"] }
+viz = { path = "../viz", features = ["middleware", "middleware-auth", "middleware-session", "middleware-cookies", "middleware-compression", "sse", "ws"] }
 
 serde = { version = "1.0", features = ["derive"] }
 nanoid = "0.3"
