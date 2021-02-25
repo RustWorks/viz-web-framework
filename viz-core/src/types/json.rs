@@ -51,6 +51,7 @@ impl ContextExt for Context {
 }
 
 /// Json Extractor
+#[derive(Clone)]
 pub struct Json<T>(pub T);
 
 impl<T> Json<T> {

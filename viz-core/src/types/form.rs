@@ -1,4 +1,7 @@
-use std::ops::{Deref, DerefMut};
+use std::{
+    fmt,
+    ops::{Deref, DerefMut},
+};
 
 use bytes::buf::Buf;
 use serde::de::DeserializeOwned;
@@ -65,6 +68,7 @@ impl ContextExt for Context {
 }
 
 /// Form Extractor
+#[derive(Clone)]
 pub struct Form<T>(pub T);
 
 impl<T> Form<T> {
@@ -91,6 +95,12 @@ impl<T> DerefMut for Form<T> {
 impl<T> PayloadCheck for Form<T> {
     fn check_type(m: &mime::Mime) -> bool {
         is_form(m)
+    }
+}
+
+impl<T: fmt::Debug> fmt::Debug for Form<T> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        T::fmt(&self, f)
     }
 }
 
