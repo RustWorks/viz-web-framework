@@ -21,7 +21,9 @@ mod response;
 pub mod config;
 pub mod types;
 
+#[cfg(feature = "sse")]
 pub mod sse;
+#[cfg(feature = "ws")]
 pub mod ws;
 
 pub use context::Context;
@@ -36,6 +38,7 @@ pub mod http {
     pub use ::http::*;
     pub use headers;
     pub use hyper::Body;
+    pub use hyper::Error;
 
     pub type Request<T = Body> = ::http::Request<T>;
     pub type Response<T = Body> = ::http::Response<T>;

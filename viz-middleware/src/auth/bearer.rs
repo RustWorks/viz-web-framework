@@ -27,6 +27,7 @@ impl<F> BearerMiddleware<F>
 where
     F: Fn(&str) -> bool,
 {
+    /// Creates a `BearerMiddleware`
     pub fn new(f: F) -> Self {
         Self {
             f

@@ -99,7 +99,9 @@ impl<'a> Middleware<'a, Context> for SessionMiddleware {
     }
 }
 
+/// Session Ext for Context
 pub trait ContextExt {
+    /// Gets a session
     fn session(&self) -> &Session;
 }
 

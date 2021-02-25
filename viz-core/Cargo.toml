@@ -1,16 +1,19 @@
 [package]
 name = "viz-core"
-version = "0.1.0-alpha.1"
+version = "0.1.0-alpha.2"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Core"
 license = "Apache-2.0/MIT"
 edition = "2018"
 
 [features]
-# cookies = ["cookie"]
+default = []
+
+sse = ["tokio/time"]
+ws = ["tokio-tungstenite", "pin-project"]
 
 [dependencies]
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.1" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.2" }
 
 handle = "1"
 
@@ -23,9 +26,10 @@ toml = "0.5"
 hyper = { version = "0.14", features = ["stream"] }
 serde = { version = "1.0", features = ["derive"] }
 cookie = { version = "0.14", default-features = false, features = ["percent-encode", "secure"] }
-tokio = { version = "1.0", default-features = false, features = ["rt", "time"] }
-tokio-tungstenite = "0.13"
-pin-project = "1.0"
+
+tokio = { version = "1.0", default-features = false, features = ["rt", "time"], optional = true }
+tokio-tungstenite = { version = "0.13", optional = true }
+pin-project = { version = "1.0", optional = true }
 
 [dev-dependencies]
 futures-executor = "0.3"

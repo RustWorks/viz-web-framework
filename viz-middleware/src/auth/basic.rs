@@ -22,6 +22,7 @@ pub struct BasicMiddleware {
 }
 
 impl BasicMiddleware {
+    /// Creates new `BasicMiddleware`
     pub fn new() -> Self {
         Self {
             users: HashMap::new(),
@@ -29,11 +30,13 @@ impl BasicMiddleware {
         }
     }
 
+    /// Creates new `BasicMiddleware` with users
     pub fn users(mut self, users: HashMap<String, String>) -> Self {
         self.users = users;
         self
     }
 
+    /// Creates new `BasicMiddleware` with realm
     pub fn realm(mut self, realm: String) -> Self {
         self.realm = realm;
         self

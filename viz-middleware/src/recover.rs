@@ -4,20 +4,9 @@ use viz_core::{Context, Middleware, Response, Result};
 
 use viz_utils::log;
 
-#[derive(Debug)]
-pub struct RecoverMiddleware;
-
-impl RecoverMiddleware {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Default for RecoverMiddleware {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+/// Recover Middleware
+#[derive(Default)]
+pub struct RecoverMiddleware {}
 
 impl RecoverMiddleware {
     async fn run(&self, cx: &mut Context) -> Result<Response> {

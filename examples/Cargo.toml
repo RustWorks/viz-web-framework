@@ -9,15 +9,8 @@ publish = false
 name = "hello"
 path = "hello.rs"
 
-[[example]]
-name = "hello-smol"
-path = "hello-smol.rs"
-
 [dev-dependencies]
-viz = { path = "../viz" }
-viz-core = { path = "../viz-core" }
-viz-router = { path = "../viz-router" }
-viz-utils = { path = "../viz-utils" }
+viz = { path = "../viz", features = ["middleware-full", "sse", "ws"] }
 
 serde = { version = "1.0", features = ["derive"] }
 nanoid = "0.3"

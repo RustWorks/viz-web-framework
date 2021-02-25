@@ -23,6 +23,7 @@ use viz_core::{
     http::{
         self,
         header::{HeaderValue, CONTENT_ENCODING, CONTENT_LENGTH},
+        Error as HyperError,
         Body,
     },
     Context, Middleware, Response, Result,
@@ -38,6 +39,7 @@ pub struct Compression<Algo> {
 }
 
 impl<Algo> Compression<Algo> {
+    /// Creates a Compression
     pub fn new() -> Self {
         Self {
             level: Level::Default,
@@ -45,6 +47,7 @@ impl<Algo> Compression<Algo> {
         }
     }
 
+    /// Creates a Compression with a quality
     pub fn with_quality(mut self, level: Level) -> Self {
         self.level = level;
         self
@@ -79,7 +82,7 @@ where
     }
 }
 
-impl From<Body> for CompressableBody<Body, hyper::Error> {
+impl From<Body> for CompressableBody<Body, HyperError> {
     fn from(body: Body) -> Self {
         CompressableBody { body }
     }
@@ -98,7 +101,7 @@ impl<R> Compression<BrotliEncoder<R>> {
         Ok(http::Response::from_parts(
             parts,
             Body::wrap_stream(ReaderStream::new(BrotliEncoder::with_quality(
-                StreamReader::new(Into::<CompressableBody<Body, hyper::Error>>::into(body)),
+                StreamReader::new(Into::<CompressableBody<Body, HyperError>>::into(body)),
                 self.level,
             ))),
         )
@@ -134,7 +137,7 @@ impl<R> Compression<DeflateEncoder<R>> {
         Ok(http::Response::from_parts(
             parts,
             Body::wrap_stream(ReaderStream::new(DeflateEncoder::with_quality(
-                StreamReader::new(Into::<CompressableBody<Body, hyper::Error>>::into(body)),
+                StreamReader::new(Into::<CompressableBody<Body, HyperError>>::into(body)),
                 self.level,
             ))),
         )
@@ -170,7 +173,7 @@ impl<R> Compression<GzipEncoder<R>> {
         Ok(http::Response::from_parts(
             parts,
             Body::wrap_stream(ReaderStream::new(GzipEncoder::with_quality(
-                StreamReader::new(Into::<CompressableBody<Body, hyper::Error>>::into(body)),
+                StreamReader::new(Into::<CompressableBody<Body, HyperError>>::into(body)),
                 self.level,
             ))),
         )
@@ -195,18 +198,18 @@ where
 
 /// compresses the Body of Response using brotli
 pub fn brotli(
-) -> Compression<BrotliEncoder<StreamReader<CompressableBody<Body, hyper::Error>, Bytes>>> {
+) -> Compression<BrotliEncoder<StreamReader<CompressableBody<Body, HyperError>, Bytes>>> {
     Compression::new()
 }
 
 /// compresses the Body of Response using gzip
-pub fn gzip() -> Compression<GzipEncoder<StreamReader<CompressableBody<Body, hyper::Error>, Bytes>>>
+pub fn gzip() -> Compression<GzipEncoder<StreamReader<CompressableBody<Body, HyperError>, Bytes>>>
 {
     Compression::new()
 }
 
 /// compresses the Body of Response using deflate
 pub fn deflate(
-) -> Compression<DeflateEncoder<StreamReader<CompressableBody<Body, hyper::Error>, Bytes>>> {
+) -> Compression<DeflateEncoder<StreamReader<CompressableBody<Body, HyperError>, Bytes>>> {
     Compression::new()
 }

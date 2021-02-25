@@ -308,7 +308,9 @@ where
         .map(|m| m.unwrap())
 }
 
+/// Into to Origin
 pub trait IntoOrigin {
+    /// Into a Origin
     fn into_origin(self) -> Origin;
 }
 

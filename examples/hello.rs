@@ -16,12 +16,13 @@ use tokio::{
 use tokio_stream::wrappers::IntervalStream;
 
 use viz::prelude::*;
-use viz_utils::{
+use viz::utils::{
     futures::{pin_mut, FutureExt, StreamExt},
     log, pretty_env_logger,
     serde::json,
     thiserror::Error as ThisError,
 };
+use viz::middleware;
 
 use redis::Client as RedisClient;
 
@@ -311,11 +312,11 @@ async fn main() -> Result {
         .state(users)
         .routes(
             router()
-                .mid(middleware::logger())
-                .mid(middleware::recover())
-                .mid(middleware::request_id())
-                .mid(middleware::timeout())
-                .mid(middleware::cookies())
+                .mid(middleware::LoggerMiddleware::default())
+                .mid(middleware::RecoverMiddleware::default())
+                .mid(middleware::RequestIDMiddleware::default())
+                .mid(middleware::TimeoutMiddleware::default())
+                .mid(middleware::CookiesMiddleware::default())
                 .mid(
                     middleware::auth::BasicMiddleware::new().users(
                         [("viz".to_string(), "rust".to_string())]

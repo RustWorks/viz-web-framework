@@ -5,15 +5,10 @@ use viz_core::{http, types::CookieContextExt, Context, Middleware, Response, Res
 use viz_utils::log;
 
 /// Cookies Middleware
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct CookiesMiddleware {}
 
 impl CookiesMiddleware {
-    /// Creates new `CookiesMiddleware`
-    pub fn new() -> Self {
-        Self {}
-    }
-
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         log::trace!("Cookies Middleware");
 

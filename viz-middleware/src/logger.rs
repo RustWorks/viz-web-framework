@@ -1,23 +1,11 @@
 use std::{future::Future, pin::Pin, time::Instant};
 
 use viz_core::{http, Context, Middleware, Response, Result};
-
 use viz_utils::log;
 
-#[derive(Debug)]
-pub struct LoggerMiddleware;
-
-impl LoggerMiddleware {
-    pub fn new() -> Self {
-        Self {}
-    }
-}
-
-impl Default for LoggerMiddleware {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+/// Logger Middleware
+#[derive(Default)]
+pub struct LoggerMiddleware {}
 
 impl LoggerMiddleware {
     async fn run(&self, cx: &mut Context) -> Result<Response> {

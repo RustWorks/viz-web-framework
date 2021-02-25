@@ -5,6 +5,7 @@ members = [
   "viz-core",
   "viz-router",
   "viz-utils",
+  "viz-middleware",
 
   "examples"
 ]

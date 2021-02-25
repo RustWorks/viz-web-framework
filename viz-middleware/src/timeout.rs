@@ -1,16 +1,12 @@
 use std::{future::Future, pin::Pin, time::Duration};
 
-use async_io::Timer;
+use tokio::time::timeout;
 
 use viz_core::{http, Context, Middleware, Response, Result};
 
-use viz_utils::{
-    futures::future::{select, Either},
-    log,
-};
+use viz_utils::log;
 
 /// Timeout Middleware
-#[derive(Debug)]
 pub struct TimeoutMiddleware {
     /// 0.256s
     delay: Duration,
@@ -36,23 +32,13 @@ impl TimeoutMiddleware {
         let method = cx.method().to_owned();
         let path = cx.path().to_owned();
 
-        match select(
-            Box::pin(cx.next()),
-            Box::pin(Self::timeout(self.delay, method, path)),
-        )
-        .await
-        {
-            Either::Left((x, _)) => x,
-            Either::Right((y, _)) => y,
+        match timeout(self.delay, cx.next()).await {
+            Ok(r) => r,
+            Err(e) => {
+                log::debug!("Timeout: {} {} {}", method, path, e);
+                Ok(http::StatusCode::REQUEST_TIMEOUT.into())
+            }
         }
-    }
-
-    async fn timeout(delay: Duration, method: http::Method, path: String) -> Result<Response> {
-        Timer::new(delay).await;
-
-        log::debug!("Timeout: {} {}", method, path);
-
-        Ok(http::StatusCode::REQUEST_TIMEOUT.into())
     }
 }
 

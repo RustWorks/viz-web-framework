@@ -5,8 +5,6 @@
 
 mod server;
 
-pub mod middleware;
-
 pub use server::serve;
 pub use server::Server;
 
@@ -18,6 +16,9 @@ pub mod prelude {
     pub use viz_core::*;
     pub use viz_router::*;
     pub use types::*;
-
-    pub use crate::middleware;
 }
+
+#[cfg(any(feature = "middleware", feature = "middleware-full"))]
+pub use viz_middleware as middleware;
+
+pub use viz_utils as utils;
