@@ -142,28 +142,28 @@ where
     F: FnOnce(WebSocket) -> U + Send + 'static,
     U: Future<Output = ()> + Send + 'static,
 {
-    fn from(mut v: WsResponse<F>) -> crate::Response {
-        let on_upgrade = v.on_upgrade;
-        let config = v.ws.config;
+    fn from(v: WsResponse<F>) -> crate::Response {
+        if let Some(on_upgrade) = v.ws.on_upgrade {
+            let on_upgrade_cb = v.on_upgrade;
+            let config = v.ws.config;
+            let fut = on_upgrade
+                .and_then(move |upgraded| {
+                    log::trace!("websocket upgrade complete");
+                    WebSocket::from_raw_socket(upgraded, protocol::Role::Server, config).map(Ok)
+                })
+                .and_then(move |socket| on_upgrade_cb(socket).map(Ok))
+                .map(|result| {
+                    if let Err(err) = result {
+                        log::debug!("ws upgrade error: {}", err);
+                    }
+                });
 
-        let mut res = ::hyper::Response::new(v.ws.body);
-        if let Some(on_upgrade) = v.ws.on_upgrade.take() {
-            res.extensions_mut().insert(on_upgrade);
+            ::tokio::task::spawn(fut);
+        } else {
+            log::debug!("ws couldn't be upgraded since no upgrade state was present");
         }
 
-        let fut = ::hyper::upgrade::on(&mut res)
-            .and_then(move |upgraded| {
-                log::trace!("websocket upgrade complete");
-                WebSocket::from_raw_socket(upgraded, protocol::Role::Server, config).map(Ok)
-            })
-            .and_then(move |socket| on_upgrade(socket).map(Ok))
-            .map(|result| {
-                if let Err(err) = result {
-                    log::debug!("ws upgrade error: {}", err);
-                }
-            });
-
-        ::tokio::task::spawn(fut);
+        let mut res = http::Response::default();
 
         *res.status_mut() = ::hyper::StatusCode::SWITCHING_PROTOCOLS;
 
