@@ -95,7 +95,7 @@ impl Cookies {
     }
 
     pub fn add_with_singed(&self, cookie: Cookie<'_>) {
-        self.write().signed(&self.key).add(cookie.into_owned())
+        self.write().signed_mut(&self.key).add(cookie.into_owned())
     }
 
     pub fn get_with_private(&self, name: &str) -> Option<Cookie<'_>> {
@@ -103,7 +103,7 @@ impl Cookies {
     }
 
     pub fn add_with_private(&self, cookie: Cookie<'_>) {
-        self.write().private(&self.key).add(cookie.into_owned())
+        self.write().private_mut(&self.key).add(cookie.into_owned())
     }
 }
 
