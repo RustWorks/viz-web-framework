@@ -23,8 +23,7 @@ use viz_core::{
     http::{
         self,
         header::{HeaderValue, CONTENT_ENCODING, CONTENT_LENGTH},
-        Error as HyperError,
-        Body,
+        Body, Error as HyperError,
     },
     Context, Middleware, Response, Result,
 };
@@ -203,8 +202,7 @@ pub fn brotli(
 }
 
 /// compresses the Body of Response using gzip
-pub fn gzip() -> Compression<GzipEncoder<StreamReader<CompressableBody<Body, HyperError>, Bytes>>>
-{
+pub fn gzip() -> Compression<GzipEncoder<StreamReader<CompressableBody<Body, HyperError>, Bytes>>> {
     Compression::new()
 }
 

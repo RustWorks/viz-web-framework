@@ -57,9 +57,9 @@ impl BasicMiddleware {
             .headers()
             .typed_get::<Authorization<Basic>>()
             .and_then(|auth| {
-                self.users
-                    .get(auth.0.username())
-                    .filter(|password| *password == auth.0.password())
+                let user = auth.0.username();
+                let pswd = auth.0.password();
+                self.users.get(user).filter(|password| *password == pswd)
             })
             .is_some()
         {
@@ -69,7 +69,7 @@ impl BasicMiddleware {
         let mut res: Response = StatusCode::UNAUTHORIZED.into();
         res.headers_mut().insert(
             WWW_AUTHENTICATE,
-            HeaderValue::from_str(&format!("basic realm={}", self.realm))?,
+            HeaderValue::from_str("invalid authorization header")?,
         );
         Ok(res)
     }

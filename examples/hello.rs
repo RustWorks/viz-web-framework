@@ -15,6 +15,7 @@ use tokio::{
 };
 use tokio_stream::wrappers::IntervalStream;
 
+use viz::middleware::*;
 use viz::prelude::*;
 use viz::utils::{
     futures::{pin_mut, FutureExt, StreamExt},
@@ -22,10 +23,10 @@ use viz::utils::{
     serde::json,
     thiserror::Error as ThisError,
 };
-use viz::middleware;
 
 use redis::Client as RedisClient;
 
+use jwt::jsonwebtoken;
 use sse::*;
 use ws::*;
 
@@ -121,18 +122,18 @@ async fn create_user(user: Json<User>) -> Result<String> {
     json::to_string_pretty(&*user).map_err(|e| anyhow!(e))
 }
 
-async fn login(session: State<middleware::session::Session>) -> Result<String> {
+async fn login(session: State<session::Session>) -> Result<String> {
     session.set::<String>("name", String::from("viz"));
     session.save().await?;
     Ok("Session Logined".to_string())
 }
 
-async fn renew(mut session: State<middleware::session::Session>) -> Result<String> {
+async fn renew(mut session: State<session::Session>) -> Result<String> {
     session.renew().await?;
     Ok("Session Renewed".to_string())
 }
 
-async fn logout(session: State<middleware::session::Session>) -> Result<String> {
+async fn logout(session: State<session::Session>) -> Result<String> {
     session.destroy().await?;
     Ok("Session Logouted".to_string())
 }
@@ -308,35 +309,58 @@ async fn main() -> Result {
 
     let users = Users::default();
 
+    #[derive(Debug, Serialize, Deserialize)]
+    struct Claims {
+        sub: String,
+        company: String,
+    }
+
+    let my_claims = Claims {
+        sub: "hello".to_string(),
+        company: "viz".to_string(),
+    };
+
+    let token = jsonwebtoken::encode(
+        &jsonwebtoken::Header::default(),
+        &my_claims,
+        &jsonwebtoken::EncodingKey::from_secret("secret".as_ref()),
+    )?;
+
+    dbg!(token);
+
     app.state(Arc::new(AtomicUsize::new(0)))
         .state(users)
         .routes(
             router()
-                .mid(middleware::LoggerMiddleware::default())
-                .mid(middleware::RecoverMiddleware::default())
-                .mid(middleware::RequestIDMiddleware::default())
-                .mid(middleware::TimeoutMiddleware::default())
-                .mid(middleware::CookiesMiddleware::default())
+                .mid(LoggerMiddleware::default())
+                .mid(RecoverMiddleware::default())
+                .mid(RequestIDMiddleware::default())
+                .mid(TimeoutMiddleware::default())
+                .mid(CookiesMiddleware::default())
                 .mid(
-                    middleware::auth::BasicMiddleware::new().users(
-                        [("viz".to_string(), "rust".to_string())]
-                            .iter()
-                            .cloned()
-                            .collect(),
-                    ),
+                    jwt::JWTMiddleware::<Claims>::new().validation(jsonwebtoken::Validation {
+                        validate_exp: false,
+                        ..Default::default()
+                    }),
                 )
-                .mid(middleware::session::SessionMiddleware::new(
-                    middleware::session::Config {
-                        cookie: middleware::session::CookieOptions::new(),
-                        // storage: Arc::new(middleware::session::MemoryStorage::default()),
-                        storage: Arc::new(middleware::session::RedisStorage::new(
-                            RedisClient::open("redis://127.0.0.1")?,
-                        )),
-                        generate: Box::new(|| nanoid::nanoid!(32)),
-                        verify: Box::new(|sid: &str| sid.len() == 32),
-                    },
-                ))
-                .mid(middleware::compression::brotli())
+                // .mid(
+                //     auth::BasicMiddleware::new().users(
+                //         [("viz".to_string(), "rust".to_string())]
+                //             .iter()
+                //             .cloned()
+                //             .collect(),
+                //     ),
+                // )
+                .mid(session::SessionMiddleware::new(session::Config {
+                    cookie: session::CookieOptions::new(),
+                    // storage: Arc::new(middleware::session::MemoryStorage::default()),
+                    storage: Arc::new(session::RedisStorage::new(RedisClient::open(
+                        "redis://127.0.0.1",
+                    )?)),
+                    generate: Box::new(|| nanoid::nanoid!(32)),
+                    verify: Box::new(|sid: &str| sid.len() == 32),
+                }))
+                .mid(compression::brotli())
                 .mid(my_mid)
                 .at(
                     "/",

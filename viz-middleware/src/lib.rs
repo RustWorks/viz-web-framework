@@ -1,11 +1,6 @@
 //! Viz Middleware
 
-#![deny(
-    missing_docs,
-    rust_2018_idioms,
-    unused_imports,
-    dead_code
-)]
+#![deny(missing_docs, rust_2018_idioms, unused_imports, dead_code)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 // Disallow warnings when running tests.
 #![cfg_attr(test, deny(warnings))]
@@ -48,3 +43,6 @@ pub mod cors;
 
 #[cfg(feature = "compression")]
 pub mod compression;
+
+#[cfg(feature = "jwt")]
+pub mod jwt;
