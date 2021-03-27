@@ -10,6 +10,8 @@ use viz_core::{
     Context, Middleware, Response, Result,
 };
 
+use viz_utils::log;
+
 #[cfg(feature = "jwt-header")]
 use viz_core::http::headers::{
     authorization::{Authorization, Bearer},
@@ -77,23 +79,24 @@ where
     }
 
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        let reason = if let Some(val) = self.get(cx) {
+        let (status, error) = if let Some(val) = self.get(cx) {
             match decode::<T>(&val, &DecodingKey::from_secret(self.s.as_ref()), &self.v) {
                 Ok(token) => {
                     cx.extensions_mut().insert(token);
                     return cx.next().await;
                 }
-                Err(e) => e.to_string(),
+                Err(e) => {
+                    log::error!("JWT error: {}", e);
+                    (StatusCode::UNAUTHORIZED, "Invalid or expired JWT")
+                },
             }
         } else {
-            "Missing Token".to_string()
+            (StatusCode::BAD_REQUEST, "Missing or malformed JWT")
         };
 
-        let mut res: Response = StatusCode::UNAUTHORIZED.into();
-        res.headers_mut().insert(
-            WWW_AUTHENTICATE,
-            HeaderValue::from_str(&format!("JWT {}", reason))?,
-        );
+        let mut res: Response = status.into();
+        res.headers_mut()
+            .insert(WWW_AUTHENTICATE, HeaderValue::from_str(error)?);
         Ok(res)
     }
 
