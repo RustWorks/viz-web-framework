@@ -15,7 +15,7 @@ ws = ["tokio/rt", "tokio-tungstenite", "pin-project"]
 [dependencies]
 viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.4" }
 
-handle = "1"
+handle = "1.0"
 
 form-data = "0.1.0-dev"
 bytes = "1.0"
