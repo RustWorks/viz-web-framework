@@ -10,7 +10,7 @@ name = "hello"
 path = "hello.rs"
 
 [dev-dependencies]
-viz = { path = "../viz", features = ["middleware", "middleware-auth", "middleware-session", "middleware-cookies", "middleware-compression", "middleware-jwt", "sse", "ws"] }
+viz = { path = "../viz", features = [ "middleware", "middleware-auth", "middleware-session", "middleware-cookies", "middleware-compression", "middleware-jwt", "sse", "ws" ] }
 
 serde = { version = "1.0", features = ["derive"] }
 nanoid = "0.3"
@@ -20,7 +20,7 @@ num_cpus = "1"
 futures = "0.3"
 
 hyper = { version = "0.14", features = ["http1", "http2", "stream", "tcp", "server"] }
-tokio = { version = "1.0", features = ["full"] }
+tokio = { version = "1.4", features = ["full"] }
 async-stream = "0.3"
 pin-project = "1.0"
 
