@@ -38,9 +38,7 @@ impl fmt::Display for Response {
 impl Response {
     /// Creates a response
     pub fn new() -> Self {
-        Self {
-            raw: http::Response::new(http::Body::empty()),
-        }
+        Self { raw: http::Response::new(http::Body::empty()) }
     }
 
     /// Gets raw response
@@ -147,17 +145,13 @@ where
 
 impl From<String> for Response {
     fn from(s: String) -> Self {
-        Self {
-            raw: http::Response::new(http::Body::from(s)),
-        }
+        Self { raw: http::Response::new(http::Body::from(s)) }
     }
 }
 
 impl From<&'_ str> for Response {
     fn from(s: &'_ str) -> Self {
-        Self {
-            raw: http::Response::new(s.to_owned().into()),
-        }
+        Self { raw: http::Response::new(s.to_owned().into()) }
     }
 }
 
@@ -169,17 +163,13 @@ impl From<Cow<'_, str>> for Response {
 
 impl From<&'_ [u8]> for Response {
     fn from(s: &'_ [u8]) -> Self {
-        Self {
-            raw: http::Response::new(http::Body::from(s.to_owned())),
-        }
+        Self { raw: http::Response::new(http::Body::from(s.to_owned())) }
     }
 }
 
 impl From<()> for Response {
     fn from(_: ()) -> Self {
-        Self {
-            raw: http::Response::new(http::Body::empty()),
-        }
+        Self { raw: http::Response::new(http::Body::empty()) }
     }
 }
 

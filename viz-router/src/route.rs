@@ -78,9 +78,7 @@ impl Route {
     where
         M: for<'m> Middleware<'m, Context, Output = Result<Response>>,
     {
-        self.middleware
-            .get_or_insert_with(Vec::new)
-            .insert(0, Arc::new(m));
+        self.middleware.get_or_insert_with(Vec::new).insert(0, Arc::new(m));
         self
     }
 
@@ -98,8 +96,7 @@ impl Route {
         T: Extract + Send + Sync + 'static,
         T::Error: Into<Response> + Send,
     {
-        self.handlers
-            .insert(method, Arc::new(HandlerWrapper::new(handler)));
+        self.handlers.insert(method, Arc::new(HandlerWrapper::new(handler)));
         self
     }
 
@@ -129,8 +126,7 @@ impl Route {
         T: Extract + Send + Sync + 'static,
         T::Error: Into<Response> + Send,
     {
-        self.handlers
-            .insert(method, Arc::new(HandlerSuper::new(handler)));
+        self.handlers.insert(method, Arc::new(HandlerSuper::new(handler)));
         self
     }
 
@@ -166,18 +162,9 @@ impl fmt::Debug for Route {
             .fold(
                 f.debug_struct("Route")
                     .field("path", &self.path)
-                    .field(
-                        "name",
-                        &self
-                            .name
-                            .as_ref()
-                            .map_or_else(String::new, |v| v.to_owned()),
-                    )
+                    .field("name", &self.name.as_ref().map_or_else(String::new, |v| v.to_owned()))
                     .field("carry", &self.carry)
-                    .field(
-                        "middle",
-                        &self.middleware.as_ref().map_or_else(|| 0, |v| v.len()),
-                    )
+                    .field("middle", &self.middleware.as_ref().map_or_else(|| 0, |v| v.len()))
                     .field("guard", &self.guard.as_ref().map_or_else(|| 0, |_| 1)),
                 |acc, x| acc.field("verb", &x),
             )

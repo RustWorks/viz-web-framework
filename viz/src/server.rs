@@ -32,20 +32,14 @@ impl Default for Server {
 
 impl Server {
     pub fn new() -> Self {
-        Self {
-            state: None,
-            config: None,
-            tree: Arc::new(Tree::new()),
-        }
+        Self { state: None, config: None, tree: Arc::new(Tree::new()) }
     }
 
     pub fn state<T>(&mut self, state: T) -> &mut Self
     where
         T: Clone + Send + Sync + 'static,
     {
-        self.state
-            .get_or_insert_with(Vec::new)
-            .push(Arc::new(State::new(state)));
+        self.state.get_or_insert_with(Vec::new).push(Arc::new(State::new(state)));
         self
     }
 
@@ -56,8 +50,7 @@ impl Server {
 
     pub async fn config(&mut self) -> Arc<Config> {
         log::info!("loading config");
-        self.config
-            .replace(Arc::new(Config::load().await.unwrap_or_default()));
+        self.config.replace(Arc::new(Config::load().await.unwrap_or_default()));
         self.config.clone().unwrap()
     }
 
@@ -116,8 +109,7 @@ pub async fn serve(
         .and_then(|t| t.find(path))
         .or_else(|| {
             if method == http::Method::HEAD {
-                tree.get(&Method::Verb(http::Method::GET))
-                    .and_then(|t| t.find(path))
+                tree.get(&Method::Verb(http::Method::GET)).and_then(|t| t.find(path))
             } else {
                 None
             }

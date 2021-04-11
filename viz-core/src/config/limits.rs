@@ -18,11 +18,7 @@ pub struct Limits {
 
 impl Default for Limits {
     fn default() -> Self {
-        Self {
-            form: form_limit(),
-            json: json_limit(),
-            multipart: multipart_limit(),
-        }
+        Self { form: form_limit(), json: json_limit(), multipart: multipart_limit() }
     }
 }
 

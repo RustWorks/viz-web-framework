@@ -170,9 +170,7 @@ impl SseContextExt for crate::Context {
     where
         T: FromStr + Send + Sync + 'static,
     {
-        self.header("last-event-id")
-            .and_then(|v| v.to_str().ok())
-            .and_then(|v| v.parse::<T>().ok())
+        self.header("last-event-id").and_then(|v| v.to_str().ok()).and_then(|v| v.parse::<T>().ok())
     }
 }
 
@@ -214,11 +212,9 @@ where
 
         let mut res = hyper::Response::new(hyper::Body::wrap_stream(body_stream));
         // Set appropriate content type
-        res.headers_mut()
-            .insert(CONTENT_TYPE, HeaderValue::from_static("text/event-stream"));
+        res.headers_mut().insert(CONTENT_TYPE, HeaderValue::from_static("text/event-stream"));
         // Disable response body caching
-        res.headers_mut()
-            .insert(CACHE_CONTROL, HeaderValue::from_static("no-cache"));
+        res.headers_mut().insert(CACHE_CONTROL, HeaderValue::from_static("no-cache"));
         res.into()
     }
 }
@@ -291,10 +287,7 @@ struct SseKeepAlive<S> {
 /// as shown below link.
 /// See [notes](https://html.spec.whatwg.org/multipage/server-sent-events.html).
 pub fn keep_alive() -> KeepAlive {
-    KeepAlive {
-        comment_text: Cow::Borrowed(""),
-        max_interval: Duration::from_secs(15),
-    }
+    KeepAlive { comment_text: Cow::Borrowed(""), max_interval: Duration::from_secs(15) }
 }
 
 impl<S> Stream for SseKeepAlive<S>
@@ -311,8 +304,7 @@ where
                 Poll::Pending => Poll::Pending,
                 Poll::Ready(_) => {
                     // restart timer
-                    pin.alive_timer
-                        .reset(tokio::time::Instant::now() + *pin.max_interval);
+                    pin.alive_timer.reset(tokio::time::Instant::now() + *pin.max_interval);
                     let comment_str = pin.comment_text.clone();
                     let event = Event::default().comment(comment_str);
                     Poll::Ready(Some(Ok(event)))
@@ -320,8 +312,7 @@ where
             },
             Poll::Ready(Some(Ok(event))) => {
                 // restart timer
-                pin.alive_timer
-                    .reset(tokio::time::Instant::now() + *pin.max_interval);
+                pin.alive_timer.reset(tokio::time::Instant::now() + *pin.max_interval);
                 Poll::Ready(Some(Ok(event)))
             }
             Poll::Ready(None) => Poll::Ready(None),

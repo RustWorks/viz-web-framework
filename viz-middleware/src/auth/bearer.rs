@@ -45,10 +45,8 @@ where
         }
 
         let mut res: Response = StatusCode::UNAUTHORIZED.into();
-        res.headers_mut().insert(
-            WWW_AUTHENTICATE,
-            HeaderValue::from_str("invalid authorization header")?,
-        );
+        res.headers_mut()
+            .insert(WWW_AUTHENTICATE, HeaderValue::from_str("invalid authorization header")?);
         Ok(res)
     }
 }

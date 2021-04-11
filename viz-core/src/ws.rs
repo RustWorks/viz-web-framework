@@ -50,17 +50,11 @@ impl WsContextExt for crate::Context {
             .map(|(key, body)| Ws {
                 key,
                 body,
-                on_upgrade: self
-                    .extensions_mut()
-                    .remove::<::hyper::upgrade::OnUpgrade>(),
+                on_upgrade: self.extensions_mut().remove::<::hyper::upgrade::OnUpgrade>(),
                 config: None,
             })
             .ok_or_else(|| {
-                (
-                    ::hyper::StatusCode::BAD_REQUEST,
-                    "invalid websocket upgrade request",
-                )
-                    .into()
+                (::hyper::StatusCode::BAD_REQUEST, "invalid websocket upgrade request").into()
             })
     }
 }
@@ -91,36 +85,26 @@ impl Ws {
         F: FnOnce(WebSocket) -> U + Send + 'static,
         U: Future<Output = ()> + Send + 'static,
     {
-        WsResponse {
-            ws: self,
-            on_upgrade: func,
-        }
-        .into()
+        WsResponse { ws: self, on_upgrade: func }.into()
     }
 
     // config
 
     /// Set the size of the internal message send queue.
     pub fn max_send_queue(mut self, max: usize) -> Self {
-        self.config
-            .get_or_insert_with(WebSocketConfig::default)
-            .max_send_queue = Some(max);
+        self.config.get_or_insert_with(WebSocketConfig::default).max_send_queue = Some(max);
         self
     }
 
     /// Set the maximum message size (defaults to 64 megabytes)
     pub fn max_message_size(mut self, max: usize) -> Self {
-        self.config
-            .get_or_insert_with(WebSocketConfig::default)
-            .max_message_size = Some(max);
+        self.config.get_or_insert_with(WebSocketConfig::default).max_message_size = Some(max);
         self
     }
 
     /// Set the maximum frame size (defaults to 16 megabytes)
     pub fn max_frame_size(mut self, max: usize) -> Self {
-        self.config
-            .get_or_insert_with(WebSocketConfig::default)
-            .max_frame_size = Some(max);
+        self.config.get_or_insert_with(WebSocketConfig::default).max_frame_size = Some(max);
         self
     }
 }
@@ -169,8 +153,7 @@ where
 
         res.headers_mut().typed_insert(Connection::upgrade());
         res.headers_mut().typed_insert(Upgrade::websocket());
-        res.headers_mut()
-            .typed_insert(SecWebsocketAccept::from(v.ws.key));
+        res.headers_mut().typed_insert(SecWebsocketAccept::from(v.ws.key));
 
         res.into()
     }
@@ -276,23 +259,17 @@ pub struct Message {
 impl Message {
     /// Construct a new Text `Message`.
     pub fn text<S: Into<String>>(s: S) -> Message {
-        Message {
-            inner: protocol::Message::text(s),
-        }
+        Message { inner: protocol::Message::text(s) }
     }
 
     /// Construct a new Binary `Message`.
     pub fn binary<V: Into<Vec<u8>>>(v: V) -> Message {
-        Message {
-            inner: protocol::Message::binary(v),
-        }
+        Message { inner: protocol::Message::binary(v) }
     }
 
     /// Construct a new Ping `Message`.
     pub fn ping<V: Into<Vec<u8>>>(v: V) -> Message {
-        Message {
-            inner: protocol::Message::Ping(v.into()),
-        }
+        Message { inner: protocol::Message::Ping(v.into()) }
     }
 
     /// Construct a new Pong `Message`.
@@ -301,16 +278,12 @@ impl Message {
     /// automatically responds to the Ping messages it receives. Manual construction might still be useful in some cases
     /// like in tests or to send unidirectional heartbeats.
     pub fn pong<V: Into<Vec<u8>>>(v: V) -> Message {
-        Message {
-            inner: protocol::Message::Pong(v.into()),
-        }
+        Message { inner: protocol::Message::Pong(v.into()) }
     }
 
     /// Construct the default Close `Message`.
     pub fn close() -> Message {
-        Message {
-            inner: protocol::Message::Close(None),
-        }
+        Message { inner: protocol::Message::Close(None) }
     }
 
     /// Construct a Close `Message` with a code and reason.

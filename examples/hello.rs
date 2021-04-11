@@ -315,10 +315,7 @@ async fn main() -> Result {
         company: String,
     }
 
-    let my_claims = Claims {
-        sub: "hello".to_string(),
-        company: "viz".to_string(),
-    };
+    let my_claims = Claims { sub: "hello".to_string(), company: "viz".to_string() };
 
     let token = jsonwebtoken::encode(
         &jsonwebtoken::Header::default(),
@@ -328,61 +325,56 @@ async fn main() -> Result {
 
     dbg!(token);
 
-    app.state(Arc::new(AtomicUsize::new(0)))
-        .state(users)
-        .routes(
-            router()
-                .mid(LoggerMiddleware::default())
-                .mid(RecoverMiddleware::default())
-                .mid(RequestIDMiddleware::default())
-                .mid(TimeoutMiddleware::default())
-                .mid(CookiesMiddleware::default())
-                .mid(
-                    jwt::JWTMiddleware::<Claims>::new().validation(jsonwebtoken::Validation {
-                        validate_exp: false,
-                        ..Default::default()
-                    }),
-                )
-                // .mid(
-                //     auth::BasicMiddleware::new().users(
-                //         [("viz".to_string(), "rust".to_string())]
-                //             .iter()
-                //             .cloned()
-                //             .collect(),
-                //     ),
-                // )
-                .mid(session::SessionMiddleware::new(session::Config {
-                    cookie: session::CookieOptions::new(),
-                    // storage: Arc::new(middleware::session::MemoryStorage::default()),
-                    storage: Arc::new(session::RedisStorage::new(RedisClient::open(
-                        "redis://127.0.0.1",
-                    )?)),
-                    generate: Box::new(|| nanoid::nanoid!(32)),
-                    verify: Box::new(|sid: &str| sid.len() == 32),
-                }))
-                .mid(compression::brotli())
-                .mid(my_mid)
-                .at(
-                    "/",
-                    route()
-                        // .guard(allow_get)
-                        .guard(into_guard(allow_get) | into_guard(allow_head))
-                        .all(hello_world),
-                )
-                .at("/users", route().post(create_user))
-                .at("/login", route().post(login))
-                .at("/renew", route().post(renew))
-                .at("/logout", route().get(logout))
-                .at("/500", route().all(server_error))
-                .at("/ticks", route().get(ticks))
-                .at("/echo", route().get(echo))
-                .at(
-                    "/chat",
-                    route().get(|| async { Response::html(INDEX_HTML) }),
-                )
-                .at("/chat/", route().get2(chat))
-                .at("/*", route().all(not_found)),
-        );
+    app.state(Arc::new(AtomicUsize::new(0))).state(users).routes(
+        router()
+            .mid(LoggerMiddleware::default())
+            .mid(RecoverMiddleware::default())
+            .mid(RequestIDMiddleware::default())
+            .mid(TimeoutMiddleware::default())
+            .mid(CookiesMiddleware::default())
+            .mid(
+                jwt::JWTMiddleware::<Claims>::new().validation(jsonwebtoken::Validation {
+                    validate_exp: false,
+                    ..Default::default()
+                }),
+            )
+            // .mid(
+            //     auth::BasicMiddleware::new().users(
+            //         [("viz".to_string(), "rust".to_string())]
+            //             .iter()
+            //             .cloned()
+            //             .collect(),
+            //     ),
+            // )
+            .mid(session::SessionMiddleware::new(session::Config {
+                cookie: session::CookieOptions::new(),
+                // storage: Arc::new(middleware::session::MemoryStorage::default()),
+                storage: Arc::new(session::RedisStorage::new(RedisClient::open(
+                    "redis://127.0.0.1",
+                )?)),
+                generate: Box::new(|| nanoid::nanoid!(32)),
+                verify: Box::new(|sid: &str| sid.len() == 32),
+            }))
+            .mid(compression::brotli())
+            .mid(my_mid)
+            .at(
+                "/",
+                route()
+                    // .guard(allow_get)
+                    .guard(into_guard(allow_get) | into_guard(allow_head))
+                    .all(hello_world),
+            )
+            .at("/users", route().post(create_user))
+            .at("/login", route().post(login))
+            .at("/renew", route().post(renew))
+            .at("/logout", route().get(logout))
+            .at("/500", route().all(server_error))
+            .at("/ticks", route().get(ticks))
+            .at("/echo", route().get(echo))
+            .at("/chat", route().get(|| async { Response::html(INDEX_HTML) }))
+            .at("/chat/", route().get2(chat))
+            .at("/*", route().all(not_found)),
+    );
 
     app.listen("127.0.0.1:8080").await
 }

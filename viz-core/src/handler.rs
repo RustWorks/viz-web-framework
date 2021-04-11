@@ -67,10 +67,7 @@ where
 
     #[inline]
     fn clone_handler(&self) -> Box<dyn Handler> {
-        Box::new(Self {
-            f: self.f.clone(),
-            _t: PhantomData,
-        })
+        Box::new(Self { f: self.f.clone(), _t: PhantomData })
     }
 }
 
@@ -135,10 +132,7 @@ where
 
     #[inline]
     fn clone_handler(&self) -> Box<dyn Handler> {
-        Box::new(Self {
-            f: self.f.clone(),
-            _t: PhantomData,
-        })
+        Box::new(Self { f: self.f.clone(), _t: PhantomData })
     }
 }
 
@@ -176,11 +170,7 @@ mod test {
             type Error = Error;
 
             fn extract<'a>(_: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
-                Box::pin(async {
-                    Ok(Info {
-                        hello: "world".to_owned(),
-                    })
-                })
+                Box::pin(async { Ok(Info { hello: "world".to_owned() }) })
             }
         }
 
@@ -210,30 +200,15 @@ mod test {
 
             let r_0 = extract::<Info>(&mut cx).await.unwrap();
 
-            assert_eq!(
-                r_0,
-                Info {
-                    hello: "world".to_owned(),
-                }
-            );
+            assert_eq!(r_0, Info { hello: "world".to_owned() });
 
             let r_1 = cx.extract::<Info>().await.unwrap();
 
-            assert_eq!(
-                r_1,
-                Info {
-                    hello: "world".to_owned(),
-                }
-            );
+            assert_eq!(r_1, Info { hello: "world".to_owned() });
 
             let r = extract::<Option<Info>>(&mut cx).await.unwrap();
 
-            assert_eq!(
-                r,
-                Some(Info {
-                    hello: "world".to_owned(),
-                })
-            );
+            assert_eq!(r, Some(Info { hello: "world".to_owned() }));
 
             let r0 = extract::<(Info, User)>(&mut cx).await.unwrap();
             let r1 = extract::<(User, Info)>(&mut cx).await.unwrap();
@@ -263,12 +238,7 @@ mod test {
             assert!(r.is_ok());
 
             async fn b(i: Info, u: User) -> Result<Response> {
-                assert_eq!(
-                    i,
-                    Info {
-                        hello: "world".to_owned(),
-                    }
-                );
+                assert_eq!(i, Info { hello: "world".to_owned() });
                 assert_eq!(u, User { id: 0 });
                 Ok(Response::new())
             }
@@ -353,33 +323,19 @@ mod test {
                 type Error = Error;
 
                 fn extract<'a>(_: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
-                    Box::pin(async {
-                        Ok(Language {
-                            name: "rust".to_owned(),
-                        })
-                    })
+                    Box::pin(async { Ok(Language { name: "rust".to_owned() }) })
                 }
             }
 
             async fn hello(lang: Language) -> &'static str {
-                assert_eq!(
-                    lang,
-                    Language {
-                        name: "rust".to_owned()
-                    }
-                );
+                assert_eq!(lang, Language { name: "rust".to_owned() });
 
                 "Hello"
             }
 
             async fn world(cx: &mut Context, lang: Language) -> &'static str {
                 assert_eq!(cx.method(), "GET");
-                assert_eq!(
-                    lang,
-                    Language {
-                        name: "rust".to_owned()
-                    }
-                );
+                assert_eq!(lang, Language { name: "rust".to_owned() });
 
                 "World"
             }

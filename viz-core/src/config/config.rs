@@ -90,9 +90,6 @@ pub trait ContextExt {
 
 impl ContextExt for Context {
     fn config(&self) -> Arc<Config> {
-        self.extensions()
-            .get::<Arc<Config>>()
-            .cloned()
-            .unwrap_or_default()
+        self.extensions().get::<Arc<Config>>().cloned().unwrap_or_default()
     }
 }

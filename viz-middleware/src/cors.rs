@@ -40,11 +40,7 @@ pub enum CorsError {
 
 impl Into<Response> for CorsError {
     fn into(self) -> Response {
-        (
-            StatusCode::FORBIDDEN,
-            format!("CORS request forbidden: {}", self.to_string()),
-        )
-            .into()
+        (StatusCode::FORBIDDEN, format!("CORS request forbidden: {}", self.to_string())).into()
     }
 }
 
@@ -157,19 +153,11 @@ impl CorsMiddleware {
         I: IntoIterator,
         I::Item: IntoOrigin,
     {
-        let iter = origins
-            .into_iter()
-            .map(IntoOrigin::into_origin)
-            .map(|origin| {
-                origin
-                    .to_string()
-                    .parse()
-                    .expect("Origin is always a valid HeaderValue")
-            });
+        let iter = origins.into_iter().map(IntoOrigin::into_origin).map(|origin| {
+            origin.to_string().parse().expect("Origin is always a valid HeaderValue")
+        });
 
-        self.allow_origins
-            .get_or_insert_with(HashSet::new)
-            .extend(iter);
+        self.allow_origins.get_or_insert_with(HashSet::new).extend(iter);
 
         self
     }
@@ -212,10 +200,7 @@ impl CorsMiddleware {
         headers.insert(ACCESS_CONTROL_ALLOW_ORIGIN, origin);
 
         if self.allow_credentials {
-            headers.insert(
-                ACCESS_CONTROL_ALLOW_CREDENTIALS,
-                HeaderValue::from_static("true"),
-            );
+            headers.insert(ACCESS_CONTROL_ALLOW_CREDENTIALS, HeaderValue::from_static("true"));
         }
 
         if !self.exposed_headers.is_empty() {
@@ -289,11 +274,7 @@ fn to_hash_set<T>(list: &[&str]) -> HashSet<T>
 where
     T: FromStr + Hash + Eq,
 {
-    list.iter()
-        .map(|m| T::from_str(m).ok())
-        .filter(|m| m.is_some())
-        .map(|m| m.unwrap())
-        .collect()
+    list.iter().map(|m| T::from_str(m).ok()).filter(|m| m.is_some()).map(|m| m.unwrap()).collect()
 }
 
 fn to_headers_iter<H, T>(headers: H) -> impl IntoIterator<Item = T>

@@ -14,8 +14,6 @@ impl Default for Cookies {
         let mut v = Vec::new();
         v.extend_from_slice(&k.signing());
         v.extend_from_slice(&k.encryption());
-        Self {
-            secret_key: String::from_utf8_lossy(&v).to_string(),
-        }
+        Self { secret_key: String::from_utf8_lossy(&v).to_string() }
     }
 }

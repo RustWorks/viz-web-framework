@@ -24,10 +24,7 @@ pub struct BasicMiddleware {
 impl BasicMiddleware {
     /// Creates new `BasicMiddleware`
     pub fn new() -> Self {
-        Self {
-            users: HashMap::new(),
-            realm: String::from("Restricted"),
-        }
+        Self { users: HashMap::new(), realm: String::from("Restricted") }
     }
 
     /// Creates new `BasicMiddleware` with users
@@ -67,10 +64,8 @@ impl BasicMiddleware {
         }
 
         let mut res: Response = StatusCode::UNAUTHORIZED.into();
-        res.headers_mut().insert(
-            WWW_AUTHENTICATE,
-            HeaderValue::from_str("invalid authorization header")?,
-        );
+        res.headers_mut()
+            .insert(WWW_AUTHENTICATE, HeaderValue::from_str("invalid authorization header")?);
         Ok(res)
     }
 }

@@ -41,11 +41,7 @@ impl ContextExt for Context {
                 .extensions()
                 .get::<Params>()
                 .map(|ps| {
-                    Params(
-                        ps.iter()
-                            .map(|p| (p.0.as_str(), p.1.as_str()))
-                            .collect::<Vec<_>>(),
-                    )
+                    Params(ps.iter().map(|p| (p.0.as_str(), p.1.as_str())).collect::<Vec<_>>())
                 })
                 .ok_or_else(|| ParamsError::Read)?,
         ))
@@ -67,10 +63,7 @@ impl ContextExt for Context {
         T: FromStr,
         T::Err: Display,
     {
-        self.extensions()
-            .get::<Params>()
-            .ok_or_else(|| ParamsError::Read)?
-            .find(name)
+        self.extensions().get::<Params>().ok_or_else(|| ParamsError::Read)?.find(name)
     }
 }
 
@@ -152,11 +145,7 @@ impl Into<Params> for Vec<(String, String)> {
 
 impl Into<Params> for Vec<(&str, &str)> {
     fn into(self) -> Params {
-        Params(
-            self.iter()
-                .map(|p| (p.0.to_string(), p.1.to_string()))
-                .collect::<Vec<_>>(),
-        )
+        Params(self.iter().map(|p| (p.0.to_string(), p.1.to_string())).collect::<Vec<_>>())
     }
 }
 
@@ -178,10 +167,7 @@ macro_rules! unsupported_type {
         where
             V: Visitor<'de>,
         {
-            Err(de::value::Error::custom(concat!(
-                "unsupported type: ",
-                $name
-            )))
+            Err(de::value::Error::custom(concat!("unsupported type: ", $name)))
         }
     };
 }
@@ -213,10 +199,7 @@ pub struct ParamsDeserializer<'de> {
 
 impl<'de> ParamsDeserializer<'de> {
     pub fn new(params: &'de Params<Vec<(&'de str, &'de str)>>) -> ParamsDeserializer<'de> {
-        Self {
-            len: params.len(),
-            params: params.iter().peekable(),
-        }
+        Self { len: params.len(), params: params.iter().peekable() }
     }
 }
 
@@ -312,13 +295,9 @@ impl<'de> Deserializer<'de> for ParamsDeserializer<'de> {
         V: Visitor<'de>,
     {
         if self.len < 1 {
-            Err(de::value::Error::custom(
-                "expeceted at least one parameters",
-            ))
+            Err(de::value::Error::custom("expeceted at least one parameters"))
         } else {
-            visitor.visit_enum(ValueEnum {
-                value: &self.params.nth(0).unwrap().1,
-            })
+            visitor.visit_enum(ValueEnum { value: &self.params.nth(0).unwrap().1 })
         }
     }
 

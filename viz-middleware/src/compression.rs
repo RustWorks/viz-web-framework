@@ -40,10 +40,7 @@ pub struct Compression<Algo> {
 impl<Algo> Compression<Algo> {
     /// Creates a Compression
     pub fn new() -> Self {
-        Self {
-            level: Level::Default,
-            algo: PhantomData::default(),
-        }
+        Self { level: Level::Default, algo: PhantomData::default() }
     }
 
     /// Creates a Compression with a quality
@@ -92,9 +89,7 @@ impl<R> Compression<BrotliEncoder<R>> {
         let res: http::Response = cx.next().await?.into();
         let (mut parts, body) = res.into_parts();
 
-        parts
-            .headers
-            .append(CONTENT_ENCODING, HeaderValue::from_static("br"));
+        parts.headers.append(CONTENT_ENCODING, HeaderValue::from_static("br"));
         parts.headers.remove(CONTENT_LENGTH);
 
         Ok(http::Response::from_parts(
@@ -128,9 +123,7 @@ impl<R> Compression<DeflateEncoder<R>> {
         let res: http::Response = cx.next().await?.into();
         let (mut parts, body) = res.into_parts();
 
-        parts
-            .headers
-            .append(CONTENT_ENCODING, HeaderValue::from_static("deflate"));
+        parts.headers.append(CONTENT_ENCODING, HeaderValue::from_static("deflate"));
         parts.headers.remove(CONTENT_LENGTH);
 
         Ok(http::Response::from_parts(
@@ -164,9 +157,7 @@ impl<R> Compression<GzipEncoder<R>> {
         let res: http::Response = cx.next().await?.into();
         let (mut parts, body) = res.into_parts();
 
-        parts
-            .headers
-            .append(CONTENT_ENCODING, HeaderValue::from_static("gzip"));
+        parts.headers.append(CONTENT_ENCODING, HeaderValue::from_static("gzip"));
         parts.headers.remove(CONTENT_LENGTH);
 
         Ok(http::Response::from_parts(

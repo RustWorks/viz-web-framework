@@ -48,16 +48,12 @@ impl Router {
     where
         M: for<'a> Middleware<'a, Context, Output = Result<Response>>,
     {
-        self.middleware
-            .get_or_insert_with(Vec::new)
-            .insert(0, Arc::new(m));
+        self.middleware.get_or_insert_with(Vec::new).insert(0, Arc::new(m));
         self
     }
 
     pub fn scope(mut self, path: &str, router: Router) -> Self {
-        self.children
-            .get_or_insert_with(Vec::new)
-            .push(router.path(path));
+        self.children.get_or_insert_with(Vec::new).push(router.path(path));
         self
     }
 
@@ -67,9 +63,7 @@ impl Router {
     }
 
     pub fn at(mut self, path: &str, route: Route) -> Self {
-        self.routes
-            .get_or_insert_with(Vec::new)
-            .push(route.path(path));
+        self.routes.get_or_insert_with(Vec::new).push(route.path(path));
         self
     }
 
@@ -101,9 +95,7 @@ impl Router {
                         m.extend_from_slice(&m0);
                     }
 
-                    tree.entry(method)
-                        .or_insert_with(PathTree::new)
-                        .insert(&path, m);
+                    tree.entry(method).or_insert_with(PathTree::new).insert(&path, m);
                 }
             }
         }
@@ -114,10 +106,7 @@ impl Router {
                 // log::debug!("{}", &path);
                 child.path = path;
                 if h0 && child.carry {
-                    child
-                        .middleware
-                        .get_or_insert_with(Vec::new)
-                        .extend_from_slice(&m0);
+                    child.middleware.get_or_insert_with(Vec::new).extend_from_slice(&m0);
                 }
                 child.finish(tree);
             }
@@ -151,26 +140,11 @@ impl fmt::Debug for Router {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Router")
             .field("path", &self.path)
-            .field(
-                "name",
-                &self
-                    .name
-                    .as_ref()
-                    .map_or_else(String::new, |v| v.to_owned()),
-            )
+            .field("name", &self.name.as_ref().map_or_else(String::new, |v| v.to_owned()))
             .field("carry", &self.carry)
-            .field(
-                "middle",
-                &self.middleware.as_ref().map_or_else(|| 0, |v| v.len()),
-            )
-            .field(
-                "routes",
-                &self.routes.as_ref().map_or_else(|| &[][..], |v| v),
-            )
-            .field(
-                "children",
-                &self.children.as_ref().map_or_else(|| &[][..], |v| v),
-            )
+            .field("middle", &self.middleware.as_ref().map_or_else(|| 0, |v| v.len()))
+            .field("routes", &self.routes.as_ref().map_or_else(|| &[][..], |v| v))
+            .field("children", &self.children.as_ref().map_or_else(|| &[][..], |v| v))
             .finish()
     }
 }
@@ -285,10 +259,7 @@ mod tests {
                         router()
                             // `/comments/:id`
                             .route(
-                                route()
-                                    .get(show_comment)
-                                    .patch(update_comment)
-                                    .put(update_comment),
+                                route().get(show_comment).patch(update_comment).put(update_comment),
                             )
                             // `/comments/:id/edit`
                             .at("/edit", route().get(edit_comment)),

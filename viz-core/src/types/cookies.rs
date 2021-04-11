@@ -109,10 +109,7 @@ impl Cookies {
 
 impl From<(Key, CookieJar)> for Cookies {
     fn from(kc: (Key, CookieJar)) -> Self {
-        Cookies {
-            key: kc.0,
-            inner: Arc::new(RwLock::new(kc.1)),
-        }
+        Cookies { key: kc.0, inner: Arc::new(RwLock::new(kc.1)) }
     }
 }
 
@@ -127,9 +124,6 @@ impl Extract for Cookies {
 
 impl fmt::Debug for Cookies {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Cookies")
-            .field("key", &"..")
-            .field("inner", &self.inner)
-            .finish()
+        f.debug_struct("Cookies").field("key", &"..").field("inner", &self.inner).finish()
     }
 }

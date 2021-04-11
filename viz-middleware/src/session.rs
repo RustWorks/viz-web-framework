@@ -22,9 +22,7 @@ pub struct SessionMiddleware {
 impl SessionMiddleware {
     /// Create a new session middleware
     pub fn new(config: Config) -> Self {
-        Self {
-            config: Arc::new(config),
-        }
+        Self { config: Arc::new(config) }
     }
 
     async fn run(&self, cx: &mut Context) -> Result<Response> {
@@ -50,15 +48,8 @@ impl SessionMiddleware {
 
         let session_status = session.status();
         if session_status > 0 {
-            let CookieOptions {
-                name,
-                max_age,
-                domain,
-                path,
-                secure,
-                http_only,
-                same_site,
-            } = self.config.cookie();
+            let CookieOptions { name, max_age, domain, path, secure, http_only, same_site } =
+                self.config.cookie();
 
             let mut cookie = Cookie::new(name, session.id()?);
 
@@ -67,12 +58,7 @@ impl SessionMiddleware {
             }
 
             cookie.set_max_age(Some(
-                if session_status == 3 {
-                    Duration::new(0, 0)
-                } else {
-                    *max_age
-                }
-                .try_into()?,
+                if session_status == 3 { Duration::new(0, 0) } else { *max_age }.try_into()?,
             ));
 
             cookie.set_path(path);

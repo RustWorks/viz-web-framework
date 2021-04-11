@@ -88,31 +88,25 @@ where
                 Err(e) => {
                     log::error!("JWT error: {}", e);
                     (StatusCode::UNAUTHORIZED, "Invalid or expired JWT")
-                },
+                }
             }
         } else {
             (StatusCode::BAD_REQUEST, "Missing or malformed JWT")
         };
 
         let mut res: Response = status.into();
-        res.headers_mut()
-            .insert(WWW_AUTHENTICATE, HeaderValue::from_str(error)?);
+        res.headers_mut().insert(WWW_AUTHENTICATE, HeaderValue::from_str(error)?);
         Ok(res)
     }
 
     #[cfg(feature = "jwt-header")]
     fn get(&self, cx: &mut Context) -> Option<String> {
-        cx.headers()
-            .typed_get::<Authorization<Bearer>>()
-            .map(|auth| auth.0.token().to_owned())
+        cx.headers().typed_get::<Authorization<Bearer>>().map(|auth| auth.0.token().to_owned())
     }
 
     #[cfg(feature = "jwt-query")]
     fn get(&self, cx: &mut Context) -> Option<String> {
-        cx.query::<HashMap<String, String>>()
-            .ok()?
-            .get(&self.n)
-            .cloned()
+        cx.query::<HashMap<String, String>>().ok()?.get(&self.n).cloned()
     }
 
     #[cfg(feature = "jwt-param")]

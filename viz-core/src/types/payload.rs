@@ -71,10 +71,7 @@ where
     T: PayloadCheck,
 {
     pub fn new() -> Self {
-        Self {
-            limit: None,
-            inner: None,
-        }
+        Self { limit: None, inner: None }
     }
 
     pub fn set_limit(&mut self, limit: usize) -> &mut Self {

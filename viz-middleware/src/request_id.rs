@@ -24,10 +24,7 @@ impl RequestIDMiddleware {
     where
         F: Send + Sync + 'static + Fn() -> Result<String>,
     {
-        Self {
-            header,
-            generator: Box::new(generator),
-        }
+        Self { header, generator: Box::new(generator) }
     }
 }
 
