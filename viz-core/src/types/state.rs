@@ -3,7 +3,7 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use viz_utils::{anyhow::anyhow, futures::future::BoxFuture, log};
+use viz_utils::{anyhow::anyhow, futures::future::BoxFuture, tracing};
 
 use crate::{http, Context, Error, Extract, Result};
 
@@ -22,7 +22,7 @@ impl ContextExt for Context {
             .get::<State<T>>()
             .cloned()
             .ok_or_else(|| {
-                log::debug!(
+                tracing::debug!(
                     "Failed to construct State extractor. \
                  Request path: {}",
                     self.path()
@@ -104,7 +104,7 @@ where
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
         Box::pin(async move {
             cx.extensions().get::<State<T>>().cloned().ok_or_else(|| {
-                log::debug!(
+                tracing::debug!(
                     "Failed to construct State extractor. \
                  Request path: {}",
                     cx.path()

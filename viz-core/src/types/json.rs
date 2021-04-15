@@ -6,7 +6,7 @@ use std::{
 use bytes::buf::Buf;
 use serde::de::DeserializeOwned;
 
-use viz_utils::{futures::future::BoxFuture, log, serde::json};
+use viz_utils::{futures::future::BoxFuture, tracing, serde::json};
 
 use crate::{
     config::ContextExt as _,
@@ -43,7 +43,7 @@ impl ContextExt for Context {
                     .chunk(),
             )
             .map_err(|e| {
-                log::debug!("{}", e);
+                tracing::debug!("{}", e);
                 PayloadError::Parse
             })
         })

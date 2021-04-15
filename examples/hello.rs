@@ -19,7 +19,7 @@ use viz::middleware::*;
 use viz::prelude::*;
 use viz::utils::{
     futures::{pin_mut, FutureExt, StreamExt},
-    log, pretty_env_logger,
+    tracing,
     serde::json,
     thiserror::Error as ThisError,
 };
@@ -46,17 +46,17 @@ async fn my_mid(cx: &mut Context) -> Result<Response> {
 
     num.as_ref().fetch_add(1, Ordering::SeqCst);
 
-    log::info!("IN  Mid: {} {} - {:?}", cx.method(), cx.path(), &num);
+    tracing::info!("IN  Mid: {} {} - {:?}", cx.method(), cx.path(), &num);
 
     let num = cx.state::<Arc<AtomicUsize>>()?;
 
     num.as_ref().fetch_add(1, Ordering::SeqCst);
 
-    // log::info!("IN  Mid: {} {} - {:?}", cx.method(), cx.path(), num);
+    // tracing::info!("IN  Mid: {} {} - {:?}", cx.method(), cx.path(), num);
 
     let fut = cx.next().await;
 
-    log::info!("OUT Mid: {} {}", cx.method(), cx.path());
+    tracing::info!("OUT Mid: {} {}", cx.method(), cx.path());
 
     Ok(match fut {
         Ok(mut res) => {
@@ -83,14 +83,14 @@ impl Into<Response> for UserError {
 }
 
 async fn not_found() -> http::StatusCode {
-    log::info!("{:8}Exec: Not Found!", "");
+    tracing::info!("{:8}Exec: Not Found!", "");
     http::StatusCode::NOT_FOUND
 }
 
 async fn hello_world(num: State<Arc<AtomicUsize>>) -> String {
     num.as_ref().fetch_sub(1, Ordering::SeqCst);
 
-    log::info!("{:8}Exec: Hello World! - {:?}", "", num);
+    tracing::info!("{:8}Exec: Hello World! - {:?}", "", num);
 
     "Hello, World!".to_string()
 }
@@ -103,12 +103,12 @@ async fn server_error() -> Result<Response> {
 }
 
 fn allow_get(cx: &Context) -> bool {
-    log::info!("{:>8} Get: {}", "", cx.method() == http::Method::GET);
+    tracing::info!("{:>8} Get: {}", "", cx.method() == http::Method::GET);
     cx.method() == http::Method::GET
 }
 
 fn allow_head(cx: &Context) -> bool {
-    log::info!("{:>8}Head: {}", "", cx.method() == http::Method::HEAD);
+    tracing::info!("{:>8}Head: {}", "", cx.method() == http::Method::HEAD);
     cx.method() == http::Method::HEAD
 }
 
@@ -299,8 +299,6 @@ static INDEX_HTML: &str = r#"<!DOCTYPE html>
 
 #[tokio::main]
 async fn main() -> Result {
-    pretty_env_logger::init();
-
     let mut app = viz::new();
 
     let config = app.config().await;
@@ -352,7 +350,7 @@ async fn main() -> Result {
                 storage: Arc::new(session::RedisStorage::new(RedisClient::open(
                     "redis://127.0.0.1",
                 )?)),
-                generate: Box::new(|| nanoid::nanoid!(32)),
+                generate: Box::new(|| nano_id::base64(32)),
                 verify: Box::new(|sid: &str| sid.len() == 32),
             }))
             .mid(compression::brotli())

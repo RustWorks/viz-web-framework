@@ -2,15 +2,15 @@ use std::{future::Future, pin::Pin};
 
 use viz_core::{http, types::CookieContextExt, Context, Middleware, Response, Result};
 
-use viz_utils::log;
+use viz_utils::tracing;
 
 /// Cookies Middleware
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct CookiesMiddleware {}
 
 impl CookiesMiddleware {
+    #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        log::trace!("Cookies Middleware");
 
         cx.cookies()?;
 

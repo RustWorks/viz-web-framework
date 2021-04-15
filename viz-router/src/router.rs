@@ -3,7 +3,7 @@ use std::fmt;
 use std::sync::Arc;
 
 use viz_core::{Context, Middleware, Middlewares, Response, Result};
-use viz_utils::log;
+use viz_utils::tracing;
 
 use crate::{Method, PathTree, Route, RouteHandler};
 
@@ -79,7 +79,7 @@ impl Router {
                 let path = join_paths(&self.path, &route.path);
 
                 for (method, handler) in route.handlers {
-                    log::info!("{:>6}:{}", method.as_str(), &path);
+                    tracing::info!("{:>6}:{}", method.as_str(), &path);
 
                     let mut m = vec![if let Some(guard) = guard.clone().take() {
                         Arc::new(RouteHandler::new(guard, handler))
@@ -162,8 +162,6 @@ mod tests {
 
     #[test]
     fn routing() {
-        viz_utils::pretty_env_logger::init();
-
         let routes = router()
             .mid(m_0)
             // `/`

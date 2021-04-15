@@ -12,7 +12,7 @@ use viz_core::{
     Context, Middleware, Response, Result,
 };
 
-use viz_utils::log;
+use viz_utils::tracing;
 
 /// Basic Auth Middleware
 #[derive(Debug)]
@@ -48,7 +48,7 @@ impl Default for BasicMiddleware {
 
 impl BasicMiddleware {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        log::trace!("Basic Auth Middleware");
+        tracing::trace!("Basic Auth Middleware");
 
         if cx
             .headers()

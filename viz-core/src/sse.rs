@@ -23,8 +23,8 @@ use viz_utils::{
         future::{self},
         stream::{Stream, TryStream, TryStreamExt},
     },
-    log,
     serde::json as serde_json,
+    tracing,
 };
 
 use crate::Result;
@@ -204,7 +204,7 @@ where
             .event_stream
             .map_err(|error| {
                 // FIXME: error logging
-                log::error!("sse stream error: {}", error);
+                tracing::error!("sse stream error: {}", error);
                 SseError
             })
             .into_stream()
@@ -317,7 +317,7 @@ where
             }
             Poll::Ready(None) => Poll::Ready(None),
             Poll::Ready(Some(Err(error))) => {
-                log::error!("sse::keep error: {}", error);
+                tracing::error!("sse::keep error: {}", error);
                 Poll::Ready(Some(Err(SseError)))
             }
         }

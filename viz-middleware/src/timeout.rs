@@ -4,9 +4,10 @@ use tokio::time::timeout;
 
 use viz_core::{http, Context, Middleware, Response, Result};
 
-use viz_utils::log;
+use viz_utils::tracing;
 
 /// Timeout Middleware
+#[derive(Debug)]
 pub struct TimeoutMiddleware {
     /// 0.256s
     delay: Duration,
@@ -26,16 +27,15 @@ impl Default for TimeoutMiddleware {
 }
 
 impl TimeoutMiddleware {
+    #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        log::trace!("Timeout Middleware");
-
         let method = cx.method().to_owned();
         let path = cx.path().to_owned();
 
         match timeout(self.delay, cx.next()).await {
             Ok(r) => r,
             Err(e) => {
-                log::debug!("Timeout: {} {} {}", method, path, e);
+                tracing::debug!("Timeout: {} {} {}", method, path, e);
                 Ok(http::StatusCode::REQUEST_TIMEOUT.into())
             }
         }

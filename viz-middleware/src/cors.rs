@@ -22,7 +22,7 @@ use viz_core::{
     Context, Middleware, Response, Result,
 };
 
-use viz_utils::{log, thiserror::Error as ThisError};
+use viz_utils::{tracing, thiserror::Error as ThisError};
 
 /// Cors Error
 #[derive(ThisError, Debug)]
@@ -210,9 +210,8 @@ impl CorsMiddleware {
         }
     }
 
+    #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        log::trace!("CORS Middleware");
-
         match (cx.header(ORIGIN).cloned(), cx.method()) {
             (Some(origin), &Method::OPTIONS) => {
                 if self.is_origin_allowed(&origin) {

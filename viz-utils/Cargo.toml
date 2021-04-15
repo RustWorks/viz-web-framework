@@ -1,19 +1,24 @@
 [package]
 name = "viz-utils"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz utils"
 license = "Apache-2.0/MIT"
 edition = "2018"
 
+[features]
+default = ["error", "serde", "futures", "tracing"]
+error = ["thiserror"]
+serde = ["serde_json", "serde_urlencoded"]
+futures = ["futures-util"]
+
 [dependencies]
 anyhow = "1.0"
-thiserror = "1.0"
+thiserror = { version = "1.0", optional = true }
 
-futures-util = { version = "0.3", default-features = false, features = ["sink"] }
+futures-util = { version = "0.3", default-features = false, features = ["sink"], optional = true }
 
-serde_json = "1.0"
-serde_urlencoded = "0.6"
+serde_json = { version = "1.0", optional = true }
+serde_urlencoded = { version = "0.6", optional = true }
 
-log = "0.4"
-pretty_env_logger = "0.4"
+tracing = { version = "0.1.25", optional = true }

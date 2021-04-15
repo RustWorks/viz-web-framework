@@ -5,7 +5,7 @@ use std::{
 
 pub use cookie::{Cookie, CookieJar, Key, PrivateJar, SignedJar};
 
-use viz_utils::{futures::future::BoxFuture, log, thiserror::Error as ThisError};
+use viz_utils::{futures::future::BoxFuture, tracing, thiserror::Error as ThisError};
 
 use crate::{http, Context, Extract, Response, Result};
 
@@ -29,13 +29,13 @@ impl ContextExt for Context {
             for pair in raw_cookie
                 .to_str()
                 .map_err(|e| {
-                    log::debug!("failed to extract cookies: {}", e);
+                    tracing::debug!("failed to extract cookies: {}", e);
                     CookiesError::Read
                 })?
                 .split(';')
             {
                 jar.add_original(Cookie::parse_encoded(pair.trim().to_string()).map_err(|e| {
-                    log::debug!("failed to parse cookies: {}", e);
+                    tracing::debug!("failed to parse cookies: {}", e);
                     CookiesError::Parse
                 })?)
             }

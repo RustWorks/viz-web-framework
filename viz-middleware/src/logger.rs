@@ -1,28 +1,27 @@
 use std::{future::Future, pin::Pin, time::Instant};
 
 use viz_core::{http, Context, Middleware, Response, Result};
-use viz_utils::log;
+use viz_utils::tracing;
 
 /// Logger Middleware
-#[derive(Default)]
+#[derive(Debug, Default)]
 pub struct LoggerMiddleware {}
 
 impl LoggerMiddleware {
+    #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        log::trace!("Logger Middleware");
-
         let start = Instant::now();
         let method = cx.method().to_string();
         let path = cx.uri().path().to_owned();
 
-        log::info!("> {:>7} {}", method, path);
+        tracing::info!("> {:>7} {}", method, path);
 
         match cx.next().await {
             Ok(res) => {
                 let status = res.status();
 
                 if status == http::StatusCode::INTERNAL_SERVER_ERROR {
-                    log::error!(
+                    tracing::error!(
                         "< {:>7} {} {} {:?}",
                         method,
                         path,
@@ -30,7 +29,7 @@ impl LoggerMiddleware {
                         start.elapsed(),
                     );
                 } else {
-                    log::info!(
+                    tracing::info!(
                         "< {:>7} {} {} {:?}",
                         method,
                         path,
@@ -42,7 +41,7 @@ impl LoggerMiddleware {
                 Ok(res)
             }
             Err(err) => {
-                log::error!("< {:>7} {} {} {:?}", method, path, err, start.elapsed(),);
+                tracing::error!("< {:>7} {} {} {:?}", method, path, err, start.elapsed(),);
                 Err(err)
             }
         }

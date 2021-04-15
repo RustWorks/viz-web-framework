@@ -1,6 +1,6 @@
 [package]
 name = "viz-middleware"
-version = "0.1.0-alpha.4"
+version = "0.1.0-alpha.5"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Middleware"
 license = "Apache-2.0/MIT"
@@ -18,7 +18,7 @@ default = [
 
 logger = []
 recover = []
-request_id = ["uuid"]
+request_id = ["nano-id"]
 timeout = ["tokio/time"]
 
 cookies = []
@@ -40,15 +40,15 @@ jwt-param = []
 jwt-cookie = []
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0-alpha.4" }
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.4" }
+viz-core = { path = "../viz-core", version = "0.1.0-alpha.5" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.5" }
 
 serde = "1.0"
-uuid = { version = "0.8", features = ["v4"], optional = true }
+nano-id = { version = "0.1", optional = true }
 
 sessions = { version = "0.1.7", features = ["redis"], optional = true }
 
-tokio = { version = "1.4", features = ["time"], optional = true }
+tokio = { version = "1.5", features = ["time"], optional = true }
 tokio-util = { version = "0.6", features = ["io"], optional = true }
 
 # compression

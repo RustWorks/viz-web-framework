@@ -1,6 +1,6 @@
 //! Trait implemented by types that can be extracted from Context.
 
-use viz_utils::{futures::future::BoxFuture, log};
+use viz_utils::{futures::future::BoxFuture, tracing};
 
 use crate::{Context, Error, Response, Result};
 
@@ -24,7 +24,7 @@ where
             Ok(match T::extract(cx).await {
                 Ok(v) => Some(v),
                 Err(e) => {
-                    log::debug!("Error for Option<T> extractor: {}", e.into());
+                    tracing::debug!("Error for Option<T> extractor: {}", e.into());
                     None
                 }
             })

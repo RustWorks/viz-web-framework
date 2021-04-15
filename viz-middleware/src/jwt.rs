@@ -1,6 +1,6 @@
 //! JSON Web Token Middleware
 
-use std::{future::Future, marker::PhantomData, pin::Pin};
+use std::{future::Future, marker::PhantomData, pin::Pin, fmt::Debug};
 
 use viz_core::{
     http::{
@@ -10,7 +10,7 @@ use viz_core::{
     Context, Middleware, Response, Result,
 };
 
-use viz_utils::log;
+use viz_utils::tracing;
 
 #[cfg(feature = "jwt-header")]
 use viz_core::http::headers::{
@@ -40,7 +40,10 @@ pub use jsonwebtoken;
 
 /// JWT Middleware
 #[derive(Debug)]
-pub struct JWTMiddleware<T> {
+pub struct JWTMiddleware<T>
+where
+    T: Debug
+{
     #[cfg(not(feature = "jwt-header"))]
     #[cfg(any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie"))]
     n: String,
@@ -51,7 +54,7 @@ pub struct JWTMiddleware<T> {
 
 impl<T> JWTMiddleware<T>
 where
-    T: DeserializeOwned + Sync + Send + 'static,
+    T: DeserializeOwned + Sync + Send + 'static + Debug,
 {
     /// Creates JWT
     pub fn new() -> Self {
@@ -85,6 +88,7 @@ where
         self
     }
 
+    #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         let (status, error) = if let Some(val) = self.get(cx) {
             match decode::<T>(&val, &DecodingKey::from_secret(self.s.as_ref()), &self.v) {
@@ -93,7 +97,7 @@ where
                     return cx.next().await;
                 }
                 Err(e) => {
-                    log::error!("JWT error: {}", e);
+                    tracing::error!("JWT error: {}", e);
                     (StatusCode::UNAUTHORIZED, "Invalid or expired JWT")
                 }
             }
@@ -131,7 +135,7 @@ where
 
 impl<'a, T> Middleware<'a, Context> for JWTMiddleware<T>
 where
-    T: DeserializeOwned + Sync + Send + 'static,
+    T: DeserializeOwned + Sync + Send + 'static + Debug,
 {
     type Output = Result<Response>;
 

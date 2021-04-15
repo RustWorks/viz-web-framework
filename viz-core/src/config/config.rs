@@ -6,7 +6,7 @@ use toml::{
     value::{Map, Value},
 };
 
-use viz_utils::{futures::future::BoxFuture, log};
+use viz_utils::{futures::future::BoxFuture, tracing};
 
 use crate::{Context, Error, Extract, Result};
 
@@ -49,7 +49,7 @@ impl Config {
 
         config.env = e;
 
-        log::info!("{:#?}", config);
+        tracing::info!("{:#?}", config);
 
         Ok(config)
     }

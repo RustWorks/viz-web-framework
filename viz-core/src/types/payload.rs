@@ -2,7 +2,7 @@ use bytes::{Buf, Bytes, BytesMut};
 
 use viz_utils::{
     futures::stream::{Stream, StreamExt},
-    log,
+    tracing,
     thiserror::Error as ThisError,
 };
 
@@ -129,7 +129,7 @@ where
 
         while let Some(item) = stream.next().await {
             let chunk = item.map_err(|e| {
-                log::debug!("{}", e);
+                tracing::debug!("{}", e);
                 PayloadError::Read
             })?;
             if (body.len() + chunk.len()) > self.limit() {

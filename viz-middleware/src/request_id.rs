@@ -2,12 +2,12 @@ use std::{future::Future, pin::Pin};
 
 use viz_core::{http, Context, Middleware, Response, Result};
 
-use viz_utils::{anyhow::anyhow, log};
+use viz_utils::anyhow::anyhow;
 
 const HEADER: &str = "x-request-id";
 
 fn generate_id() -> Result<String> {
-    Ok(uuid::Uuid::new_v4().to_string())
+    Ok(nano_id::base64(21))
 }
 
 /// RequestID Middleware
@@ -35,10 +35,7 @@ impl Default for RequestIDMiddleware {
 }
 
 impl RequestIDMiddleware {
-    #[inline]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        log::trace!("RequestID Middleware");
-
         let mut res: Response = cx.next().await.into();
 
         res.headers_mut().insert(

@@ -8,7 +8,7 @@ use viz_core::{
     Context, Middleware, Response, Result,
 };
 
-use viz_utils::log;
+use viz_utils::tracing;
 
 pub use sessions::*;
 
@@ -25,9 +25,8 @@ impl SessionMiddleware {
         Self { config: Arc::new(config) }
     }
 
+    #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        log::trace!("Session Middleware");
-
         let id = cx
             .cookie(&self.config.cookie.name)
             .map(|c| c.value().to_string())

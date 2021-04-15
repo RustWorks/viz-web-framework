@@ -15,7 +15,7 @@ use viz_core::{
     Context, Error, Result,
 };
 use viz_router::{Method, Router, Tree};
-use viz_utils::{anyhow::anyhow, log};
+use viz_utils::{anyhow::anyhow, tracing};
 
 /// Viz Server
 pub struct Server {
@@ -49,7 +49,7 @@ impl Server {
     }
 
     pub async fn config(&mut self) -> Arc<Config> {
-        log::info!("loading config");
+        tracing::info!("loading config");
         self.config.replace(Arc::new(Config::load().await.unwrap_or_default()));
         self.config.clone().unwrap()
     }
@@ -80,7 +80,7 @@ impl Server {
                 }
             }));
 
-        log::info!("listening on http://{}", addr);
+        tracing::info!("listening on http://{}", addr);
 
         srv.await.map_err(|e| anyhow!(e))
     }

@@ -16,7 +16,7 @@ use serde::{
     forward_to_deserialize_any, Deserialize,
 };
 
-use viz_utils::{futures::future::BoxFuture, log, thiserror::Error as ThisError};
+use viz_utils::{futures::future::BoxFuture, tracing, thiserror::Error as ThisError};
 
 use crate::{http, Context, Extract, Response, Result};
 
@@ -47,7 +47,7 @@ impl ContextExt for Context {
         ))
         // .map(|inner| Params(inner))
         .map_err(|e| {
-            log::debug!(
+            tracing::debug!(
                 "Failed during Params extractor deserialization. \
                          Request path: {:?}, error: {}",
                 self.path(),
@@ -100,7 +100,7 @@ impl Params {
             .1
             .parse()
             .map_err(|e: T::Err| {
-                log::debug!(
+                tracing::debug!(
                     "Failed during Params extractor deserialization. \
                          error: {}",
                     e

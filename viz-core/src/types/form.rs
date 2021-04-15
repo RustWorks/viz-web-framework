@@ -6,7 +6,7 @@ use std::{
 use bytes::buf::Buf;
 use serde::de::DeserializeOwned;
 
-use viz_utils::{futures::future::BoxFuture, log, serde::urlencoded};
+use viz_utils::{futures::future::BoxFuture, tracing, serde::urlencoded};
 
 use crate::{
     config::ContextExt as _,
@@ -45,7 +45,7 @@ impl ContextExt for Context {
             //     )
             //     // .map(|o| Form(o))
             //     .map_err(|e| {
-            //         log::debug!("{}", e);
+            //         tracing::debug!("{}", e);
             //         PayloadError::Parse
             //     })?,
             // );
@@ -58,7 +58,7 @@ impl ContextExt for Context {
             )
             // .map(|o| Form(o))
             .map_err(|e| {
-                log::debug!("{}", e);
+                tracing::debug!("{}", e);
                 PayloadError::Parse
             })
 

@@ -12,7 +12,7 @@ use viz_core::{
     Context, Middleware, Response, Result,
 };
 
-use viz_utils::log;
+use viz_utils::tracing;
 
 /// Bearer Auth Middleware
 #[derive(Debug)]
@@ -33,7 +33,7 @@ where
     }
 
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        log::trace!("Bearer Auth Middleware");
+        tracing::trace!("Bearer Auth Middleware");
 
         if cx
             .headers()

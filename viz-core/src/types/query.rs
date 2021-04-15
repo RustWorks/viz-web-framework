@@ -5,7 +5,7 @@ use std::{
 
 use serde::de::DeserializeOwned;
 
-use viz_utils::{futures::future::BoxFuture, log, serde::urlencoded};
+use viz_utils::{futures::future::BoxFuture, tracing, serde::urlencoded};
 
 use crate::{types::PayloadError, Context, Extract, Result};
 
@@ -22,7 +22,7 @@ impl ContextExt for Context {
         T: DeserializeOwned,
     {
         urlencoded::from_str(self.query_str().unwrap_or_default()).map_err(|e| {
-            log::debug!("{}", e);
+            tracing::debug!("{}", e);
             PayloadError::Parse
         })
     }

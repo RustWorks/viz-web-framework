@@ -1,7 +1,5 @@
 use crate::{http, Extract, Middlewares, Response, Result};
 
-use viz_utils::log;
-
 pub struct Context {
     uri: http::Uri,
 
