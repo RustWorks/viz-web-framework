@@ -19,14 +19,18 @@ use viz_core::http::headers::{
 };
 
 #[cfg(feature = "jwt-query")]
+#[cfg(not(all(feature = "jwt-header", feature = "jwt-param", feature = "jwt-cookie")))]
 use std::collections::HashMap;
 #[cfg(feature = "jwt-query")]
+#[cfg(not(all(feature = "jwt-header", feature = "jwt-param", feature = "jwt-cookie")))]
 use viz_core::types::QueryContextExt;
 
 #[cfg(feature = "jwt-param")]
+#[cfg(not(all(feature = "jwt-header", feature = "jwt-query", feature = "jwt-cookie")))]
 use viz_core::types::ParamsContextExt;
 
 #[cfg(feature = "jwt-cookie")]
+#[cfg(not(all(feature = "jwt-header", feature = "jwt-query", feature = "jwt-param")))]
 use viz_core::types::CookieContextExt;
 
 use jsonwebtoken::{decode, DecodingKey, Validation};
@@ -37,6 +41,7 @@ pub use jsonwebtoken;
 /// JWT Middleware
 #[derive(Debug)]
 pub struct JWTMiddleware<T> {
+    #[cfg(not(feature = "jwt-header"))]
     #[cfg(any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie"))]
     n: String,
     s: String,
@@ -51,11 +56,12 @@ where
     /// Creates JWT
     pub fn new() -> Self {
         Self {
+            #[cfg(not(feature = "jwt-header"))]
+            #[cfg(any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie"))]
+            n: "token".to_owned(),
             s: "secret".to_owned(),
             v: Validation::default(),
             t: PhantomData::default(),
-            #[cfg(any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie"))]
-            n: "token".to_owned(),
         }
     }
 
@@ -72,6 +78,7 @@ where
     }
 
     /// Creates JWT Middleware with a name
+    #[cfg(not(feature = "jwt-header"))]
     #[cfg(any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie"))]
     pub fn name(mut self, name: &str) -> Self {
         self.n = name.to_owned();
@@ -99,24 +106,26 @@ where
         Ok(res)
     }
 
-    #[cfg(feature = "jwt-header")]
+    #[allow(unused_variables)]
     fn get(&self, cx: &mut Context) -> Option<String> {
-        cx.headers().typed_get::<Authorization<Bearer>>().map(|auth| auth.0.token().to_owned())
-    }
-
-    #[cfg(feature = "jwt-query")]
-    fn get(&self, cx: &mut Context) -> Option<String> {
-        cx.query::<HashMap<String, String>>().ok()?.get(&self.n).cloned()
-    }
-
-    #[cfg(feature = "jwt-param")]
-    fn get(&self, cx: &mut Context) -> Option<String> {
-        cx.param(&self.n).ok()
-    }
-
-    #[cfg(feature = "jwt-cookie")]
-    fn get(&self, cx: &mut Context) -> Option<String> {
-        cx.cookie(&self.n).map(|c| c.to_string())
+        cfg_if::cfg_if! {
+            if #[cfg(feature = "jwt-header")] {
+                cx.headers()
+                    .typed_get::<Authorization<Bearer>>()
+                    .map(|auth| auth.0.token().to_owned())
+            } else if #[cfg(feature = "jwt-query")] {
+                cx.query::<HashMap<String, String>>()
+                    .ok()?
+                    .get(&self.n)
+                    .cloned()
+            } else if #[cfg(feature = "jwt-param")] {
+                cx.param(&self.n).ok()
+            }  else if #[cfg(feature = "jwt-cookie")] {
+                cx.cookie(&self.n).map(|c| c.to_string())
+            } else {
+                None
+            }
+        }
     }
 }
 
