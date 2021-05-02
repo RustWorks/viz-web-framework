@@ -6,7 +6,7 @@ use std::{
 use bytes::buf::Buf;
 use serde::de::DeserializeOwned;
 
-use viz_utils::{futures::future::BoxFuture, tracing, serde::urlencoded};
+use viz_utils::{futures::future::BoxFuture, serde::urlencoded, tracing};
 
 use crate::{
     config::ContextExt as _,
@@ -112,7 +112,7 @@ where
 
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
-        Box::pin(async move { cx.form().await.map(|v| Form(v)) })
+        Box::pin(async move { cx.form().await.map(Form) })
     }
 }
 

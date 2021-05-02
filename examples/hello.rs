@@ -18,10 +18,11 @@ use tokio_stream::wrappers::IntervalStream;
 use viz::middleware::*;
 use viz::prelude::*;
 use viz::utils::{
+    anyhow,
     futures::{pin_mut, FutureExt, StreamExt},
-    tracing,
     serde::json,
     thiserror::Error as ThisError,
+    tracing,
 };
 
 use redis::Client as RedisClient;
@@ -40,6 +41,14 @@ static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 /// - Key is their id
 /// - Value is a sender of `warp::ws::Message`
 type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Result<Message, Error>>>>>;
+
+async fn my_mid_error(cx: &mut Context) -> Result<Response> {
+    if cx.path() == "/error" {
+        bail!("my mid error")
+    } else {
+        cx.next().await
+    }
+}
 
 async fn my_mid(cx: &mut Context) -> Result<Response> {
     let num = cx.extract::<State<Arc<AtomicUsize>>>().await?;
@@ -66,7 +75,10 @@ async fn my_mid(cx: &mut Context) -> Result<Response> {
 
             res
         }
-        Err(e) => e.into(),
+        Err(e) => {
+            tracing::error!("middle error {}", e);
+            e.into()
+        }
     })
 }
 
@@ -95,11 +107,11 @@ async fn hello_world(num: State<Arc<AtomicUsize>>) -> String {
     "Hello, World!".to_string()
 }
 
-async fn server_error() -> Result<Response> {
-    // async fn server_error() -> Result<Response, UserError> {
-    // Err(UserError::NotFound))
+// async fn server_error() -> Result<Response> {
+async fn server_error() -> Result<Response, UserError> {
+    Err(UserError::NotFound)
     // Err(how!(UserError::NotFound))
-    reject!(UserError::NotFound)
+    // reject!(UserError::NotFound)
 }
 
 fn allow_get(cx: &Context) -> bool {
@@ -119,6 +131,7 @@ struct User {
 }
 
 async fn create_user(user: Json<User>) -> Result<String> {
+    dbg!(123);
     json::to_string_pretty(&*user).map_err(|e| anyhow!(e))
 }
 
@@ -299,6 +312,12 @@ static INDEX_HTML: &str = r#"<!DOCTYPE html>
 
 #[tokio::main]
 async fn main() -> Result {
+    tracing_subscriber::fmt()
+        // From env var: `RUST_LOG`
+        .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
+        .try_init()
+        .map_err(|e| anyhow::anyhow!(e));
+
     let mut app = viz::new();
 
     let config = app.config().await;
@@ -330,12 +349,12 @@ async fn main() -> Result {
             .mid(RequestIDMiddleware::default())
             .mid(TimeoutMiddleware::default())
             .mid(CookiesMiddleware::default())
-            .mid(
-                jwt::JWTMiddleware::<Claims>::new().validation(jsonwebtoken::Validation {
-                    validate_exp: false,
-                    ..Default::default()
-                }),
-            )
+            // .mid(
+            //     jwt::JWTMiddleware::<Claims>::new().validation(jsonwebtoken::Validation {
+            //         validate_exp: false,
+            //         ..Default::default()
+            //     }),
+            // )
             // .mid(
             //     auth::BasicMiddleware::new().users(
             //         [("viz".to_string(), "rust".to_string())]
@@ -344,16 +363,17 @@ async fn main() -> Result {
             //             .collect(),
             //     ),
             // )
-            .mid(session::SessionMiddleware::new(session::Config {
-                cookie: session::CookieOptions::new(),
-                // storage: Arc::new(middleware::session::MemoryStorage::default()),
-                storage: Arc::new(session::RedisStorage::new(RedisClient::open(
-                    "redis://127.0.0.1",
-                )?)),
-                generate: Box::new(|| nano_id::base64(32)),
-                verify: Box::new(|sid: &str| sid.len() == 32),
-            }))
-            .mid(compression::brotli())
+            // .mid(session::SessionMiddleware::new(session::Config {
+            //     cookie: session::CookieOptions::new(),
+            //     // storage: Arc::new(middleware::session::MemoryStorage::default()),
+            //     storage: Arc::new(session::RedisStorage::new(RedisClient::open(
+            //         "redis://127.0.0.1",
+            //     )?)),
+            //     generate: Box::new(|| nano_id::base64(32)),
+            //     verify: Box::new(|sid: &str| sid.len() == 32),
+            // }))
+            // .mid(compression::brotli())
+            .mid(my_mid_error)
             .mid(my_mid)
             .at(
                 "/",
@@ -366,7 +386,7 @@ async fn main() -> Result {
             .at("/login", route().post(login))
             .at("/renew", route().post(renew))
             .at("/logout", route().get(logout))
-            .at("/500", route().all(server_error))
+            .at("/404", route().all(server_error))
             .at("/ticks", route().get(ticks))
             .at("/echo", route().get(echo))
             .at("/chat", route().get(|| async { Response::html(INDEX_HTML) }))

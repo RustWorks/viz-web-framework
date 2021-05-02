@@ -107,7 +107,6 @@ impl Context {
     /// Invokes the next middleware.
     pub async fn next(&mut self) -> Result<Response> {
         if let Some(m) = self.middleware.pop() {
-            // m.call(self).await.or_else(|e| Ok(e.into()))
             return m.call(self).await;
         }
         Ok(http::StatusCode::NOT_FOUND.into())

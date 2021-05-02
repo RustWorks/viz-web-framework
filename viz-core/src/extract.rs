@@ -2,12 +2,14 @@
 
 use viz_utils::{futures::future::BoxFuture, tracing};
 
-use crate::{Context, Error, Response, Result};
+use crate::{Context, Error, Result};
 
 /// Extract
 pub trait Extract: Sized {
-    type Error: Into<Response> + Into<Error>;
+    /// The type of failures extracted by this Extractor.
+    type Error;
 
+    /// Extract the value from Context.
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>>;
 }
 

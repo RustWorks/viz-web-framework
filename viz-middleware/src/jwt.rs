@@ -1,6 +1,6 @@
 //! JSON Web Token Middleware
 
-use std::{future::Future, marker::PhantomData, pin::Pin, fmt::Debug};
+use std::{fmt::Debug, future::Future, marker::PhantomData, pin::Pin};
 
 use viz_core::{
     http::{
@@ -42,7 +42,7 @@ pub use jsonwebtoken;
 #[derive(Debug)]
 pub struct JWTMiddleware<T>
 where
-    T: Debug
+    T: Debug,
 {
     #[cfg(not(feature = "jwt-header"))]
     #[cfg(any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie"))]

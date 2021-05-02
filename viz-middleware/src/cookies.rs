@@ -11,7 +11,6 @@ pub struct CookiesMiddleware {}
 impl CookiesMiddleware {
     #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-
         cx.cookies()?;
 
         let mut res = cx.next().await?;

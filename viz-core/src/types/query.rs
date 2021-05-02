@@ -5,7 +5,7 @@ use std::{
 
 use serde::de::DeserializeOwned;
 
-use viz_utils::{futures::future::BoxFuture, tracing, serde::urlencoded};
+use viz_utils::{futures::future::BoxFuture, serde::urlencoded, tracing};
 
 use crate::{types::PayloadError, Context, Extract, Result};
 
@@ -73,6 +73,6 @@ where
 
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
-        Box::pin(async move { cx.query().map(|v| Query(v)) })
+        Box::pin(async move { cx.query().map(Query) })
     }
 }

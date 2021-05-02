@@ -22,7 +22,7 @@ use viz_core::{
     Context, Middleware, Response, Result,
 };
 
-use viz_utils::{tracing, thiserror::Error as ThisError};
+use viz_utils::{thiserror::Error as ThisError, tracing};
 
 /// Cors Error
 #[derive(ThisError, Debug)]

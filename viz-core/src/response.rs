@@ -1,5 +1,4 @@
 use std::{
-    any::TypeId,
     borrow::Cow,
     error::Error as StdError,
     fmt,
@@ -53,31 +52,23 @@ impl Response {
 
     /// Responds Text
     pub fn text(data: impl Into<http::Body>) -> Self {
-        let mut raw = http::Response::new(data.into());
-        raw.headers_mut().insert(
-            http::header::CONTENT_TYPE,
-            http::HeaderValue::from_static(mime::TEXT_PLAIN.as_ref()),
-        );
-        Self { raw }
+        Self::body(data, mime::TEXT_PLAIN.as_ref())
     }
 
     /// Responds HTML
     pub fn html(data: impl Into<http::Body>) -> Self {
-        let mut raw = http::Response::new(data.into());
-        raw.headers_mut().insert(
-            http::header::CONTENT_TYPE,
-            http::HeaderValue::from_static(mime::TEXT_HTML.as_ref()),
-        );
-        Self { raw }
+        Self::body(data, mime::TEXT_HTML.as_ref())
     }
 
     /// Responds JSON
     pub fn json(data: impl Into<http::Body>) -> Self {
+        Self::body(data, mime::APPLICATION_JSON.as_ref())
+    }
+
+    /// Sets body for response
+    pub fn body(data: impl Into<http::Body>, ct: &'static str) -> Self {
         let mut raw = http::Response::new(data.into());
-        raw.headers_mut().insert(
-            http::header::CONTENT_TYPE,
-            http::HeaderValue::from_static(mime::APPLICATION_JSON.as_ref()),
-        );
+        raw.headers_mut().insert(http::header::CONTENT_TYPE, http::HeaderValue::from_static(ct));
         Self { raw }
     }
 
@@ -125,21 +116,10 @@ impl From<Error> for Response {
 impl<T, E> From<Result<T, E>> for Response
 where
     T: Into<Response>,
-    E: Into<Response> + Into<Error> + 'static,
+    E: Into<Response>,
 {
     fn from(r: Result<T, E>) -> Self {
-        r.map_or_else(
-            |e| {
-                if TypeId::of::<Error>() == TypeId::of::<E>() {
-                    Into::<Error>::into(e)
-                        .downcast::<Response>()
-                        .map_or_else(Into::into, Into::into)
-                } else {
-                    e.into()
-                }
-            },
-            Into::into,
-        )
+        r.map_or_else(Into::into, Into::into)
     }
 }
 

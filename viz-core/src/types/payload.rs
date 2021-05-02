@@ -2,8 +2,8 @@ use bytes::{Buf, Bytes, BytesMut};
 
 use viz_utils::{
     futures::stream::{Stream, StreamExt},
-    tracing,
     thiserror::Error as ThisError,
+    tracing,
 };
 
 use crate::http;

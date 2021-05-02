@@ -56,10 +56,9 @@ macro_rules! tuple {
         impl<$($T),+> Extract for ($($T,)+)
         where
             $($T: Extract + Send,)+
-            // $($T::Error: Into<Error> + Send,)+
-            $($T::Error: Into<Error> + Into<Response> + Send + 'static,)+
+            $($T::Error: Into<Response> + Send + 'static,)+
         {
-            type Error = Error;
+            type Error = Response;
 
             #[inline]
             fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
@@ -68,8 +67,7 @@ macro_rules! tuple {
                         $(
                             match $T::extract(cx).await {
                                 Ok(v) => v,
-                                // Err(e) => return Err(anyhow!(e)),
-                                Err(e) => return Err(Into::<Response>::into(e as $T::Error).into()),
+                                Err(e) => return Err(Into::<Response>::into(e as $T::Error)),
                             },
                         )+
                     ))

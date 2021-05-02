@@ -1,7 +1,7 @@
 use std::{collections::HashMap, fmt, sync::Arc};
 
 use viz_core::{
-    http, Context, DynMiddleware, Extract, Guard, HandlerBase, HandlerCamp, HandlerSuper,
+    http, Context, DynMiddleware, Error, Extract, Guard, HandlerBase, HandlerCamp, HandlerSuper,
     HandlerWrapper, Middleware, Middlewares, Response, Result,
 };
 

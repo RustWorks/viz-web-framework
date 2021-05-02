@@ -7,9 +7,11 @@ pub enum Method {
 }
 
 impl Method {
+    pub const STAR: &'static str = "*";
+
     pub fn as_str(&self) -> &str {
         match self {
-            Method::All => "*",
+            Method::All => Self::STAR,
             Method::Verb(method) => method.as_str(),
         }
     }

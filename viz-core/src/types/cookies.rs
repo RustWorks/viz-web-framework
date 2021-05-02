@@ -5,7 +5,7 @@ use std::{
 
 pub use cookie::{Cookie, CookieJar, Key, PrivateJar, SignedJar};
 
-use viz_utils::{futures::future::BoxFuture, tracing, thiserror::Error as ThisError};
+use viz_utils::{futures::future::BoxFuture, thiserror::Error as ThisError, tracing};
 
 use crate::{http, Context, Extract, Response, Result};
 

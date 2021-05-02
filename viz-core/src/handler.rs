@@ -1,8 +1,8 @@
-use std::{any::TypeId, future::Future, marker::PhantomData};
+use std::{future::Future, marker::PhantomData};
 
 use viz_utils::futures::future::BoxFuture;
 
-use crate::{Context, Error, Extract, Middleware, Response, Result};
+use crate::{Context, Extract, Middleware, Response, Result};
 
 pub trait HandlerBase<Args>: Clone + 'static {
     type Output: Into<Response>;
@@ -42,25 +42,14 @@ impl<F, T> Handler for HandlerWrapper<F, T>
 where
     F: HandlerBase<T> + Send + Sync,
     T: Extract + Send + Sync + 'static,
-    // T::Error: Into<Response> + Send,
-    T::Error: Into<Response> + Into<Error> + Send,
+    T::Error: Into<Response> + Send,
 {
     #[inline]
     fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result<Response>> {
         Box::pin(async move {
             Ok(match T::extract(cx).await {
                 Ok(args) => self.f.call(args).await.into(),
-                Err(e) => {
-                    // e.into()
-
-                    if TypeId::of::<Error>() == TypeId::of::<T::Error>() {
-                        Into::<Error>::into(e)
-                            .downcast::<Response>()
-                            .map_or_else(Into::into, Into::into)
-                    } else {
-                        e.into()
-                    }
-                }
+                Err(e) => e.into(),
             })
         })
     }
@@ -107,25 +96,14 @@ impl<F, T> Handler for HandlerSuper<F, T>
 where
     F: for<'h> HandlerCamp<'h, T> + Send + Sync,
     T: Extract + Send + Sync + 'static,
-    // T::Error: Into<Response> + Send,
-    T::Error: Into<Response> + Into<Error> + Send,
+    T::Error: Into<Response> + Send,
 {
     #[inline]
     fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result<Response>> {
         Box::pin(async move {
             Ok(match T::extract(cx).await {
                 Ok(args) => self.f.call(cx, args).await.into(),
-                Err(e) => {
-                    // e.into()
-
-                    if TypeId::of::<Error>() == TypeId::of::<T::Error>() {
-                        Into::<Error>::into(e)
-                            .downcast::<Response>()
-                            .map_or_else(Into::into, Into::into)
-                    } else {
-                        e.into()
-                    }
-                }
+                Err(e) => e.into(),
             })
         })
     }
