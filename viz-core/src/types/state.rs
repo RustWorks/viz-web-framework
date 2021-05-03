@@ -77,7 +77,11 @@ where
 
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
-        Box::pin(async move { cx.state::<Self>() })
+        let state = cx.extensions().get::<Self>().cloned().ok_or_else(|| {
+            tracing::debug!("State extract error: {}", std::any::type_name::<T>());
+            anyhow!("State is not configured")
+        });
+        Box::pin(async move { state })
     }
 }
 
