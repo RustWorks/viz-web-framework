@@ -7,11 +7,12 @@ mod payload;
 mod query;
 mod state;
 
-pub use cookies::{Cookie, CookieJar, Cookies, CookiesError};
+pub use cookie::{Cookie, CookieJar, Key, PrivateJar, SignedJar};
+pub use cookies::{Cookies, CookiesError};
 pub use form::Form;
 pub use json::Json;
 pub use multipart::Multipart;
-pub use params::{Params, ParamsDeserializer, ParamsError};
+pub use params::{Params, ParamsError};
 pub use payload::{Payload, PayloadCheck, PayloadError};
 pub use query::Query;
 pub use state::{State, StateFactory};
@@ -432,7 +433,7 @@ mod tests {
 
             let mut cx = Context::from(req);
 
-            assert_eq!(cx.query_str().unwrap_or_default(), "foo=bar&crab=1&logged_in=true");
+            assert_eq!(cx.query_str(), "foo=bar&crab=1&logged_in=true");
 
             let args = cx.query::<Args>()?;
             assert_eq!(args, Args { foo: "bar".to_string(), crab: 1, logged_in: true });

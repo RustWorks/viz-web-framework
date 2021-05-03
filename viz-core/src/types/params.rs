@@ -20,42 +20,6 @@ use viz_utils::{futures::future::BoxFuture, thiserror::Error as ThisError, traci
 
 use crate::{http, Context, Extract, Response, Result};
 
-impl Context {
-    pub fn params<T>(&self) -> Result<T, ParamsError>
-    where
-        T: DeserializeOwned,
-    {
-        de::Deserialize::deserialize(ParamsDeserializer::new(
-            &self
-                .extensions()
-                .get::<Params>()
-                .map(|ps| {
-                    Params(ps.iter().map(|p| (p.0.as_str(), p.1.as_str())).collect::<Vec<_>>())
-                })
-                .ok_or_else(|| ParamsError::Read)?,
-        ))
-        // .map(|inner| Params(inner))
-        .map_err(|e| {
-            tracing::debug!(
-                "Failed during Params extractor deserialization. \
-                         Request path: {:?}, error: {}",
-                self.path(),
-                e
-            );
-            // e.into()
-            ParamsError::Parse
-        })
-    }
-
-    pub fn param<T>(&self, name: &str) -> Result<T, ParamsError>
-    where
-        T: FromStr,
-        T::Err: Display,
-    {
-        self.extensions().get::<Params>().ok_or_else(|| ParamsError::Read)?.find(name)
-    }
-}
-
 #[derive(ThisError, Debug, PartialEq)]
 pub enum ParamsError {
     #[error("failed to read param: {0:?}")]
@@ -74,10 +38,12 @@ impl Into<Response> for ParamsError {
     }
 }
 
+/// Extract typed information from the request's path.
 #[derive(Clone, Debug, Deserialize)]
 pub struct Params<T = Vec<(String, String)>>(pub T);
 
 impl Params {
+    /// Gets single parameter by name.
     pub fn find<T: FromStr>(&self, name: &str) -> Result<T, ParamsError>
     where
         T: FromStr,
@@ -89,11 +55,7 @@ impl Params {
             .1
             .parse()
             .map_err(|e: T::Err| {
-                tracing::debug!(
-                    "Failed during Params extractor deserialization. \
-                         error: {}",
-                    e
-                );
+                tracing::debug!("Params deserialize error: {}", e);
                 ParamsError::SingleParse(name.to_string())
             })
     }
@@ -150,6 +112,37 @@ where
     }
 }
 
+impl Context {
+    /// Gets parameters.
+    pub fn params<T>(&self) -> Result<T, ParamsError>
+    where
+        T: DeserializeOwned,
+    {
+        de::Deserialize::deserialize(ParamsDeserializer::new(
+            &self
+                .extensions()
+                .get::<Params>()
+                .map(|ps| {
+                    Params(ps.iter().map(|p| (p.0.as_str(), p.1.as_str())).collect::<Vec<_>>())
+                })
+                .ok_or_else(|| ParamsError::Read)?,
+        ))
+        .map_err(|e| {
+            tracing::debug!("Params deserialize error: {}", e);
+            ParamsError::Parse
+        })
+    }
+
+    /// Gets single parameter by name.
+    pub fn param<T>(&self, name: &str) -> Result<T, ParamsError>
+    where
+        T: FromStr,
+        T::Err: Display,
+    {
+        self.extensions().get::<Params>().ok_or_else(|| ParamsError::Read)?.find(name)
+    }
+}
+
 macro_rules! unsupported_type {
     ($trait_fn:ident, $name:expr) => {
         fn $trait_fn<V>(self, _: V) -> Result<V::Value, Self::Error>
@@ -181,7 +174,7 @@ macro_rules! parse_single_value {
     };
 }
 
-pub struct ParamsDeserializer<'de> {
+pub(crate) struct ParamsDeserializer<'de> {
     len: usize,
     params: Peekable<Iter<'de, (&'de str, &'de str)>>,
 }

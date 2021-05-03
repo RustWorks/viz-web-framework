@@ -9,7 +9,6 @@ use serde::de::DeserializeOwned;
 use viz_utils::{futures::future::BoxFuture, serde::urlencoded, tracing};
 
 use crate::{
-    config::ContextExt as _,
     types::{Payload, PayloadCheck, PayloadError},
     Context, Extract,
 };

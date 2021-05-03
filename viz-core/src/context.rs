@@ -55,8 +55,12 @@ impl Context {
     }
 
     /// Returns a reference to the associated query portion of the URL.
-    pub fn query_str(&self) -> Option<&str> {
-        self.uri.query()
+    pub fn query_str(&self) -> &str {
+        if let Some(query) = self.uri().query().as_ref() {
+            query
+        } else {
+            ""
+        }
     }
 
     /// Returns a reference to the associated host portion of the URL.
@@ -116,16 +120,9 @@ impl Context {
 impl From<http::Request> for Context {
     #[inline]
     fn from(req: http::Request) -> Self {
-        let (parts, body) = req.into_parts();
-        Self {
-            body: Some(body),
-            uri: parts.uri,
-            method: parts.method,
-            headers: parts.headers,
-            version: parts.version,
-            extensions: parts.extensions,
-            middleware: Vec::new(),
-        }
+        let (::http::request::Parts { uri, method, headers, version, extensions, .. }, body) =
+            req.into_parts();
+        Self { uri, method, headers, version, extensions, body: Some(body), middleware: Vec::new() }
     }
 }
 

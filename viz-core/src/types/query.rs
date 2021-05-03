@@ -9,20 +9,7 @@ use viz_utils::{futures::future::BoxFuture, serde::urlencoded, tracing};
 
 use crate::{types::PayloadError, Context, Extract, Result};
 
-/// Context Extends
-impl Context {
-    pub fn query<T>(&self) -> Result<T, PayloadError>
-    where
-        T: DeserializeOwned,
-    {
-        urlencoded::from_str(self.query_str().unwrap_or_default()).map_err(|e| {
-            tracing::debug!("{}", e);
-            PayloadError::Parse
-        })
-    }
-}
-
-/// Query Extractor
+/// Extract typed information from the request's query
 #[derive(Clone)]
 pub struct Query<T>(pub T);
 
@@ -68,5 +55,18 @@ where
     #[inline]
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
         Box::pin(async move { cx.query().map(Query) })
+    }
+}
+
+impl Context {
+    /// Get query parameters from the path
+    pub fn query<T>(&self) -> Result<T, PayloadError>
+    where
+        T: DeserializeOwned,
+    {
+        urlencoded::from_str(self.query_str()).map_err(|e| {
+            tracing::debug!("Query deserialize error: {}", e);
+            PayloadError::Parse
+        })
     }
 }

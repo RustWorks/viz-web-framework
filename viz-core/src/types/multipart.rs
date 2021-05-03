@@ -3,7 +3,6 @@ pub use form_data::FormData;
 use viz_utils::futures::future::BoxFuture;
 
 use crate::{
-    config::ContextExt as _,
     http,
     types::{Payload, PayloadCheck, PayloadError},
     Context, Extract, Result,
