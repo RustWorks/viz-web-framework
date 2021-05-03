@@ -6,30 +6,35 @@ use crate::types::Payload;
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Limits {
     /// Form Limit
-    #[serde(default = "form_limit")]
+    #[serde(default = "Limits::form")]
     pub form: usize,
     /// JSON Limit
-    #[serde(default = "json_limit")]
+    #[serde(default = "Limits::json")]
     pub json: usize,
     /// Mulitpart Limit
-    #[serde(default = "multipart_limit")]
+    #[serde(default = "Limits::multipart")]
     pub multipart: usize,
 }
 
 impl Default for Limits {
     fn default() -> Self {
-        Self { form: form_limit(), json: json_limit(), multipart: multipart_limit() }
+        Self { form: Self::form(), json: Self::json(), multipart: Self::multipart() }
     }
 }
 
-fn form_limit() -> usize {
-    Payload::PAYLOAD_LIMIT
-}
+impl Limits {
+    #[inline]
+    fn form() -> usize {
+        Payload::PAYLOAD_LIMIT
+    }
 
-fn json_limit() -> usize {
-    Payload::PAYLOAD_LIMIT * 8
-}
+    #[inline]
+    fn json() -> usize {
+        Payload::PAYLOAD_LIMIT * 8
+    }
 
-fn multipart_limit() -> usize {
-    Payload::PAYLOAD_LIMIT * 16
+    #[inline]
+    fn multipart() -> usize {
+        Payload::PAYLOAD_LIMIT * 16
+    }
 }

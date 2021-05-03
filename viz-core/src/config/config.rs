@@ -15,6 +15,10 @@ use super::{Cookies, Env, Limits};
 /// Config
 #[derive(Debug, Deserialize, Serialize)]
 pub struct Config {
+    /// Env
+    #[serde(skip_deserializing)]
+    pub env: Env,
+
     /// Limits
     #[serde(default)]
     pub limits: Limits,
@@ -22,10 +26,6 @@ pub struct Config {
     /// Cookies
     #[serde(default)]
     pub cookies: Cookies,
-
-    /// Env
-    #[serde(skip_deserializing)]
-    pub env: Env,
 
     /// Extras
     #[serde(default)]
@@ -83,13 +83,9 @@ impl Extract for Arc<Config> {
 }
 
 /// Extends Context
-pub trait ContextExt {
+impl Context {
     /// Gets application config
-    fn config(&self) -> Arc<Config>;
-}
-
-impl ContextExt for Context {
-    fn config(&self) -> Arc<Config> {
+    pub fn config(&self) -> Arc<Config> {
         self.extensions().get::<Arc<Config>>().cloned().unwrap_or_default()
     }
 }
