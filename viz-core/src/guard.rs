@@ -2,7 +2,9 @@ use std::ops::{BitAnd, BitOr, BitXor};
 
 use crate::Context;
 
+/// A guard for Context
 pub trait Guard: Send + Sync + 'static {
+    /// Checks the Context
     fn check(&self, _: &Context) -> bool;
 }
 
@@ -18,15 +20,6 @@ where
 impl Guard for Box<dyn Guard> {
     fn check(&self, cx: &Context) -> bool {
         (**self).check(cx)
-    }
-}
-
-impl<F> From<F> for Box<dyn Guard>
-where
-    F: Send + Sync + 'static + Fn(&Context) -> bool,
-{
-    fn from(f: F) -> Self {
-        Box::new(f)
     }
 }
 
@@ -54,11 +47,13 @@ impl BitXor for Box<dyn Guard> {
     }
 }
 
-pub fn into_guard<F>(f: F) -> Box<dyn Guard>
+impl<F> From<F> for Box<dyn Guard>
 where
-    F: Into<Box<dyn Guard>>,
+    F: Send + Sync + 'static + Fn(&Context) -> bool,
 {
-    f.into()
+    fn from(f: F) -> Self {
+        Box::new(f)
+    }
 }
 
 #[cfg(test)]
