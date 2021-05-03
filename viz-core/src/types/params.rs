@@ -20,14 +20,19 @@ use viz_utils::{futures::future::BoxFuture, thiserror::Error as ThisError, traci
 
 use crate::{http, Context, Extract, Response, Result};
 
+/// Params Error
 #[derive(ThisError, Debug, PartialEq)]
 pub enum ParamsError {
+    /// Failed to read single param
     #[error("failed to read param: {0:?}")]
     SingleRead(String),
+    /// Failed to parse single param
     #[error("failed to parse param: {0:?}")]
     SingleParse(String),
+    /// Failed to read params
     #[error("failed to read params")]
     Read,
+    /// Failed to parse params
     #[error("failed to parse params")]
     Parse,
 }
@@ -180,7 +185,7 @@ pub(crate) struct ParamsDeserializer<'de> {
 }
 
 impl<'de> ParamsDeserializer<'de> {
-    pub fn new(params: &'de Params<Vec<(&'de str, &'de str)>>) -> ParamsDeserializer<'de> {
+    fn new(params: &'de Params<Vec<(&'de str, &'de str)>>) -> ParamsDeserializer<'de> {
         Self { len: params.len(), params: params.iter().peekable() }
     }
 }

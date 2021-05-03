@@ -9,45 +9,20 @@ use serde::de::DeserializeOwned;
 use viz_utils::{futures::future::BoxFuture, serde::json, tracing};
 
 use crate::{
-    types::{Payload, PayloadCheck, PayloadError},
+    types::{Payload, PayloadDetect, PayloadError},
     Context, Extract,
 };
 
-/// Context Extends
-impl Context {
-    pub fn json<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
-    where
-        T: DeserializeOwned + Send + Sync,
-    {
-        Box::pin(async move {
-            let mut payload = Payload::<Json<T>>::new();
-
-            payload.set_limit(self.config().limits.json);
-
-            let m = Payload::get_mime(self);
-            let l = Payload::get_length(self);
-
-            payload.check_header(m, l)?;
-
-            json::from_slice(
-                payload
-                    .check_real_length(self.take_body().ok_or_else(|| PayloadError::Read)?)
-                    .await?
-                    .chunk(),
-            )
-            .map_err(|e| {
-                tracing::debug!("{}", e);
-                PayloadError::Parse
-            })
-        })
-    }
-}
-
 /// Json Extractor
 #[derive(Clone)]
-pub struct Json<T>(pub T);
+pub struct Json<T = ()>(pub T);
 
 impl<T> Json<T> {
+    /// Create new `Json` instance.
+    pub fn new(t: T) -> Self {
+        Self(t)
+    }
+
     /// Deconstruct to an inner value
     pub fn into_inner(self) -> T {
         self.0
@@ -74,12 +49,6 @@ impl<T> DerefMut for Json<T> {
     }
 }
 
-impl<T> PayloadCheck for Json<T> {
-    fn check_type(m: &mime::Mime) -> bool {
-        is_json(m)
-    }
-}
-
 impl<T: fmt::Debug> fmt::Debug for Json<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         T::fmt(&self, f)
@@ -98,6 +67,36 @@ where
     }
 }
 
-fn is_json(m: &mime::Mime) -> bool {
-    m.type_() == mime::APPLICATION && (m.subtype() == mime::JSON || m.suffix() == Some(mime::JSON))
+impl PayloadDetect for Json {
+    #[inline]
+    fn detect(m: &mime::Mime) -> bool {
+        m.type_() == mime::APPLICATION
+            && (m.subtype() == mime::JSON || m.suffix() == Some(mime::JSON))
+    }
+}
+
+impl Context {
+    /// Extracts JSON Data from the request' body.
+    pub async fn json<T>(&mut self) -> Result<T, PayloadError>
+    where
+        T: DeserializeOwned,
+    {
+        // @TODO: cache Payload<JSON> to extensions
+        let mut payload = Payload::<Json>::new();
+
+        payload.set_limit(self.config().limits.json);
+
+        payload.check_header(self.mime(), self.len())?;
+
+        json::from_slice(
+            payload
+                .check_real_length(self.take_body().ok_or_else(|| PayloadError::Read)?)
+                .await?
+                .chunk(),
+        )
+        .map_err(|e| {
+            tracing::debug!("Json deserialize error: {}", e);
+            PayloadError::Parse
+        })
+    }
 }

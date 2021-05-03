@@ -59,7 +59,7 @@ where
 }
 
 impl Context {
-    /// Get query parameters from the path
+    /// Gets query parameters from the path
     pub fn query<T>(&self) -> Result<T, PayloadError>
     where
         T: DeserializeOwned,

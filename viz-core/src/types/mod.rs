@@ -1,3 +1,5 @@
+//! Web Types
+
 mod cookies;
 mod form;
 mod json;
@@ -13,7 +15,7 @@ pub use form::Form;
 pub use json::Json;
 pub use multipart::Multipart;
 pub use params::{Params, ParamsError};
-pub use payload::{Payload, PayloadCheck, PayloadError};
+pub use payload::{Payload, PayloadDetect, PayloadError};
 pub use query::Query;
 pub use state::{State, StateFactory};
 
@@ -103,14 +105,11 @@ mod tests {
 
             let cx = Context::from(req);
 
-            let mut payload = Payload::<Json<Lang>>::new();
+            let mut payload = Payload::<Json>::new();
 
             payload.set_limit(19);
 
-            let m = Payload::get_mime(&cx);
-            let l = Payload::get_length(&cx);
-
-            let err = payload.check_header(m, l).err().unwrap();
+            let err = payload.check_header(cx.mime(), cx.len()).err().unwrap();
 
             assert_eq!(err, PayloadError::TooLarge);
 
@@ -144,22 +143,17 @@ mod tests {
 
             let mut cx = Context::from(req);
 
-            let mut payload = Payload::<Form<Lang>>::new();
+            let payload = Payload::<Form>::new();
 
-            let m = Payload::get_mime(&cx);
-            let l = Payload::get_length(&cx);
+            assert!(payload.check_header(cx.mime(), cx.len()).is_ok());
 
-            assert!(payload.check_header(m, l).is_ok());
+            let data: Form<Lang> = urlencoded::from_reader(
+                payload.check_real_length(cx.take_body().unwrap()).await?.reader(),
+            )
+            .map(Form)
+            .unwrap();
 
-            payload.replace(
-                urlencoded::from_reader(
-                    payload.check_real_length(cx.take_body().unwrap()).await?.reader(),
-                )
-                .map(|o| Form(o))
-                .unwrap(),
-            );
-
-            assert_eq!(*payload.take(), Lang { name: "你好，世界".to_owned() });
+            assert_eq!(*data, Lang { name: "你好，世界".to_owned() });
 
             Ok::<_, Error>(())
         })
@@ -221,10 +215,7 @@ mod tests {
 
             let payload = Payload::<Multipart>::new();
 
-            let m = Payload::get_mime(&cx);
-            let l = Payload::get_length(&cx);
-
-            let m = payload.check_header(m, l)?;
+            let m = payload.check_header(cx.mime(), cx.len())?;
 
             let charset = m.get_param(mime::CHARSET);
             let boundary = m.get_param(mime::BOUNDARY);
@@ -317,7 +308,7 @@ mod tests {
     }
 
     #[test]
-    fn test_data() {
+    fn test_state() {
         use std::sync::{
             atomic::{AtomicUsize, Ordering},
             Arc,

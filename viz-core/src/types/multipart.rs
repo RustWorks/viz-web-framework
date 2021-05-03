@@ -1,24 +1,40 @@
-pub use form_data::FormData;
+use form_data::FormData;
 
 use viz_utils::futures::future::BoxFuture;
 
 use crate::{
     http,
-    types::{Payload, PayloadCheck, PayloadError},
+    types::{Payload, PayloadDetect, PayloadError},
     Context, Extract, Result,
 };
 
-/// Context Extends
+/// Multipart Extractor
+pub type Multipart<T = http::Body> = FormData<T>;
+
+impl Extract for Multipart {
+    type Error = PayloadError;
+
+    #[inline]
+    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+        Box::pin(async move { cx.multipart() })
+    }
+}
+
+impl PayloadDetect for Multipart {
+    #[inline]
+    fn detect(m: &mime::Mime) -> bool {
+        m.type_() == mime::MULTIPART && m.subtype() == mime::FORM_DATA
+    }
+}
+
 impl Context {
+    /// Extracts Multipart from the request' body.
     pub fn multipart(&mut self) -> Result<Multipart, PayloadError> {
         let mut payload = Payload::<Multipart>::new();
 
         payload.set_limit(self.config().limits.multipart);
 
-        let m = Payload::get_mime(self);
-        let l = Payload::get_length(self);
-
-        let m = payload.check_header(m, l)?;
+        let m = payload.check_header(self.mime(), self.len())?;
 
         let boundary = m.get_param(mime::BOUNDARY);
 
@@ -32,26 +48,4 @@ impl Context {
 
         Ok(Multipart::new(boundary, self.take_body().unwrap()))
     }
-}
-
-/// Multipart Extractor
-pub type Multipart<T = http::Body> = FormData<T>;
-
-impl PayloadCheck for Multipart {
-    fn check_type(m: &mime::Mime) -> bool {
-        is_multipart(m)
-    }
-}
-
-impl Extract for Multipart {
-    type Error = PayloadError;
-
-    #[inline]
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
-        Box::pin(async move { cx.multipart() })
-    }
-}
-
-fn is_multipart(m: &mime::Mime) -> bool {
-    m.type_() == mime::MULTIPART && m.subtype() == mime::FORM_DATA
 }

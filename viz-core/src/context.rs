@@ -68,6 +68,20 @@ impl Context {
         self.uri.host()
     }
 
+    /// Gets content type
+    pub fn mime(&self) -> Option<mime::Mime> {
+        self.header(http::header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse::<mime::Mime>().ok())
+    }
+
+    /// Gets content length
+    pub fn len(&self) -> Option<usize> {
+        self.header(http::header::CONTENT_LENGTH)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse::<usize>().ok())
+    }
+
     /// Returns a reference to the associated header by key.
     pub fn header(&self, key: impl AsRef<str>) -> Option<&http::HeaderValue> {
         self.headers.get(key.as_ref())
