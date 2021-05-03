@@ -5,23 +5,19 @@ use viz_utils::futures::future::BoxFuture;
 use crate::{
     config::ContextExt as _,
     http,
-    types::{get_length, get_mime, Payload, PayloadCheck, PayloadError},
+    types::{Payload, PayloadCheck, PayloadError},
     Context, Extract, Result,
 };
 
 /// Context Extends
-pub trait ContextExt {
-    fn multipart(&mut self) -> Result<Multipart, PayloadError>;
-}
-
-impl ContextExt for Context {
-    fn multipart(&mut self) -> Result<Multipart, PayloadError> {
-        let mut payload = multipart();
+impl Context {
+    pub fn multipart(&mut self) -> Result<Multipart, PayloadError> {
+        let mut payload = Payload::<Multipart>::new();
 
         payload.set_limit(self.config().limits.multipart);
 
-        let m = get_mime(self);
-        let l = get_length(self);
+        let m = Payload::get_mime(self);
+        let l = Payload::get_length(self);
 
         let m = payload.check_header(m, l)?;
 
@@ -55,10 +51,6 @@ impl Extract for Multipart {
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
         Box::pin(async move { cx.multipart() })
     }
-}
-
-pub fn multipart() -> Payload<Multipart> {
-    Payload::new()
 }
 
 fn is_multipart(m: &mime::Mime) -> bool {

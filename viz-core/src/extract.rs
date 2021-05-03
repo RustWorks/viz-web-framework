@@ -4,7 +4,7 @@ use viz_utils::{futures::future::BoxFuture, tracing};
 
 use crate::{Context, Error, Result};
 
-/// Extract
+/// A Extractor trait.
 pub trait Extract: Sized {
     /// The type of failures extracted by this Extractor.
     type Error;

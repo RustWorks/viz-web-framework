@@ -10,29 +10,23 @@ use viz_utils::{futures::future::BoxFuture, serde::urlencoded, tracing};
 
 use crate::{
     config::ContextExt as _,
-    types::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT},
+    types::{Payload, PayloadCheck, PayloadError},
     Context, Extract,
 };
 
 /// Context Extends
-pub trait ContextExt {
-    fn form<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
-    where
-        T: DeserializeOwned + Send + Sync;
-}
-
-impl ContextExt for Context {
-    fn form<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
+impl Context {
+    pub fn form<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
     where
         T: DeserializeOwned + Send + Sync,
     {
         Box::pin(async move {
-            let mut payload = form::<T>();
+            let mut payload = Payload::<Form<T>>::new();
 
             payload.set_limit(self.config().limits.form);
 
-            let m = get_mime(self);
-            let l = get_length(self);
+            let m = Payload::get_mime(self);
+            let l = Payload::get_length(self);
 
             payload.check_header(m, l)?;
 
@@ -114,13 +108,6 @@ where
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
         Box::pin(async move { cx.form().await.map(Form) })
     }
-}
-
-pub fn form<T>() -> Payload<Form<T>>
-where
-    T: DeserializeOwned,
-{
-    Payload::new()
 }
 
 fn is_form(m: &mime::Mime) -> bool {

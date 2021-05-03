@@ -5,11 +5,6 @@
 
 use viz_utils::anyhow;
 
-pub use anyhow::Error;
-
-/// Result
-pub type Result<T = (), E = anyhow::Error> = anyhow::Result<T, E>;
-
 mod context;
 mod extract;
 mod guard;
@@ -26,23 +21,32 @@ pub mod sse;
 #[cfg(feature = "ws")]
 pub mod ws;
 
-pub use context::Context;
-pub use extract::Extract;
-pub use guard::{into_guard, Guard};
-pub use handler::{Handler, HandlerBase, HandlerCamp, HandlerSuper, HandlerWrapper};
-pub use middleware::{DynMiddleware, Middleware, Middlewares};
-pub use response::Response;
-
 #[allow(missing_docs)]
 pub mod http {
-    pub use ::http::*;
     pub use headers;
+    pub use http::*;
     pub use hyper::Body;
     pub use hyper::Error;
 
     pub type Request<T = Body> = ::http::Request<T>;
     pub type Response<T = Body> = ::http::Response<T>;
 }
+
+/// Handle Trait
+pub use handle::Handle as Middleware;
+
+/// Error
+pub use anyhow::Error;
+
+/// Result
+pub type Result<T = Response, E = anyhow::Error> = anyhow::Result<T, E>;
+
+pub use context::Context;
+pub use extract::Extract;
+pub use guard::Guard;
+pub use handler::{Handler, HandlerBase, HandlerCamp, HandlerSuper, HandlerWrapper};
+pub use middleware::{DynMiddleware, Middlewares};
+pub use response::Response;
 
 /// Responds a custom error to response.
 #[macro_export]
@@ -60,4 +64,4 @@ macro_rules! how {
     };
 }
 
-pub use crate::anyhow::{anyhow, bail, ensure};
+pub use anyhow::{anyhow, bail, ensure};

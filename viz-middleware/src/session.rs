@@ -3,8 +3,7 @@
 use std::{convert::TryInto, future::Future, pin::Pin, sync::Arc, time::Duration};
 
 use viz_core::{
-    types::Cookie,
-    types::{CookieContextExt, State},
+    types::{Cookie, State},
     Context, Middleware, Response, Result,
 };
 

@@ -156,7 +156,7 @@ mod tests {
     use futures_executor::block_on;
     use hyper::body::to_bytes;
 
-    use viz_core::{http, into_guard, Context, Error, Response, Result};
+    use viz_core::{http, Context, Error, Guard, Response, Result};
 
     use crate::*;
 
@@ -216,8 +216,10 @@ mod tests {
                                             .route(
                                                 route()
                                                     .guard(
-                                                        into_guard(edit_guard)
-                                                            & into_guard(get_guard),
+                                                        <Box<dyn Guard>>::from(edit_guard)
+                                                            & Into::<Box<dyn Guard>>::into(
+                                                                get_guard,
+                                                            ),
                                                     )
                                                     .get(show_post),
                                             )

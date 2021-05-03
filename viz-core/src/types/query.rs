@@ -10,14 +10,8 @@ use viz_utils::{futures::future::BoxFuture, serde::urlencoded, tracing};
 use crate::{types::PayloadError, Context, Extract, Result};
 
 /// Context Extends
-pub trait ContextExt {
-    fn query<T>(&self) -> Result<T, PayloadError>
-    where
-        T: DeserializeOwned;
-}
-
-impl ContextExt for Context {
-    fn query<T>(&self) -> Result<T, PayloadError>
+impl Context {
+    pub fn query<T>(&self) -> Result<T, PayloadError>
     where
         T: DeserializeOwned,
     {

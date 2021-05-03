@@ -11,14 +11,8 @@ use crate::{http, Context, Extract, Response, Result};
 
 use crate::config::{ContextExt as _, Cookies as ConfigCookies};
 
-pub trait ContextExt {
-    fn cookies(&mut self) -> Result<Cookies, CookiesError>;
-
-    fn cookie(&self, name: &str) -> Option<Cookie<'_>>;
-}
-
-impl ContextExt for Context {
-    fn cookies(&mut self) -> Result<Cookies, CookiesError> {
+impl Context {
+    pub fn cookies(&mut self) -> Result<Cookies, CookiesError> {
         if let Some(cookies) = self.extensions().get::<Cookies>() {
             return Ok(cookies.clone());
         }
@@ -48,7 +42,7 @@ impl ContextExt for Context {
         Ok(cookies)
     }
 
-    fn cookie(&self, name: &str) -> Option<Cookie<'_>> {
+    pub fn cookie(&self, name: &str) -> Option<Cookie<'_>> {
         self.extensions().get::<Cookies>()?.get(name)
     }
 }

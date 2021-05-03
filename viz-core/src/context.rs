@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use crate::{http, Extract, Middlewares, Response, Result};
+use crate::{http, Extract, Middlewares, Result};
 
 /// The `Context` of an HTTP `request - response`.
 pub struct Context {
@@ -105,7 +105,7 @@ impl Context {
     }
 
     /// Invokes the next middleware.
-    pub async fn next(&mut self) -> Result<Response> {
+    pub async fn next(&mut self) -> Result {
         if let Some(m) = self.middleware.pop() {
             return m.call(self).await;
         }

@@ -7,14 +7,8 @@ use viz_utils::{anyhow::anyhow, futures::future::BoxFuture, tracing};
 
 use crate::{http, Context, Error, Extract, Result};
 
-pub trait ContextExt {
-    fn state<T>(&self) -> Result<T, Error>
-    where
-        T: Clone + Send + Sync + 'static;
-}
-
-impl ContextExt for Context {
-    fn state<T>(&self) -> Result<T, Error>
+impl Context {
+    pub fn state<T>(&self) -> Result<T, Error>
     where
         T: Clone + Send + Sync + 'static,
     {

@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-use crate::types::PAYLOAD_LIMIT;
+use crate::types::Payload;
 
 /// Limits Settings
 #[derive(Debug, Deserialize, Serialize)]
@@ -23,13 +23,13 @@ impl Default for Limits {
 }
 
 fn form_limit() -> usize {
-    PAYLOAD_LIMIT
+    Payload::PAYLOAD_LIMIT
 }
 
 fn json_limit() -> usize {
-    PAYLOAD_LIMIT * 8
+    Payload::PAYLOAD_LIMIT * 8
 }
 
 fn multipart_limit() -> usize {
-    PAYLOAD_LIMIT * 16
+    Payload::PAYLOAD_LIMIT * 16
 }

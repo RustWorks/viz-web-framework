@@ -10,29 +10,23 @@ use viz_utils::{futures::future::BoxFuture, serde::json, tracing};
 
 use crate::{
     config::ContextExt as _,
-    types::{get_length, get_mime, Payload, PayloadCheck, PayloadError},
+    types::{Payload, PayloadCheck, PayloadError},
     Context, Extract,
 };
 
 /// Context Extends
-pub trait ContextExt {
-    fn json<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
-    where
-        T: DeserializeOwned + Send + Sync;
-}
-
-impl ContextExt for Context {
-    fn json<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
+impl Context {
+    pub fn json<'a, T>(&'a mut self) -> BoxFuture<'a, Result<T, PayloadError>>
     where
         T: DeserializeOwned + Send + Sync,
     {
         Box::pin(async move {
-            let mut payload = json::<T>();
+            let mut payload = Payload::<Json<T>>::new();
 
             payload.set_limit(self.config().limits.json);
 
-            let m = get_mime(self);
-            let l = get_length(self);
+            let m = Payload::get_mime(self);
+            let l = Payload::get_length(self);
 
             payload.check_header(m, l)?;
 
@@ -103,14 +97,6 @@ where
     fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
         Box::pin(async move { cx.json().await.map(Json) })
     }
-}
-
-/// Creates a JSON payload
-pub fn json<T>() -> Payload<Json<T>>
-where
-    T: DeserializeOwned,
-{
-    Payload::new()
 }
 
 fn is_json(m: &mime::Mime) -> bool {

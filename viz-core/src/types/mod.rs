@@ -7,14 +7,14 @@ mod payload;
 mod query;
 mod state;
 
-pub use cookies::{ContextExt as CookieContextExt, Cookie, CookieJar, Cookies, CookiesError};
-pub use form::{form, ContextExt as FormContextExt, Form};
-pub use json::{json, Json};
-pub use multipart::{multipart, ContextExt as MultipartContextExt, Multipart};
-pub use params::{ContextExt as ParamsContextExt, Params, ParamsDeserializer, ParamsError};
-pub use payload::{get_length, get_mime, Payload, PayloadCheck, PayloadError, PAYLOAD_LIMIT};
-pub use query::{ContextExt as QueryContextExt, Query};
-pub use state::{ContextExt as StateContextExt, State, StateFactory};
+pub use cookies::{Cookie, CookieJar, Cookies, CookiesError};
+pub use form::Form;
+pub use json::Json;
+pub use multipart::Multipart;
+pub use params::{Params, ParamsDeserializer, ParamsError};
+pub use payload::{Payload, PayloadCheck, PayloadError};
+pub use query::Query;
+pub use state::{State, StateFactory};
 
 #[cfg(test)]
 mod tests {
@@ -102,12 +102,12 @@ mod tests {
 
             let cx = Context::from(req);
 
-            let mut payload = json::<Lang>();
+            let mut payload = Payload::<Json<Lang>>::new();
 
             payload.set_limit(19);
 
-            let m = get_mime(&cx);
-            let l = get_length(&cx);
+            let m = Payload::get_mime(&cx);
+            let l = Payload::get_length(&cx);
 
             let err = payload.check_header(m, l).err().unwrap();
 
@@ -143,10 +143,10 @@ mod tests {
 
             let mut cx = Context::from(req);
 
-            let mut payload = form::<Lang>();
+            let mut payload = Payload::<Form<Lang>>::new();
 
-            let m = get_mime(&cx);
-            let l = get_length(&cx);
+            let m = Payload::get_mime(&cx);
+            let l = Payload::get_length(&cx);
 
             assert!(payload.check_header(m, l).is_ok());
 
@@ -218,11 +218,10 @@ mod tests {
 
             let mut cx = Context::from(req);
 
-            let payload = multipart();
+            let payload = Payload::<Multipart>::new();
 
-            let m = get_mime(&cx);
-
-            let l = get_length(&cx);
+            let m = Payload::get_mime(&cx);
+            let l = Payload::get_length(&cx);
 
             let m = payload.check_header(m, l)?;
 

@@ -311,7 +311,7 @@ static INDEX_HTML: &str = r#"<!DOCTYPE html>
 "#;
 
 #[tokio::main]
-async fn main() -> Result {
+async fn main() -> Result<()> {
     tracing_subscriber::fmt()
         // From env var: `RUST_LOG`
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
@@ -379,7 +379,10 @@ async fn main() -> Result {
                 "/",
                 route()
                     // .guard(allow_get)
-                    .guard(into_guard(allow_get) | into_guard(allow_head))
+                    .guard(
+                        <Box<dyn Guard>>::from(allow_get)
+                            | Into::<Box<dyn Guard>>::into(allow_head),
+                    )
                     .all(hello_world),
             )
             .at("/users", route().post(create_user))

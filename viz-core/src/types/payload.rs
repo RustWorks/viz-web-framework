@@ -6,13 +6,7 @@ use viz_utils::{
     tracing,
 };
 
-use crate::http;
-use crate::Context;
-use crate::Response;
-use crate::Result;
-
-/// 1 MB
-pub const PAYLOAD_LIMIT: usize = 1024 * 1024;
+use crate::{http, Context, Response, Result};
 
 /// Payload Error
 #[derive(ThisError, Debug, PartialEq)]
@@ -58,12 +52,26 @@ pub trait PayloadCheck {
 }
 
 /// Payload Body
-pub struct Payload<T>
-where
-    T: PayloadCheck,
-{
+pub struct Payload<T> {
     limit: Option<usize>,
     inner: Option<T>,
+}
+
+impl Payload<()> {
+    /// 1 MB
+    pub const PAYLOAD_LIMIT: usize = 1024 * 1024;
+
+    pub fn get_mime(cx: &Context) -> Option<mime::Mime> {
+        cx.header(http::header::CONTENT_TYPE)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse::<mime::Mime>().ok())
+    }
+
+    pub fn get_length(cx: &Context) -> Option<usize> {
+        cx.header(http::header::CONTENT_LENGTH)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse::<usize>().ok())
+    }
 }
 
 impl<T> Payload<T>
@@ -80,7 +88,7 @@ where
     }
 
     pub fn limit(&self) -> usize {
-        self.limit.unwrap_or(PAYLOAD_LIMIT)
+        self.limit.unwrap_or(Payload::PAYLOAD_LIMIT)
     }
 
     pub fn replace(&mut self, data: T) {
@@ -141,16 +149,4 @@ where
 
         Ok(body)
     }
-}
-
-pub fn get_mime(cx: &Context) -> Option<mime::Mime> {
-    cx.header(http::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.parse::<mime::Mime>().ok())
-}
-
-pub fn get_length(cx: &Context) -> Option<usize> {
-    cx.header(http::header::CONTENT_LENGTH)
-        .and_then(|v| v.to_str().ok())
-        .and_then(|v| v.parse::<usize>().ok())
 }

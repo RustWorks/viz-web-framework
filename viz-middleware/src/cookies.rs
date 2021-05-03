@@ -1,6 +1,6 @@
 use std::{future::Future, pin::Pin};
 
-use viz_core::{http, types::CookieContextExt, Context, Middleware, Response, Result};
+use viz_core::{http, Context, Middleware, Response, Result};
 
 use viz_utils::tracing;
 

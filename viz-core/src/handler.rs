@@ -1,24 +1,33 @@
+//! Handler
+
 use std::{future::Future, marker::PhantomData};
 
 use viz_utils::futures::future::BoxFuture;
 
 use crate::{Context, Extract, Middleware, Response, Result};
 
+/// A basic handler within the given Args.
 pub trait HandlerBase<Args>: Clone + 'static {
+    /// The type of value produced on completion.
     type Output: Into<Response>;
+    /// Retures a future for handler.
     type Future: Future<Output = Self::Output> + Send + 'static;
 
+    /// Invokes the handler within the given args.
     fn call(&self, args: Args) -> Self::Future;
 }
 
+/// A handler within the given Context.
 pub trait Handler: Send + Sync + 'static {
-    fn call<'a>(&'a self, _: &'a mut Context) -> BoxFuture<'a, Result<Response>>;
+    /// Invokes the handler within the given Context.
+    fn call<'a>(&'a self, _: &'a mut Context) -> BoxFuture<'a, Result>;
 
+    /// Clones the handler to boxed.
     fn clone_handler(&self) -> Box<dyn Handler>;
 }
 
 impl Handler for Box<dyn Handler> {
-    fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result<Response>> {
+    fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result> {
         (**self).call(cx)
     }
 
@@ -27,12 +36,15 @@ impl Handler for Box<dyn Handler> {
     }
 }
 
+/// A basic handler wrapper within the given Args.
+#[derive(Debug)]
 pub struct HandlerWrapper<F, T> {
     pub(crate) f: F,
     _t: PhantomData<T>,
 }
 
 impl<F, T> HandlerWrapper<F, T> {
+    /// Creates new basic handler wrapper.
     pub fn new(f: F) -> Self {
         Self { f, _t: PhantomData }
     }
@@ -45,7 +57,7 @@ where
     T::Error: Into<Response> + Send,
 {
     #[inline]
-    fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result<Response>> {
+    fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result> {
         Box::pin(async move {
             Ok(match T::extract(cx).await {
                 Ok(args) => self.f.call(args).await.into(),
@@ -74,19 +86,26 @@ where
     }
 }
 
+/// A handler within the given Context and Args.
 pub trait HandlerCamp<'h, Args>: Clone + 'static {
+    /// The type of value produced on completion.
     type Output: Into<Response>;
+    /// Retures a future for handler.
     type Future: Future<Output = Self::Output> + Send + 'h;
 
+    /// Invokes the handler within the given Context and args.
     fn call(&'h self, cx: &'h mut Context, args: Args) -> Self::Future;
 }
 
+/// A super handler wrapper within the given Context and Args.
+#[derive(Debug)]
 pub struct HandlerSuper<F, T> {
     pub(crate) f: F,
     _t: PhantomData<T>,
 }
 
 impl<F, T> HandlerSuper<F, T> {
+    /// Creates new super handler wrapper.
     pub fn new(f: F) -> Self {
         Self { f, _t: PhantomData }
     }
@@ -99,7 +118,7 @@ where
     T::Error: Into<Response> + Send,
 {
     #[inline]
-    fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result<Response>> {
+    fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result> {
         Box::pin(async move {
             Ok(match T::extract(cx).await {
                 Ok(args) => self.f.call(cx, args).await.into(),
@@ -169,7 +188,7 @@ mod test {
         }
 
         /// Helper method for extractors testing
-        pub async fn extract<T: Extract>(cx: &mut Context) -> Result<T, T::Error> {
+        async fn extract<T: Extract>(cx: &mut Context) -> Result<T, T::Error> {
             T::extract(cx).await
         }
 
@@ -215,7 +234,7 @@ mod test {
             let r = h.call(&mut cx).await;
             assert!(r.is_ok());
 
-            async fn b(i: Info, u: User) -> Result<Response> {
+            async fn b(i: Info, u: User) -> Result {
                 assert_eq!(i, Info { hello: "world".to_owned() });
                 assert_eq!(u, User { id: 0 });
                 Ok(Response::new())
@@ -240,7 +259,7 @@ mod test {
             let r0 = hh.call(&mut cx).await;
             assert_eq!(r.is_ok(), r0.is_ok());
 
-            async fn e(u: User) -> Result<Response> {
+            async fn e(u: User) -> Result {
                 assert_eq!(u, User { id: 0 });
                 Ok(Response::new())
             }
@@ -287,7 +306,7 @@ mod test {
     fn handler_with_context() {
         block_on(async move {
             fn make_middle(
-                f: impl for<'a> Middleware<'a, Context, Output = Result<Response>>,
+                f: impl for<'a> Middleware<'a, Context, Output = Result>,
             ) -> Box<DynMiddleware> {
                 Box::new(f)
             }

@@ -20,19 +20,8 @@ use viz_utils::{futures::future::BoxFuture, thiserror::Error as ThisError, traci
 
 use crate::{http, Context, Extract, Response, Result};
 
-pub trait ContextExt {
-    fn params<T>(&self) -> Result<T, ParamsError>
-    where
-        T: DeserializeOwned;
-
-    fn param<T>(&self, name: &str) -> Result<T, ParamsError>
-    where
-        T: FromStr,
-        T::Err: Display;
-}
-
-impl ContextExt for Context {
-    fn params<T>(&self) -> Result<T, ParamsError>
+impl Context {
+    pub fn params<T>(&self) -> Result<T, ParamsError>
     where
         T: DeserializeOwned,
     {
@@ -58,7 +47,7 @@ impl ContextExt for Context {
         })
     }
 
-    fn param<T>(&self, name: &str) -> Result<T, ParamsError>
+    pub fn param<T>(&self, name: &str) -> Result<T, ParamsError>
     where
         T: FromStr,
         T::Err: Display,
