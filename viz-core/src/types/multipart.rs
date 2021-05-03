@@ -46,6 +46,6 @@ impl Context {
 
         // let charset = m.get_param(mime::CHARSET).map(|c| c.to_string());
 
-        Ok(Multipart::new(boundary, self.take_body().unwrap()))
+        Ok(Multipart::new(boundary, self.take_body().ok_or_else(|| PayloadError::Read)?))
     }
 }

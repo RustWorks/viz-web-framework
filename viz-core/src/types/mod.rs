@@ -9,7 +9,16 @@ mod payload;
 mod query;
 mod state;
 
-pub use cookie::{Cookie, CookieJar, Key, PrivateJar, SignedJar};
+#[cfg(feature = "private-cookies")]
+pub use cookie::PrivateJar;
+
+#[cfg(feature = "signed-cookies")]
+pub use cookie::SignedJar;
+
+#[cfg(any(feature = "signed-cookies", feature = "private-cookies"))]
+pub use cookie::Key;
+
+pub use cookie::{Cookie, CookieJar};
 pub use cookies::{Cookies, CookiesError};
 pub use form::Form;
 pub use json::Json;

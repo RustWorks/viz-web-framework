@@ -64,21 +64,25 @@ impl Cookies {
     }
 
     /// Gets a signed cookie by name
+    #[cfg(feature = "signed-cookies")]
     pub fn get_with_singed(&self, name: &str) -> Option<Cookie<'_>> {
         self.write().signed(self.key()).get(name)
     }
 
     /// Adds a signed cookie
+    #[cfg(feature = "signed-cookies")]
     pub fn add_with_singed(&self, cookie: Cookie<'_>) {
         self.write().signed_mut(self.key()).add(cookie.into_owned())
     }
 
     /// Gets a private cookie by name
+    #[cfg(feature = "private-cookies")]
     pub fn get_with_private(&self, name: &str) -> Option<Cookie<'_>> {
         self.write().private(self.key()).get(name)
     }
 
     /// Adds a private cookie
+    #[cfg(feature = "private-cookies")]
     pub fn add_with_private(&self, cookie: Cookie<'_>) {
         self.write().private_mut(self.key()).add(cookie.into_owned())
     }
