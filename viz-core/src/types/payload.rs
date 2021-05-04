@@ -59,13 +59,13 @@ pub trait PayloadDetect {
 
 /// Payload Body
 #[derive(Debug)]
-pub struct Payload<T> {
+pub struct Payload<T = ()> {
     /// A limit size
     limit: Option<usize>,
     _t: PhantomData<T>,
 }
 
-impl Payload<()> {
+impl Payload {
     /// 1 MB
     pub const PAYLOAD_LIMIT: usize = 1024 * 1024;
 }
