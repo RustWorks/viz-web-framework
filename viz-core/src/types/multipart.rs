@@ -1,4 +1,4 @@
-use form_data::FormData;
+use form_data::{FormData, Limits};
 
 use viz_utils::futures::future::BoxFuture;
 
@@ -32,7 +32,9 @@ impl Context {
     pub fn multipart(&mut self) -> Result<Multipart, PayloadError> {
         let mut payload = Payload::<Multipart>::new();
 
-        payload.set_limit(self.config().limits.multipart);
+        let limits = &self.config().limits.multipart;
+
+        payload.set_limit(limits.stream_size.unwrap_or(Limits::DEFAULT_STREAM_SIZE));
 
         let m = payload.check_header(self.mime(), self.len())?;
 
@@ -46,6 +48,10 @@ impl Context {
 
         // let charset = m.get_param(mime::CHARSET).map(|c| c.to_string());
 
-        Ok(Multipart::new(boundary, self.take_body().ok_or_else(|| PayloadError::Read)?))
+        Ok(Multipart::with_limits(
+            self.take_body().ok_or_else(|| PayloadError::Read)?,
+            boundary,
+            limits.clone(),
+        ))
     }
 }

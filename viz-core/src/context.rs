@@ -76,10 +76,10 @@ impl Context {
     }
 
     /// Gets content length
-    pub fn len(&self) -> Option<usize> {
+    pub fn len(&self) -> Option<u64> {
         self.header(http::header::CONTENT_LENGTH)
             .and_then(|v| v.to_str().ok())
-            .and_then(|v| v.parse::<usize>().ok())
+            .and_then(|v| v.parse::<u64>().ok())
     }
 
     /// Returns a reference to the associated header by key.

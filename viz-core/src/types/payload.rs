@@ -61,13 +61,16 @@ pub trait PayloadDetect {
 #[derive(Debug)]
 pub struct Payload<T = ()> {
     /// A limit size
-    limit: Option<usize>,
+    limit: Option<u64>,
     _t: PhantomData<T>,
 }
 
 impl Payload {
-    /// 1 MB
-    pub const PAYLOAD_LIMIT: usize = 1024 * 1024;
+    /// 1MB
+    pub const PAYLOAD_LIMIT: u64 = 1024 * 1024;
+
+    /// 8KB
+    pub const PAYLOAD_BUFFER_SIZE: usize = 8 * 1024;
 }
 
 impl<T> Payload<T>
@@ -80,13 +83,13 @@ where
     }
 
     /// Sets the limit.
-    pub fn set_limit(&mut self, limit: usize) -> &mut Self {
+    pub fn set_limit(&mut self, limit: u64) -> &mut Self {
         self.limit.replace(limit);
         self
     }
 
     /// Gets the limit.
-    pub fn limit(&self) -> usize {
+    pub fn limit(&self) -> u64 {
         self.limit.unwrap_or(Payload::PAYLOAD_LIMIT)
     }
 
@@ -94,7 +97,7 @@ where
     pub fn check_header(
         &self,
         m: Option<mime::Mime>,
-        l: Option<usize>,
+        l: Option<u64>,
     ) -> Result<mime::Mime, PayloadError> {
         let m = m.ok_or_else(|| PayloadError::UnsupportedMediaType)?;
 
@@ -118,7 +121,7 @@ where
     where
         S: Stream<Item = Result<Bytes, hyper::Error>> + Unpin,
     {
-        let mut body = BytesMut::with_capacity(8192);
+        let mut body = BytesMut::with_capacity(Payload::PAYLOAD_BUFFER_SIZE);
         let limit = self.limit();
 
         while let Some(item) = stream.next().await {
@@ -126,7 +129,7 @@ where
                 tracing::debug!("{}", e);
                 PayloadError::Read
             })?;
-            if (body.len() + chunk.len()) > limit {
+            if ((body.len() + chunk.len()) as u64) > limit {
                 return Err(PayloadError::TooLarge);
             } else {
                 body.extend_from_slice(&chunk);

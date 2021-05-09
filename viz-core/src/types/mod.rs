@@ -21,6 +21,7 @@ pub use cookie::Key;
 pub use cookie::{Cookie, CookieJar};
 pub use cookies::{Cookies, CookiesError};
 pub use form::Form;
+pub use form_data::Limits as MultipartLimits;
 pub use json::Json;
 pub use multipart::Multipart;
 pub use params::{Params, ParamsError};
