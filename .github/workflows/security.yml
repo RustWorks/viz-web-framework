@@ -15,14 +15,6 @@ jobs:
       - name: Set current week of the year in environnement
         run: echo "CURRENT_WEEK=$(date +%V)" >> $GITHUB_ENV
 
-        #- uses: actions-rs/audit-check@v1
-        #with:
-        #  token: ${{ secrets.GITHUB_TOKEN }}
-      - name: install cargo audit
-        run: cargo install --force cargo-audit
-      - name: Cargo update
-        run: cargo update
-      - name: Generate lockfile
-        run: cargo generate-lockfile
-      - name: Run cargo audit
-        run: cargo audit
+        - uses: actions-rs/audit-check@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
