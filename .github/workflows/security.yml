@@ -15,6 +15,7 @@ jobs:
       - name: Set current week of the year in environnement
         run: echo "CURRENT_WEEK=$(date +%V)" >> $GITHUB_ENV
 
-        - uses: actions-rs/audit-check@v1
+      - name: Cargo audio
+        uses: actions-rs/audit-check@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
