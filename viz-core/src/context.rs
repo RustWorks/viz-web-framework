@@ -71,20 +71,23 @@ impl Context {
     /// Gets content type
     pub fn mime(&self) -> Option<mime::Mime> {
         self.header(http::header::CONTENT_TYPE)
-            .and_then(|v| v.to_str().ok())
-            .and_then(|v| v.parse::<mime::Mime>().ok())
     }
 
     /// Gets content length
     pub fn len(&self) -> Option<u64> {
         self.header(http::header::CONTENT_LENGTH)
-            .and_then(|v| v.to_str().ok())
-            .and_then(|v| v.parse::<u64>().ok())
     }
 
     /// Returns a reference to the associated header by key.
-    pub fn header(&self, key: impl AsRef<str>) -> Option<&http::HeaderValue> {
+    pub fn header_value(&self, key: impl AsRef<str>) -> Option<&http::HeaderValue> {
         self.headers.get(key.as_ref())
+    }
+
+    /// Returns a value by header key.
+    pub fn header<T: std::str::FromStr>(&self, key: impl AsRef<str>) -> Option<T> {
+        self.header_value(key.as_ref())
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse::<T>().ok())
     }
 
     /// Returns a reference to the associated header field map.

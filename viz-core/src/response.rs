@@ -72,6 +72,29 @@ impl Response {
         Self { raw }
     }
 
+    /// Sets the `Content-Location` header
+    pub fn location(location: &'static str) -> Self {
+        let mut res = Self::new();
+        res.headers_mut().insert(http::header::CONTENT_LOCATION, http::HeaderValue::from_static(location));
+        res
+    }
+
+    /// Redirects to the URL derived from the specified path
+    pub fn redirect(location: &'static str, status: http::StatusCode) -> Self {
+        let mut res = Self::new();
+        res.headers_mut().insert(http::header::LOCATION, http::HeaderValue::from_static(location));
+        res.with_status(status)
+    }
+
+    /*
+    pub fn download(data: impl Into<http::Body>, ct: &'static str) -> Self {
+        let mut raw = http::Response::new(data.into());
+        raw.headers_mut().insert(http::header::CONTENT_TYPE, http::HeaderValue::from_static(ct));
+        raw.headers_mut().insert(http::header::CONTENT_DISPOSITION, http::HeaderValue::from_static(""));
+        Self { raw }
+    }
+    */
+
     /// Sets status for response
     pub fn with_status(mut self, status: http::StatusCode) -> Self {
         *self.status_mut() = status;

@@ -40,7 +40,7 @@ impl RequestIDMiddleware {
 
         res.headers_mut().insert(
             http::header::HeaderName::from_static(self.header),
-            match cx.header(&self.header).cloned() {
+            match cx.header_value(&self.header).cloned() {
                 Some(id) => id,
                 None => (self.generator)()
                     .and_then(|id| http::HeaderValue::from_str(&id).map_err(|e| anyhow!(e)))?,

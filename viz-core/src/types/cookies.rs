@@ -121,7 +121,7 @@ impl Context {
 
         let mut jar = CookieJar::new();
 
-        if let Some(raw_cookie) = self.header(http::header::COOKIE) {
+        if let Some(raw_cookie) = self.header_value(http::header::COOKIE) {
             for pair in raw_cookie
                 .to_str()
                 .map_err(|e| {

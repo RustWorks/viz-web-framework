@@ -170,7 +170,7 @@ impl SseContextExt for crate::Context {
     where
         T: FromStr + Send + Sync + 'static,
     {
-        self.header("last-event-id").and_then(|v| v.to_str().ok()).and_then(|v| v.parse::<T>().ok())
+        self.header("last-event-id")
     }
 }
 
