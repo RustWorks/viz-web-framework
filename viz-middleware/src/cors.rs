@@ -212,13 +212,13 @@ impl CorsMiddleware {
 
     #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        match (cx.header(ORIGIN).cloned(), cx.method()) {
+        match (cx.header_value(ORIGIN).cloned(), cx.method()) {
             (Some(origin), &Method::OPTIONS) => {
                 if self.is_origin_allowed(&origin) {
                     return Ok(CorsError::OriginNotAllowed.into());
                 }
 
-                if let Some(method) = cx.header(ACCESS_CONTROL_REQUEST_METHOD) {
+                if let Some(method) = cx.header_value(ACCESS_CONTROL_REQUEST_METHOD) {
                     if !self.is_method_allowed(method) {
                         return Ok(CorsError::MethodNotAllowed.into());
                     }
@@ -226,7 +226,7 @@ impl CorsMiddleware {
                     return Ok(CorsError::MethodNotAllowed.into());
                 }
 
-                if let Some(headers) = cx.header(ACCESS_CONTROL_REQUEST_HEADERS) {
+                if let Some(headers) = cx.header_value(ACCESS_CONTROL_REQUEST_HEADERS) {
                     let headers = headers.to_str().map_err(|_| CorsError::MethodNotAllowed)?;
                     for header in headers.split(',') {
                         if !self.is_header_allowed(header.trim()) {

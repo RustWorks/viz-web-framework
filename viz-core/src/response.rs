@@ -75,7 +75,8 @@ impl Response {
     /// Sets the `Content-Location` header
     pub fn location(location: &'static str) -> Self {
         let mut res = Self::new();
-        res.headers_mut().insert(http::header::CONTENT_LOCATION, http::HeaderValue::from_static(location));
+        res.headers_mut()
+            .insert(http::header::CONTENT_LOCATION, http::HeaderValue::from_static(location));
         res
     }
 
