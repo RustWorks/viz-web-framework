@@ -1,25 +1,30 @@
-use std::io;
-use std::path::{Path, PathBuf};
-use std::pin::Pin;
-use std::sync::Arc;
-use std::task::Poll;
-use std::{fs::Metadata, str::FromStr};
+use std::{
+    io,
+    path::{Path, PathBuf},
+    pin::Pin,
+    task::Poll,
+    {fs::Metadata, str::FromStr},
+};
 
 use bytes::{BufMut, Bytes, BytesMut};
 use headers::{
     AcceptRanges, ContentLength, ContentRange, ContentType, HeaderMap, HeaderMapExt,
     IfModifiedSince, IfRange, IfUnmodifiedSince, LastModified, Range,
 };
-use tokio::fs::{read_dir, File};
-use tokio::io::AsyncSeekExt;
+use tokio::{
+    fs::{read_dir, File},
+    io::AsyncSeekExt,
+};
 use tokio_util::io::poll_read_buf;
 
-use viz_utils::futures::{
-    future::{self, BoxFuture, Either, FutureExt},
-    ready,
-    stream::{self, Stream, StreamExt},
+use viz_utils::{
+    futures::{
+        future::{self, BoxFuture, Either, FutureExt},
+        ready,
+        stream::{self, Stream, StreamExt},
+    },
+    tracing,
 };
-use viz_utils::tracing;
 
 mod template;
 

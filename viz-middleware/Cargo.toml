@@ -1,20 +1,13 @@
 [package]
 name = "viz-middleware"
-version = "0.1.0-alpha.5"
+version = "0.1.0-alpha.6"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Middleware"
 license = "Apache-2.0/MIT"
 edition = "2018"
 
 [features]
-default = [
-  "logger",
-  "recover",
-  "request_id",
-  "timeout",
-  "jwt",
-  "jwt-header"
-]
+default = ["logger", "recover", "request_id", "timeout", "jwt", "jwt-header"]
 
 logger = []
 recover = []
@@ -26,12 +19,7 @@ session = ["sessions"]
 
 auth = []
 cors = []
-compression = [
-  "async-compression",
-  "bytes",
-  "pin-project",
-  "tokio-util/io"
-]
+compression = ["async-compression", "bytes", "pin-project", "tokio-util/io"]
 
 jwt = ["jsonwebtoken"]
 jwt-header = []
@@ -40,22 +28,22 @@ jwt-param = []
 jwt-cookie = []
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0-alpha.5" }
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.5" }
+viz-core = { path="../viz-core", version="0.1.0-alpha.6" }
+viz-utils = { path="../viz-utils", version="0.1.0-alpha.6" }
 
 serde = "1.0"
-nano-id = { version = "0.1", optional = true }
+nano-id = { version="0.1", optional=true }
 
-sessions = { version = "0.1.7", features = ["redis"], optional = true }
+sessions = { version="0.1.7", features=["redis"], optional=true }
 
-tokio = { version = "1.5", features = ["time"], optional = true }
-tokio-util = { version = "0.6", features = ["io"], optional = true }
+tokio = { version="1.5", features=["time"], optional=true }
+tokio-util = { version="0.6", features=["io"], optional=true }
 
 # compression
-async-compression = { version = "0.3", features = ["brotli", "deflate", "gzip", "tokio"], optional = true }
-bytes = { version = "1.0", optional = true }
-pin-project = { version = "1.0", optional = true }
+async-compression = { version="0.3", features=["brotli", "deflate", "gzip", "tokio"], optional=true }
+bytes = { version="1.0", optional=true }
+pin-project = { version="1.0", optional=true }
 
 # jwt
-jsonwebtoken = { version = "7.2", optional = true }
+jsonwebtoken = { version="7.2", optional=true }
 cfg-if = "1.0.0"

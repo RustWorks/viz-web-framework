@@ -16,12 +16,12 @@ mod response;
 pub mod config;
 pub mod types;
 
+#[cfg(feature = "fs")]
+pub mod fs;
 #[cfg(feature = "sse")]
 pub mod sse;
 #[cfg(feature = "ws")]
 pub mod ws;
-
-pub mod fs;
 
 #[allow(missing_docs)]
 pub mod http {
