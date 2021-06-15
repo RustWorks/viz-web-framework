@@ -1,4 +1,4 @@
-use std::{env, fs, sync::Arc};
+use std::{env, fs, path::PathBuf, sync::Arc};
 
 use serde::{Deserialize, Serialize};
 use toml::{
@@ -30,6 +30,9 @@ pub struct Config {
     /// Extras
     #[serde(default)]
     pub extras: Map<String, Value>,
+
+    /// Dir
+    pub dir: PathBuf,
 }
 
 impl Config {
@@ -47,6 +50,7 @@ impl Config {
             Config::default()
         };
 
+        config.dir = path;
         config.env = e;
 
         tracing::info!("{:#?}", config);
@@ -62,6 +66,7 @@ impl Default for Config {
             cookies: Cookies::default(),
             env: Env::default(),
             extras: Map::default(),
+            dir: env::current_dir().unwrap_or_default(),
         }
     }
 }

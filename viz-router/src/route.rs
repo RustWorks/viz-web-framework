@@ -1,11 +1,11 @@
 use std::{collections::HashMap, fmt, sync::Arc};
 
 use viz_core::{
-    http, Context, DynMiddleware, Error, Extract, Guard, HandlerBase, HandlerCamp, HandlerSuper,
+    http, Context, DynMiddleware, Extract, Guard, HandlerBase, HandlerCamp, HandlerSuper,
     HandlerWrapper, Middleware, Middlewares, Response, Result,
 };
 
-use crate::Method;
+use crate::{handler, Method};
 
 macro_rules! verbs {
     ($(($name:ident, $verb:ident),)*) => {
@@ -37,6 +37,7 @@ macro_rules! verbs2 {
     }
 }
 
+/// Route
 pub struct Route {
     // inherit parrent's middleware
     pub(crate) carry: bool,
@@ -48,6 +49,7 @@ pub struct Route {
 }
 
 impl Route {
+    /// Creates new Route Instance
     pub fn new(path: &str) -> Self {
         Self {
             handlers: HashMap::new(),
@@ -76,7 +78,7 @@ impl Route {
 
     pub fn mid<M>(mut self, m: M) -> Self
     where
-        M: for<'m> Middleware<'m, Context, Output = Result<Response>>,
+        M: for<'m> Middleware<'m, Context, Output = Result>,
     {
         self.middleware.get_or_insert_with(Vec::new).insert(0, Arc::new(m));
         self
@@ -120,6 +122,44 @@ impl Route {
         self.on(Method::All, handler)
     }
 
+    pub fn only<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
+    where
+        F: HandlerBase<T> + Send + Sync + 'static,
+        T: Extract + Send + Sync + 'static,
+        T::Error: Into<Response> + Send,
+    {
+        methods.iter().cloned().for_each(|method| {
+            self.handlers.insert(method, Arc::new(HandlerWrapper::new(handler.clone())));
+        });
+        self
+    }
+
+    pub fn except<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
+    where
+        F: HandlerBase<T> + Send + Sync + 'static,
+        T: Extract + Send + Sync + 'static,
+        T::Error: Into<Response> + Send,
+    {
+        let mut verbs = vec![
+            Method::Verb(http::Method::GET),
+            Method::Verb(http::Method::POST),
+            Method::Verb(http::Method::PUT),
+            Method::Verb(http::Method::DELETE),
+            Method::Verb(http::Method::OPTIONS),
+            Method::Verb(http::Method::CONNECT),
+            Method::Verb(http::Method::PATCH),
+            Method::Verb(http::Method::TRACE),
+        ];
+
+        verbs.dedup_by_key(|m| methods.contains(m));
+
+        verbs.iter().cloned().for_each(|method| {
+            self.handlers.insert(method, Arc::new(HandlerWrapper::new(handler.clone())));
+        });
+
+        self
+    }
+
     pub fn on2<F, T>(mut self, method: Method, handler: F) -> Self
     where
         F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
@@ -148,6 +188,52 @@ impl Route {
         T::Error: Into<Response> + Send,
     {
         self.on2(Method::All, handler)
+    }
+
+    pub fn only2<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
+    where
+        F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
+        T: Extract + Send + Sync + 'static,
+        T::Error: Into<Response> + Send,
+    {
+        methods.iter().cloned().for_each(|method| {
+            self.handlers.insert(method, Arc::new(HandlerSuper::new(handler.clone())));
+        });
+        self
+    }
+
+    pub fn except2<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
+    where
+        F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
+        T: Extract + Send + Sync + 'static,
+        T::Error: Into<Response> + Send,
+    {
+        let mut verbs = vec![
+            Method::Verb(http::Method::GET),
+            Method::Verb(http::Method::POST),
+            Method::Verb(http::Method::PUT),
+            Method::Verb(http::Method::DELETE),
+            Method::Verb(http::Method::OPTIONS),
+            Method::Verb(http::Method::CONNECT),
+            Method::Verb(http::Method::PATCH),
+            Method::Verb(http::Method::TRACE),
+        ];
+
+        verbs.dedup_by_key(|m| methods.contains(m));
+
+        verbs.iter().cloned().for_each(|method| {
+            self.handlers.insert(method, Arc::new(HandlerSuper::new(handler.clone())));
+        });
+
+        self
+    }
+
+    pub fn all3<H>(mut self, handler: H) -> Self
+    where
+        H: for<'m> Middleware<'m, Context, Output = Result>,
+    {
+        self.handlers.insert(Method::All, Arc::new(handler));
+        self
     }
 }
 

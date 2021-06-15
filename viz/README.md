@@ -69,7 +69,7 @@
 * [x] Websocket
 * [x] Server-Sent Events
 * [x] Sessions
-* [ ] Middlewares
+* [x] Middlewares
     * [x] `auth`
     * [x] `logger`
     * [x] `recover`
@@ -80,7 +80,7 @@
     * [x] `cors`
     * [x] `compression`
     * [x] `jwt`
-    * [ ] `serve static files`
+    * [x] `serve static files`
 
 
 ## Thanks

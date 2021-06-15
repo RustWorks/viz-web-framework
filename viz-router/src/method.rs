@@ -1,14 +1,19 @@
 use viz_core::http;
 
-#[derive(Eq, PartialEq, Hash)]
+/// Method
+#[derive(Clone, Eq, PartialEq, Hash)]
 pub enum Method {
+    /// All Verbs
     All,
+    /// Single Verb
     Verb(http::Method),
 }
 
 impl Method {
+    /// Star
     pub const STAR: &'static str = "*";
 
+    /// To str
     pub fn as_str(&self) -> &str {
         match self {
             Method::All => Self::STAR,

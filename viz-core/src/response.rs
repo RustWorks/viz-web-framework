@@ -171,6 +171,12 @@ impl From<&'_ [u8]> for Response {
     }
 }
 
+impl From<http::Body> for Response {
+    fn from(body: http::Body) -> Self {
+        Self { raw: http::Response::new(body) }
+    }
+}
+
 impl From<()> for Response {
     fn from(_: ()) -> Self {
         Self { raw: http::Response::new(http::Body::empty()) }

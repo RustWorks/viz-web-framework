@@ -7,6 +7,7 @@ use viz_utils::tracing;
 
 use crate::{Method, PathTree, Route, RouteHandler};
 
+/// Router
 pub struct Router {
     // inherit parrent's middleware
     carry: bool,
@@ -18,6 +19,7 @@ pub struct Router {
 }
 
 impl Router {
+    /// Creates new Router with path.
     pub fn new(path: &str) -> Self {
         Self {
             name: None,
@@ -29,21 +31,25 @@ impl Router {
         }
     }
 
+    /// Prefix path of the Router.
     pub fn path(mut self, path: &str) -> Self {
         self.path.insert_str(0, path);
         self
     }
 
+    /// Name of the Router.
     pub fn name(mut self, name: &str) -> Self {
         self.name.replace(name.to_owned());
         self
     }
 
+    /// Inherits parrent's middleware
     pub fn carry(mut self, b: bool) -> Self {
         self.carry = b;
         self
     }
 
+    /// Appends middleware to the Router.
     pub fn mid<M>(mut self, m: M) -> Self
     where
         M: for<'a> Middleware<'a, Context, Output = Result<Response>>,
@@ -52,21 +58,25 @@ impl Router {
         self
     }
 
+    /// Creates a scope Router with path.
     pub fn scope(mut self, path: &str, router: Router) -> Self {
         self.children.get_or_insert_with(Vec::new).push(router.path(path));
         self
     }
 
+    /// Appends a route.
     pub fn route(mut self, route: Route) -> Self {
         self.routes.get_or_insert_with(Vec::new).push(route);
         self
     }
 
+    /// Appends a route with path.
     pub fn at(mut self, path: &str, route: Route) -> Self {
         self.routes.get_or_insert_with(Vec::new).push(route.path(path));
         self
     }
 
+    /// Outputs the routes to map.
     pub fn finish(mut self, tree: &mut HashMap<Method, PathTree<Middlewares>>) {
         let m0 = self.middleware.take().unwrap_or_default();
         let h0 = m0.len() > 0;
@@ -125,6 +135,7 @@ impl Router {
     }
 }
 
+/// Creates new Router with empty path
 pub fn router() -> Router {
     Router::new("")
 }

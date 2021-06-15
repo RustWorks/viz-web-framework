@@ -1,6 +1,8 @@
 use std::{
     collections::HashMap,
     convert::Infallible,
+    env,
+    path::PathBuf,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -27,6 +29,7 @@ use viz::utils::{
 
 use redis::Client as RedisClient;
 
+use fs::{Config as ServeConfig, Serve};
 use jwt::jsonwebtoken;
 use sse::*;
 use ws::*;
@@ -322,7 +325,7 @@ async fn main() -> Result<()> {
 
     let config = app.config().await;
 
-    dbg!(config);
+    dbg!(&config);
 
     let users = Users::default();
 
@@ -394,6 +397,7 @@ async fn main() -> Result<()> {
             .at("/echo", route().get(echo))
             .at("/chat", route().get(|| async { Response::html(INDEX_HTML) }))
             .at("/chat/", route().get2(chat))
+            .at("/public/*", route().all3(Serve::new(ServeConfig::new(config.dir.join("public")))))
             .at("/*", route().all(not_found)),
     );
 

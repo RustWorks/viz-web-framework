@@ -21,6 +21,8 @@ pub mod sse;
 #[cfg(feature = "ws")]
 pub mod ws;
 
+pub mod fs;
+
 #[allow(missing_docs)]
 pub mod http {
     pub use headers;
