@@ -1,4 +1,4 @@
-use std::{io, net::SocketAddr, sync::Arc};
+use std::{io, net::SocketAddr, sync::Arc, path::Path};
 
 use hyper::{
     server::{
@@ -69,7 +69,7 @@ impl Server {
         let tree = self.tree;
         let srv =
             HyperServer::builder(incoming).serve(make_service_fn(move |stream: &AddrStream| {
-                let addr = stream.remote_addr();
+                let addr = Some(stream.remote_addr());
                 let config = config.clone();
                 let state = state.clone();
                 let tree = tree.clone();
@@ -84,18 +84,50 @@ impl Server {
 
         srv.await.map_err(|e| anyhow!(e))
     }
+
+    pub async fn listen_uds<P: AsRef<Path>>(self, path: P) -> Result<()> {
+        use tokio::net::{UnixListener, UnixStream};
+        use tokio_stream::wrappers::UnixListenerStream;
+
+        let path = path.as_ref();
+        let unix_listener = UnixListener::bind(path.to_owned())?;
+        let stream = UnixListenerStream::new(unix_listener);
+        let incoming = hyper::server::accept::from_stream(stream);
+
+        let config = self.config.unwrap_or_default();
+        let state = self.state.unwrap_or_default();
+        let tree = self.tree;
+        let srv =
+            HyperServer::builder(incoming).serve(make_service_fn(move |_stream: &UnixStream| {
+                let addr = None;
+                let config = config.clone();
+                let state = state.clone();
+                let tree = tree.clone();
+                async move {
+                    Ok::<_, Error>(service_fn(move |req| {
+                        serve(req, addr, state.clone(), config.clone(), tree.clone())
+                    }))
+                }
+            }));
+
+        tracing::info!("listening on {:?}", path.canonicalize()?);
+
+        srv.await.map_err(|e| anyhow!(e))
+    }
 }
 
 /// Serves a request and returns a response.
 pub async fn serve(
     req: http::Request,
-    addr: SocketAddr,
+    mut addr: Option<SocketAddr>,
     state: Vec<Arc<dyn StateFactory>>,
     config: Arc<Config>,
     tree: Arc<Tree>,
 ) -> Result<http::Response> {
     let mut cx = Context::from(req);
-    cx.extensions_mut().insert(addr);
+    if addr.is_some() {
+        cx.extensions_mut().insert(addr.take());
+    }
     cx.extensions_mut().insert(config);
     for t in state.iter() {
         t.create(cx.extensions_mut());

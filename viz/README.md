@@ -81,6 +81,7 @@
     * [x] `compression`
     * [x] `jwt`
     * [x] `serve static files`
+* [x] Unix Domain Socket
 
 
 ## Thanks

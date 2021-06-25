@@ -1,6 +1,7 @@
 use std::{
     collections::HashMap,
     convert::Infallible,
+    fs::remove_file,
     env,
     path::PathBuf,
     sync::{
@@ -401,5 +402,10 @@ async fn main() -> Result<()> {
             .at("/*", route().all(not_found)),
     );
 
-    app.listen("127.0.0.1:8080").await
+    //app.listen("127.0.0.1:8080").await
+    
+    let path = "tmp.sock";
+    let _ = remove_file(path);
+
+    app.listen_uds(path).await
 }
