@@ -54,6 +54,7 @@ impl Server {
         self.config.clone().unwrap()
     }
 
+    #[cfg(not(feature = "uds"))]
     pub async fn listen<A: ToString>(self, addr: A) -> Result<()> {
         let addr = addr
             .to_string()
@@ -85,7 +86,8 @@ impl Server {
         srv.await.map_err(|e| anyhow!(e))
     }
 
-    pub async fn listen_uds<P: AsRef<Path>>(self, path: P) -> Result<()> {
+    #[cfg(feature = "uds")]
+    pub async fn listen<P: AsRef<Path>>(self, path: P) -> Result<()> {
         use tokio::net::{UnixListener, UnixStream};
         use tokio_stream::wrappers::UnixListenerStream;
 
