@@ -1,8 +1,8 @@
 use std::{
     collections::HashMap,
     convert::Infallible,
-    fs::remove_file,
     env,
+    fs::remove_file,
     path::PathBuf,
     sync::{
         atomic::{AtomicUsize, Ordering},
@@ -403,7 +403,7 @@ async fn main() -> Result<()> {
     );
 
     //app.listen("127.0.0.1:8080").await
-    
+
     let path = "tmp.sock";
     let _ = remove_file(path);
 

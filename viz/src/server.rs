@@ -1,10 +1,7 @@
-use std::{io, net::SocketAddr, sync::Arc, path::Path};
+use std::{io, net::SocketAddr, path::Path, sync::Arc};
 
 use hyper::{
-    server::{
-        conn::{AddrIncoming, AddrStream},
-        Server as HyperServer,
-    },
+    server::Server as HyperServer,
     service::{make_service_fn, service_fn},
 };
 
@@ -56,6 +53,8 @@ impl Server {
 
     #[cfg(not(feature = "uds"))]
     pub async fn listen<A: ToString>(self, addr: A) -> Result<()> {
+        use hyper::server::conn::{AddrIncoming, AddrStream};
+
         let addr = addr
             .to_string()
             .parse::<SocketAddr>()
