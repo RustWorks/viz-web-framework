@@ -1,6 +1,6 @@
 [package]
 name = "viz"
-version = "0.1.0-alpha.6"
+version = "0.1.0-alpha.7"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Fast, flexible, minimalist web framework for Rust"
 homepage = "https://viz.rs"
@@ -18,6 +18,7 @@ default = []
 sse = ["viz-core/sse"]
 ws = ["viz-core/ws"]
 fs = ["viz-core/fs"]
+uds = ["tokio/net", "tokio-stream/net"]
 
 middleware = ["viz-middleware/default"]
 
@@ -37,13 +38,11 @@ middleware-session = ["viz-middleware/session"]
 middleware-compression = ["viz-middleware/compression"]
 middleware-jwt = ["viz-middleware/jwt"]
 
-uds = ["tokio/net", "tokio-stream/net"]
-
 [dependencies]
-viz-core = { path="../viz-core", version="0.1.0-alpha.6" }
-viz-router = { path="../viz-router", version="0.1.0-alpha.6" }
-viz-utils = { path="../viz-utils", version="0.1.0-alpha.6" }
-viz-middleware = { path="../viz-middleware", version="0.1.0-alpha.6", optional=true }
+viz-core = { path="../viz-core", version="0.1.0-alpha.7" }
+viz-router = { path="../viz-router", version="0.1.0-alpha.7" }
+viz-utils = { path="../viz-utils", version="0.1.0-alpha.7" }
+viz-middleware = { path="../viz-middleware", version="0.1.0-alpha.7", optional=true }
 
 hyper = { version="0.14", features=["full"] }
 

@@ -407,5 +407,5 @@ async fn main() -> Result<()> {
     let path = "tmp.sock";
     let _ = remove_file(path);
 
-    app.listen_uds(path).await
+    app.listen(path).await
 }
