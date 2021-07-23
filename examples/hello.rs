@@ -402,10 +402,14 @@ async fn main() -> Result<()> {
             .at("/*", route().all(not_found)),
     );
 
-    //app.listen("127.0.0.1:8080").await
-
-    let path = "tmp.sock";
-    let _ = remove_file(path);
-
-    app.listen(path).await
+    cfg_if::cfg_if! {
+        if #[cfg(unix)]
+        {
+            let path = "tmp.sock";
+            let _ = remove_file(path);
+            app.listen(path).await
+        } else {
+            app.listen("127.0.0.1:8080").await
+        }
+    }
 }

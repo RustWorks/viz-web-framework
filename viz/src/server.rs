@@ -51,7 +51,7 @@ impl Server {
         self.config.clone().unwrap()
     }
 
-    #[cfg(not(feature = "uds"))]
+    #[cfg(not(all(unix, feature = "uds")))]
     pub async fn listen<A: ToString>(self, addr: A) -> Result<()> {
         use hyper::server::conn::{AddrIncoming, AddrStream};
 
@@ -85,7 +85,7 @@ impl Server {
         srv.await.map_err(|e| anyhow!(e))
     }
 
-    #[cfg(feature = "uds")]
+    #[cfg(all(unix, feature = "uds"))]
     pub async fn listen<P: AsRef<Path>>(self, path: P) -> Result<()> {
         use tokio::net::{UnixListener, UnixStream};
         use tokio_stream::wrappers::UnixListenerStream;
