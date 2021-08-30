@@ -26,7 +26,6 @@ impl Default for Server {
         Self::new()
     }
 }
-
 impl Server {
     pub fn new() -> Self {
         Self { state: None, config: None, tree: Arc::new(Tree::new()) }
@@ -87,12 +86,24 @@ impl Server {
 
     #[cfg(all(unix, feature = "uds"))]
     pub async fn listen<P: AsRef<Path>>(self, path: P) -> Result<()> {
-        use tokio::net::{UnixListener, UnixStream};
+        use std::os::unix::io::AsRawFd;
+        use std::os::unix::io::FromRawFd;
+        use std::os::unix::fs::PermissionsExt;
+        use std::os::unix::net::UnixListener;
+        use std::fs::{File, set_permissions};
+        use tokio::net::UnixStream;
         use tokio_stream::wrappers::UnixListenerStream;
 
         let path = path.as_ref();
-        let unix_listener = UnixListener::bind(path.to_owned())?;
-        let stream = UnixListenerStream::new(unix_listener);
+        let unix_listener = UnixListener::bind(path)?;
+
+        // Nginx Required!
+        let file = unsafe { File::from_raw_fd(unix_listener.as_raw_fd() )};
+        let mut perms = file.metadata()?.permissions();
+        perms.set_mode(0o666);
+        set_permissions(path, perms)?;
+
+        let stream = UnixListenerStream::new(tokio::net::UnixListener::from_std(unix_listener)?);
         let incoming = hyper::server::accept::from_stream(stream);
 
         let config = self.config.unwrap_or_default();
