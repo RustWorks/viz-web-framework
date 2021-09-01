@@ -46,5 +46,5 @@ viz-middleware = { path="../viz-middleware", version="0.1.0-alpha.7", optional=t
 
 hyper = { version="0.14", features=["full"] }
 
-tokio = { version = "1.9", default-features = false, features = ["net"] }
+tokio = { version = "1.11", default-features = false, features = ["net"] }
 tokio-stream = { version = "0.1", default-features = false, features = ["net"] }
