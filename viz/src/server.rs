@@ -83,6 +83,7 @@ impl Server {
         srv.await.map_err(|e| anyhow!(e))
     }
 
+    #[cfg(all(unix, feature = "std"))]
     pub async fn listen_from_std(self, listener: std::os::unix::net::UnixListener) -> Result<()> {
         use tokio::net::{UnixStream, UnixListener} ;
         use tokio_stream::wrappers::UnixListenerStream;
