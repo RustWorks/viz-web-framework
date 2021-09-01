@@ -50,7 +50,6 @@ impl Server {
         self.config.clone().unwrap()
     }
 
-    #[cfg(not(all(unix, feature = "uds")))]
     pub async fn listen<A: ToString>(self, addr: A) -> Result<()> {
         use hyper::server::conn::{AddrIncoming, AddrStream};
 
@@ -84,26 +83,12 @@ impl Server {
         srv.await.map_err(|e| anyhow!(e))
     }
 
-    #[cfg(all(unix, feature = "uds"))]
-    pub async fn listen<P: AsRef<Path>>(self, path: P) -> Result<()> {
-        use std::os::unix::io::AsRawFd;
-        use std::os::unix::io::FromRawFd;
-        use std::os::unix::fs::PermissionsExt;
-        use std::os::unix::net::UnixListener;
-        use std::fs::{File, set_permissions};
-        use tokio::net::UnixStream;
+    pub async fn listen_from_std(self, listener: std::os::unix::net::UnixListener) -> Result<()> {
+        use tokio::net::{UnixStream, UnixListener} ;
         use tokio_stream::wrappers::UnixListenerStream;
 
-        let path = path.as_ref();
-        let unix_listener = UnixListener::bind(path)?;
-
-        // Nginx Required!
-        let file = unsafe { File::from_raw_fd(unix_listener.as_raw_fd() )};
-        let mut perms = file.metadata()?.permissions();
-        perms.set_mode(0o666);
-        set_permissions(path, perms)?;
-
-        let stream = UnixListenerStream::new(tokio::net::UnixListener::from_std(unix_listener)?);
+        let path = listener.local_addr()?;
+        let stream = UnixListenerStream::new(UnixListener::from_std(listener)?);
         let incoming = hyper::server::accept::from_stream(stream);
 
         let config = self.config.unwrap_or_default();
@@ -122,7 +107,7 @@ impl Server {
                 }
             }));
 
-        tracing::info!("listening on {:?}", path.canonicalize()?);
+        tracing::info!("listening on {:?}", path);
 
         srv.await.map_err(|e| anyhow!(e))
     }

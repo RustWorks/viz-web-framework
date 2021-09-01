@@ -18,7 +18,7 @@ default = []
 sse = ["viz-core/sse"]
 ws = ["viz-core/ws"]
 fs = ["viz-core/fs"]
-uds = ["tokio/net", "tokio-stream/net"]
+std = ["tokio/net", "tokio-stream/net"]
 
 middleware = ["viz-middleware/default"]
 

@@ -3,6 +3,7 @@ use std::{
     convert::Infallible,
     env,
     fs::remove_file,
+    os::unix::net::UnixListener,
     path::PathBuf,
     sync::{
         atomic::{AtomicUsize, Ordering},
@@ -405,9 +406,13 @@ async fn main() -> Result<()> {
     cfg_if::cfg_if! {
         if #[cfg(unix)]
         {
-            let path = "tmp.sock";
-            let _ = remove_file(path);
-            app.listen(path).await
+            app.listen_from_std({
+                let path = "tmp.sock";
+                let _ = remove_file(path);
+                let unix_listener = UnixListener::bind(path)?;
+                unix_listener.set_nonblocking(true)?;
+                unix_listener
+            }).await
         } else {
             app.listen("127.0.0.1:8080").await
         }
