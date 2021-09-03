@@ -9,7 +9,7 @@ edition = "2018"
 [dependencies]
 viz-core = { path = "../viz-core", version = "0.1.0-alpha.7" }
 viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.7" }
-path-tree = "0.1"
+path-tree = "0.2"
 
 [dev-dependencies]
 futures-executor = "0.3"
