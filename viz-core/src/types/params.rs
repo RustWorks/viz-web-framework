@@ -129,8 +129,7 @@ impl Context {
                 .get::<Params>()
                 .map(|ps| {
                     Params(ps.iter().map(|p| (p.0.as_str(), p.1.as_str())).collect::<Vec<_>>())
-                })
-                .ok_or_else(|| ParamsError::Read)?,
+                }).ok_or(ParamsError::Read)?,
         ))
         .map_err(|e| {
             tracing::debug!("Params deserialize error: {}", e);
@@ -144,7 +143,7 @@ impl Context {
         T: FromStr,
         T::Err: Display,
     {
-        self.extensions().get::<Params>().ok_or_else(|| ParamsError::Read)?.find(name)
+        self.extensions().get::<Params>().ok_or(ParamsError::Read)?.find(name)
     }
 }
 
@@ -284,7 +283,7 @@ impl<'de> Deserializer<'de> for ParamsDeserializer<'de> {
         if self.len < 1 {
             Err(de::value::Error::custom("expeceted at least one parameters"))
         } else {
-            visitor.visit_enum(ValueEnum { value: &self.params.nth(0).unwrap().1 })
+            visitor.visit_enum(ValueEnum { value: self.params.next().unwrap().1 })
         }
     }
 
@@ -297,7 +296,7 @@ impl<'de> Deserializer<'de> for ParamsDeserializer<'de> {
                 format!("wrong number of parameters: {} expected 1", self.len).as_str(),
             ))
         } else {
-            visitor.visit_borrowed_str(&self.params.nth(0).unwrap().1)
+            visitor.visit_borrowed_str(self.params.next().unwrap().1)
         }
     }
 

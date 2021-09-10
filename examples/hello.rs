@@ -1,7 +1,6 @@
 use std::{
     collections::HashMap,
     convert::Infallible,
-    env,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -26,7 +25,7 @@ use viz::utils::{
     tracing,
 };
 
-use redis::Client as RedisClient;
+
 
 use fs::{Config as ServeConfig, Serve};
 use jwt::jsonwebtoken;

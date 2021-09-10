@@ -79,7 +79,7 @@ impl Event {
     /// Set Server-sent event retry
     /// Retry timeout field ("retry:<timeout>")
     pub fn retry(mut self, duration: Duration) -> Event {
-        self.retry = Some(duration.into());
+        self.retry = Some(duration);
         self
     }
 
@@ -329,7 +329,7 @@ mod sealed {
 
     /// SSE error type
     #[derive(Debug)]
-    pub struct SseError;
+    pub(crate) struct SseError;
 
     impl Display for SseError {
         fn fmt(&self, f: &mut Formatter<'_>) -> ::std::fmt::Result {

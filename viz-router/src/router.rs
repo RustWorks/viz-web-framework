@@ -79,13 +79,13 @@ impl Router {
     /// Outputs the routes to map.
     pub fn finish(mut self, tree: &mut HashMap<Method, PathTree<Middlewares>>) {
         let m0 = self.middleware.take().unwrap_or_default();
-        let h0 = m0.len() > 0;
+        let h0 = !m0.is_empty();
 
         if let Some(routes) = self.routes.take() {
             for mut route in routes {
                 let m1 = route.middleware.take().unwrap_or_default();
                 let carry = route.carry;
-                let guard = route.guard.take().map(|g| Arc::new(g));
+                let guard = route.guard.take().map(Arc::new);
                 let path = join_paths(&self.path, &route.path);
 
                 for (method, handler) in route.handlers {
@@ -97,7 +97,7 @@ impl Router {
                         handler
                     }];
 
-                    if m1.len() > 0 {
+                    if !m1.is_empty() {
                         m.extend_from_slice(&m1);
                     }
 
@@ -282,7 +282,7 @@ mod tests {
         routes.finish(&mut tree);
 
         for i in 0..3 {
-            println!("");
+            println!();
             println!("request {}", i);
 
             let tr = tree.get(&Method::Verb(http::Method::GET));
@@ -293,7 +293,7 @@ mod tests {
                 *req.uri_mut() = "/users/fundon/edit".parse().unwrap();
                 *req.body_mut() = "Open Edit User Page".into();
 
-                println!("");
+                println!();
                 println!("request {} {}", i, req.uri());
 
                 if let Some(r) = t.find(&req.uri().to_string()) {
@@ -319,7 +319,7 @@ mod tests {
                 *req.uri_mut() = "/users/fundon/posts/233/edit".parse().unwrap();
                 *req.body_mut() = "Open Edit Post Page".into();
 
-                println!("");
+                println!();
                 println!("request {} {}", i, req.uri());
 
                 if let Some(r) = t.find(&req.uri().to_string()) {
@@ -345,7 +345,7 @@ mod tests {
                 *req.uri_mut() = "/users/fundon/posts/233".parse().unwrap();
                 *req.body_mut() = "Open Get Post Page".into();
 
-                println!("");
+                println!();
                 println!("request {} {}", i, req.uri());
 
                 if let Some(r) = t.find(&req.uri().to_string()) {

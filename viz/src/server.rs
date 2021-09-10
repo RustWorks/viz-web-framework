@@ -1,4 +1,4 @@
-use std::{io, net::SocketAddr, path::Path, sync::Arc};
+use std::{io, net::SocketAddr, sync::Arc};
 
 use hyper::{
     server::Server as HyperServer,

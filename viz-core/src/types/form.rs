@@ -40,7 +40,7 @@ impl<T> DerefMut for Form<T> {
 
 impl<T: fmt::Debug> fmt::Debug for Form<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        T::fmt(&self, f)
+        T::fmt(self, f)
     }
 }
 
@@ -77,7 +77,7 @@ impl Context {
 
         urlencoded::from_reader(
             payload
-                .check_real_length(self.take_body().ok_or_else(|| PayloadError::Read)?)
+                .check_real_length(self.take_body().ok_or(PayloadError::Read)?)
                 .await?
                 .reader(),
         )

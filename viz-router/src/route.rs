@@ -5,7 +5,7 @@ use viz_core::{
     HandlerWrapper, Middleware, Middlewares, Response, Result,
 };
 
-use crate::{handler, Method};
+use crate::{Method};
 
 macro_rules! verbs {
     ($(($name:ident, $verb:ident),)*) => {

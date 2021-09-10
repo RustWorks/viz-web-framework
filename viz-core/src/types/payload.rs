@@ -99,7 +99,7 @@ where
         m: Option<mime::Mime>,
         l: Option<u64>,
     ) -> Result<mime::Mime, PayloadError> {
-        let m = m.ok_or_else(|| PayloadError::UnsupportedMediaType)?;
+        let m = m.ok_or(PayloadError::UnsupportedMediaType)?;
 
         if !T::detect(&m) {
             return Err(PayloadError::UnsupportedMediaType);

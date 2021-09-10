@@ -81,8 +81,7 @@ impl Serve {
                         ext.to_str().and_then(|ext| {
                             mime_db::lookup(ext).and_then(|ext| mime::Mime::from_str(ext).ok())
                         })
-                    })
-                    .unwrap_or_else(|| mime::APPLICATION_OCTET_STREAM),
+                    }).unwrap_or(mime::APPLICATION_OCTET_STREAM),
             ));
         }
 

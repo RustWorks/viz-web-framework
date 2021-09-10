@@ -42,7 +42,7 @@ impl<T> DerefMut for Query<T> {
 
 impl<T: fmt::Debug> fmt::Debug for Query<T> {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        T::fmt(&self, f)
+        T::fmt(self, f)
     }
 }
 

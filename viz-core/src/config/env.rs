@@ -61,7 +61,7 @@ impl From<String> for Env {
             return Env::Test;
         }
 
-        return Env::Dev;
+        Env::Dev
     }
 }
 
