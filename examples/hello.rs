@@ -2,9 +2,6 @@ use std::{
     collections::HashMap,
     convert::Infallible,
     env,
-    fs::remove_file,
-    os::unix::net::UnixListener,
-    path::PathBuf,
     sync::{
         atomic::{AtomicUsize, Ordering},
         Arc,
@@ -406,6 +403,8 @@ async fn main() -> Result<()> {
     cfg_if::cfg_if! {
         if #[cfg(unix)]
         {
+            use std::{fs::remove_file, os::unix::net::UnixListener};
+
             let path = "tmp.sock";
             let _ = remove_file(path);
             let unix_listener = UnixListener::bind(path)?;
