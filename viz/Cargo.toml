@@ -19,6 +19,7 @@ sse = ["viz-core/sse"]
 ws = ["viz-core/ws"]
 fs = ["viz-core/fs"]
 std = ["tokio/net", "tokio-stream/net"]
+http2 = ["hyper/http2"]
 
 middleware = ["viz-middleware/default"]
 
@@ -44,7 +45,7 @@ viz-router = { path="../viz-router", version="0.1.0-alpha.7" }
 viz-utils = { path="../viz-utils", version="0.1.0-alpha.7" }
 viz-middleware = { path="../viz-middleware", version="0.1.0-alpha.7", optional=true }
 
-hyper = { version="0.14", features=["full"] }
+hyper = { version="0.14", features=["server", "tcp", "stream", "http1"] }
 
 tokio = { version = "1.11", default-features = false, features = ["net"] }
 tokio-stream = { version = "0.1", default-features = false, features = ["net"] }

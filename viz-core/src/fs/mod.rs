@@ -73,7 +73,23 @@ impl Serve {
             path.push(suffix);
         }
 
-        let file = File::open(&path).await?;
+        let mut resource = File::open(&path).await;
+        let mut is_err = resource.is_err();
+
+        if is_err {
+            if let Some(file) = self.config.try_file {
+                path.pop();
+                path.push(file);
+                resource = File::open(&path).await;
+                is_err = resource.is_err();
+            }
+        }
+
+        if is_err {
+            return Ok(Response::new().with_status(hyper::StatusCode::NOT_FOUND))
+        }
+
+        let file = resource.unwrap();
         let metadata = file.metadata().await?;
         let file_type = metadata.file_type();
 
@@ -111,21 +127,7 @@ impl Serve {
             let len = body.len();
             let mut res = Response::html(body);
             res.headers_mut().typed_insert(ContentLength(len as u64));
-
             return Ok(res)
-        } else if let Some(file) = self.config.try_file {
-            path = self.config.public.clone();
-
-            let index_file = path.join(file);
-
-            if index_file.exists() {
-                let file = File::open(index_file.clone()).await?;
-                let metadata = file.metadata().await?;
-
-                if metadata.file_type().is_file() {
-                    return Ok(respond(file, metadata, cx.headers(), mime::TEXT_HTML_UTF_8));
-                }
-            }
         };
 
         Ok(Response::new().with_status(hyper::StatusCode::NOT_FOUND))
