@@ -74,7 +74,7 @@ impl Context {
     }
 
     /// Gets content length
-    pub fn len(&self) -> Option<u64> {
+    pub fn size(&self) -> Option<u64> {
         self.header(http::header::CONTENT_LENGTH)
     }
 

@@ -132,8 +132,7 @@ struct User {
 }
 
 async fn create_user(user: Json<User>) -> Result<String> {
-    dbg!(123);
-    json::to_string_pretty(&*user).map_err(|e| anyhow!(e))
+    json::to_string_pretty(&*user).map_err(Error::new)
 }
 
 async fn login(session: State<session::Session>) -> Result<String> {
@@ -317,7 +316,7 @@ async fn main() -> Result<()> {
         // From env var: `RUST_LOG`
         .with_env_filter(tracing_subscriber::EnvFilter::from_default_env())
         .try_init()
-        .map_err(|e| anyhow::anyhow!(e));
+        .map_err(|e| anyhow::anyhow!(e))?;
 
     let mut app = viz::new();
 

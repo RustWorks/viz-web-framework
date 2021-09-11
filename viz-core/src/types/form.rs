@@ -51,7 +51,7 @@ where
     type Error = PayloadError;
 
     #[inline]
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+    fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         Box::pin(async move { cx.form().await.map(Form) })
     }
 }
@@ -73,7 +73,7 @@ impl Context {
 
         payload.set_limit(self.config().limits.form);
 
-        payload.check_header(self.mime(), self.len())?;
+        payload.check_header(self.mime(), self.size())?;
 
         urlencoded::from_reader(
             payload

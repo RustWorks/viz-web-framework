@@ -50,16 +50,15 @@ impl BasicMiddleware {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         tracing::trace!("Basic Auth Middleware");
 
-        if cx
+        let verified = cx
             .headers()
             .typed_get::<Authorization<Basic>>()
             .and_then(|auth| {
-                let user = auth.0.username();
-                let pswd = auth.0.password();
-                self.users.get(user).filter(|password| *password == pswd)
+                self.users.get(auth.0.username()).filter(|password| *password == auth.0.password())
             })
-            .is_some()
-        {
+            .is_some();
+
+        if verified {
             return cx.next().await;
         }
 

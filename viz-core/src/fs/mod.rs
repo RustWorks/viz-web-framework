@@ -1,3 +1,5 @@
+//! Serve Static Files
+
 use std::{
     io,
     path::{Path, PathBuf},
@@ -32,6 +34,7 @@ use template::*;
 
 use crate::{http, Context, Middleware, Response, Result};
 
+/// A Config For Serving Static Files
 #[derive(Clone, Debug)]
 pub struct Config {
     public: PathBuf,
@@ -41,25 +44,30 @@ pub struct Config {
 }
 
 impl Config {
+    /// Creates `Config` with a path
     pub fn new(path: impl Into<PathBuf>) -> Self {
         Self { public: path.into(), unlisted: Some(vec![".DS_Store", ".git"]), listing: false, try_file: None }
     }
 
+    /// Gets a mutable unlisted
     pub fn unlisted(&mut self) -> Option<&mut Vec<&'static str>> {
         self.unlisted.as_mut()
     }
 
+    /// Sets a try file
     pub fn try_file(&mut self, file: &'static str) {
         self.try_file.replace(file);
     }
 }
 
+/// Serve
 #[derive(Clone, Debug)]
 pub struct Serve {
     config: Config,
 }
 
 impl Serve {
+    ///  Creates a `Serve` with `Config`
     pub fn new(config: Config) -> Self {
         Self { config }
     }
@@ -143,6 +151,7 @@ impl<'m> Middleware<'m, Context> for Serve {
     }
 }
 
+/// serve fn with `Config`
 pub fn serve(config: Config) -> Serve {
     Serve::new(config)
 }

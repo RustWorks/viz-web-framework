@@ -38,9 +38,9 @@ pub enum CorsError {
     HeaderNotAllowed,
 }
 
-impl Into<Response> for CorsError {
-    fn into(self) -> Response {
-        (StatusCode::FORBIDDEN, format!("CORS request forbidden: {}", self.to_string())).into()
+impl From<CorsError> for Response {
+    fn from(e: CorsError) -> Self {
+        (StatusCode::FORBIDDEN, format!("CORS request forbidden: {}", e.to_string())).into()
     }
 }
 
@@ -273,7 +273,7 @@ fn to_hash_set<T>(list: &[&str]) -> HashSet<T>
 where
     T: FromStr + Hash + Eq,
 {
-    list.iter().map(|m| T::from_str(m).ok()).filter(|m| m.is_some()).map(|m| m.unwrap()).collect()
+    list.iter().map(|m| T::from_str(m).ok()).flatten().collect()
 }
 
 fn to_headers_iter<H, T>(headers: H) -> impl IntoIterator<Item = T>
@@ -284,8 +284,7 @@ where
     headers
         .into_iter()
         .map(|m| TryFrom::try_from(m).ok())
-        .filter(|m| m.is_some())
-        .map(|m| m.unwrap())
+        .flatten()
 }
 
 /// Into to Origin

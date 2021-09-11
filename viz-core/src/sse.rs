@@ -20,7 +20,7 @@ use tokio::time::{self, Sleep};
 
 use viz_utils::{
     futures::{
-        future::{self},
+        future,
         stream::{Stream, TryStream, TryStreamExt},
     },
     serde::json as serde_json,
@@ -29,7 +29,7 @@ use viz_utils::{
 
 use crate::Result;
 
-// Server-sent event data type
+/// Server-sent event data type
 #[derive(Debug)]
 enum DataType {
     Text(String),
@@ -160,6 +160,7 @@ impl Display for Event {
 /// Typically this identifier represented as number or string.
 /// Context Extends
 pub trait SseContextExt {
+    /// Gets the last event id
     fn last_event_id<T>(&self) -> Option<T>
     where
         T: FromStr + Send + Sync + 'static;

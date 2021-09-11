@@ -18,8 +18,9 @@ use tokio_tungstenite::{
 };
 
 use viz_utils::{
+    anyhow::anyhow,
     futures::{
-        future::{self, BoxFuture, FutureExt, TryFutureExt},
+        future::{BoxFuture, FutureExt, TryFutureExt},
         Sink, Stream, StreamExt,
     },
     tracing,
@@ -59,7 +60,7 @@ impl Extract for Ws {
     type Error = crate::Response;
 
     #[inline]
-    fn extract<'a>(cx: &'a mut crate::Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+    fn extract(cx: &mut crate::Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         Box::pin(async move { cx.ws() })
     }
 }
@@ -177,7 +178,7 @@ impl WebSocket {
 
     /// Gracefully close this websocket.
     pub async fn close(mut self) -> Result<(), Error> {
-        future::poll_fn(|cx| Pin::new(&mut self).poll_close(cx)).await
+        self.inner.close(None).await.map_err(Error::new)
     }
 }
 
@@ -295,10 +296,10 @@ impl Message {
     }
 
     /// Try to get a reference to the string text, if this is a Text message.
-    pub fn to_str(&self) -> Result<&str, ()> {
+    pub fn to_str(&self) -> Result<&str, Error> {
         match self.inner {
             protocol::Message::Text(ref s) => Ok(s),
-            _ => Err(()),
+            _ => Err(anyhow!("It's not a Text message")),
         }
     }
 
@@ -319,9 +320,9 @@ impl Message {
     }
 }
 
-impl Into<Vec<u8>> for Message {
-    fn into(self) -> Vec<u8> {
-        self.into_bytes()
+impl From<Message> for Vec<u8> {
+    fn from(m: Message) -> Self {
+        m.into_bytes()
     }
 }
 

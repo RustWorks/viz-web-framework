@@ -1,4 +1,4 @@
-use std::{io, net::SocketAddr, sync::Arc};
+use std::{fmt, io, net::SocketAddr, sync::Arc};
 
 use hyper::{
     server::Server as HyperServer,
@@ -12,7 +12,7 @@ use viz_core::{
     Context, Error, Result,
 };
 use viz_router::{Method, Router, Tree};
-use viz_utils::{anyhow::anyhow, tracing};
+use viz_utils::tracing;
 
 /// Viz Server
 pub struct Server {
@@ -26,11 +26,14 @@ impl Default for Server {
         Self::new()
     }
 }
+
 impl Server {
+    /// Creates a server
     pub fn new() -> Self {
         Self { state: None, config: None, tree: Arc::new(Tree::new()) }
     }
 
+    /// Sets a `State`
     pub fn state<T>(&mut self, state: T) -> &mut Self
     where
         T: Clone + Send + Sync + 'static,
@@ -39,17 +42,20 @@ impl Server {
         self
     }
 
+    /// Sets a `Router`
     pub fn routes(&mut self, router: Router) -> &mut Self {
         router.finish(Arc::get_mut(&mut self.tree).unwrap());
         self
     }
 
+    /// Gets the `Config`
     pub async fn config(&mut self) -> Arc<Config> {
         tracing::info!("loading config");
         self.config.replace(Arc::new(Config::load().await.unwrap_or_default()));
         self.config.clone().unwrap()
     }
 
+    /// Listens a address
     pub async fn listen<A: ToString>(self, addr: A) -> Result<()> {
         use hyper::server::conn::{AddrIncoming, AddrStream};
 
@@ -80,12 +86,13 @@ impl Server {
 
         tracing::info!("listening on http://{}", addr);
 
-        srv.await.map_err(|e| anyhow!(e))
+        srv.await.map_err(Error::new)
     }
 
+    /// Listens from the standard UnixListener
     #[cfg(all(unix, feature = "std"))]
     pub async fn listen_from_std(self, listener: std::os::unix::net::UnixListener) -> Result<()> {
-        use tokio::net::{UnixStream, UnixListener} ;
+        use tokio::net::{UnixListener, UnixStream};
         use tokio_stream::wrappers::UnixListenerStream;
 
         let path = listener.local_addr()?;
@@ -110,7 +117,7 @@ impl Server {
 
         tracing::info!("listening on {:?}", path);
 
-        srv.await.map_err(|e| anyhow!(e))
+        srv.await.map_err(Error::new)
     }
 }
 
@@ -152,4 +159,10 @@ pub async fn serve(
     }
 
     Ok(cx.next().await?.into())
+}
+
+impl fmt::Debug for Server {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Server").finish()
+    }
 }

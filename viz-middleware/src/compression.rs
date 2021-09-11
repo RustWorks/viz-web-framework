@@ -50,6 +50,12 @@ impl<Algo> Compression<Algo> {
     }
 }
 
+impl<Algo> Default for Compression<Algo> {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// A wrapper around any type that implements [`Stream`](futures::Stream) to be
 /// compatible with async_compression's Stream based encoders
 #[pin_project]

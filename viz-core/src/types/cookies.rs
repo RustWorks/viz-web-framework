@@ -22,9 +22,9 @@ pub enum CookiesError {
     Parse,
 }
 
-impl Into<Response> for CookiesError {
-    fn into(self) -> Response {
-        (http::StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into()
+impl From<CookiesError> for Response {
+    fn from(e: CookiesError) -> Self {
+        (http::StatusCode::INTERNAL_SERVER_ERROR, e).into()
     }
 }
 
@@ -107,7 +107,7 @@ impl Extract for Cookies {
     type Error = CookiesError;
 
     #[inline]
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+    fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         Box::pin(async move { cx.cookies() })
     }
 }

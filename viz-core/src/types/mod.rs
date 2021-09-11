@@ -119,7 +119,7 @@ mod tests {
 
             payload.set_limit(19);
 
-            let err = payload.check_header(cx.mime(), cx.len()).err().unwrap();
+            let err = payload.check_header(cx.mime(), cx.size()).err().unwrap();
 
             assert_eq!(err, PayloadError::TooLarge);
 
@@ -155,7 +155,7 @@ mod tests {
 
             let payload = Payload::<Form>::new();
 
-            assert!(payload.check_header(cx.mime(), cx.len()).is_ok());
+            assert!(payload.check_header(cx.mime(), cx.size()).is_ok());
 
             let data: Form<Lang> = urlencoded::from_reader(
                 payload.check_real_length(cx.take_body().unwrap()).await?.reader(),
@@ -225,7 +225,7 @@ mod tests {
 
             let payload = Payload::<Multipart>::new();
 
-            let m = payload.check_header(cx.mime(), cx.len())?;
+            let m = payload.check_header(cx.mime(), cx.size())?;
 
             let charset = m.get_param(mime::CHARSET);
             let boundary = m.get_param(mime::BOUNDARY);

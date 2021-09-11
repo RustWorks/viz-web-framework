@@ -37,9 +37,9 @@ pub enum ParamsError {
     Parse,
 }
 
-impl Into<Response> for ParamsError {
-    fn into(self) -> Response {
-        (http::StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into()
+impl From<ParamsError> for Response {
+    fn from(e: ParamsError) -> Self {
+        (http::StatusCode::INTERNAL_SERVER_ERROR, e).into()
     }
 }
 
@@ -93,15 +93,15 @@ impl<T> DerefMut for Params<T> {
     }
 }
 
-impl Into<Params> for Vec<(String, String)> {
-    fn into(self) -> Params {
-        Params(self)
+impl From<Vec<(String, String)>> for Params {
+    fn from(v: Vec<(String, String)>) -> Self {
+        Params(v)
     }
 }
 
-impl Into<Params> for Vec<(&str, &str)> {
-    fn into(self) -> Params {
-        Params(self.iter().map(|p| (p.0.to_string(), p.1.to_string())).collect::<Vec<_>>())
+impl From<Vec<(&str, &str)>> for Params {
+    fn from(v: Vec<(&str, &str)>) -> Self {
+        Params(v.iter().map(|p| (p.0.to_string(), p.1.to_string())).collect())
     }
 }
 
@@ -112,7 +112,7 @@ where
     type Error = ParamsError;
 
     #[inline]
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+    fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         Box::pin(async move { cx.params() })
     }
 }
@@ -129,7 +129,8 @@ impl Context {
                 .get::<Params>()
                 .map(|ps| {
                     Params(ps.iter().map(|p| (p.0.as_str(), p.1.as_str())).collect::<Vec<_>>())
-                }).ok_or(ParamsError::Read)?,
+                })
+                .ok_or(ParamsError::Read)?,
         ))
         .map_err(|e| {
             tracing::debug!("Params deserialize error: {}", e);

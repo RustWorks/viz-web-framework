@@ -76,7 +76,7 @@ where
     type Error = Error;
 
     #[inline]
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+    fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         let state = cx.extensions().get::<Self>().cloned().ok_or_else(|| {
             tracing::debug!("State extract error: {}", std::any::type_name::<T>());
             anyhow!("State is not configured")

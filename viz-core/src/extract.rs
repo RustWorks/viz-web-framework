@@ -10,7 +10,7 @@ pub trait Extract: Sized {
     type Error;
 
     /// Extract the value from Context.
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>>;
+    fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>>;
 }
 
 impl<T> Extract for Option<T>
@@ -21,7 +21,7 @@ where
     type Error = T::Error;
 
     #[inline]
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+    fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         Box::pin(async move {
             Ok(match T::extract(cx).await {
                 Ok(v) => Some(v),
@@ -41,7 +41,7 @@ where
     type Error = T::Error;
 
     #[inline]
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+    fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         Box::pin(async move { Ok(T::extract(cx).await) })
     }
 }

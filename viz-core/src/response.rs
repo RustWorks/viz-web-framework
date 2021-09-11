@@ -103,6 +103,12 @@ impl Response {
     }
 }
 
+impl Default for Response {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Deref for Response {
     type Target = http::Response;
 
@@ -117,9 +123,9 @@ impl DerefMut for Response {
     }
 }
 
-impl Into<http::Response> for Response {
-    fn into(self) -> http::Response {
-        self.raw
+impl From<Response> for http::Response {
+    fn from(res: Response) -> Self {
+        res.raw
     }
 }
 

@@ -34,16 +34,16 @@ pub enum PayloadError {
     UnsupportedMediaType,
 }
 
-impl Into<Response> for PayloadError {
-    fn into(self) -> Response {
+impl From<PayloadError> for Response {
+    fn from(e: PayloadError) -> Response {
         (
-            match self {
-                Self::Read | Self::Parse => http::StatusCode::BAD_REQUEST,
-                Self::LengthRequired => http::StatusCode::LENGTH_REQUIRED,
-                Self::TooLarge => http::StatusCode::PAYLOAD_TOO_LARGE,
-                Self::UnsupportedMediaType => http::StatusCode::UNSUPPORTED_MEDIA_TYPE,
+            match e {
+                PayloadError::Read | PayloadError::Parse => http::StatusCode::BAD_REQUEST,
+                PayloadError::LengthRequired => http::StatusCode::LENGTH_REQUIRED,
+                PayloadError::TooLarge => http::StatusCode::PAYLOAD_TOO_LARGE,
+                PayloadError::UnsupportedMediaType => http::StatusCode::UNSUPPORTED_MEDIA_TYPE,
             },
-            self.to_string(),
+            e.to_string(),
         )
             .into()
     }
@@ -58,7 +58,7 @@ pub trait PayloadDetect {
 }
 
 /// Payload Body
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Payload<T = ()> {
     /// A limit size
     limit: Option<u64>,

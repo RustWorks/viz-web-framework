@@ -8,10 +8,12 @@ mod server;
 pub use server::serve;
 pub use server::Server;
 
+/// Creats a `Server`
 pub fn new() -> Server {
     Server::new()
 }
 
+/// Prelude some stuff
 pub mod prelude {
     pub use types::*;
     pub use viz_core::*;

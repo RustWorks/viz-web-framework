@@ -133,6 +133,15 @@ where
     }
 }
 
+impl<T> Default for JWTMiddleware<T> 
+where
+    T: DeserializeOwned + Sync + Send + 'static + Debug,
+{
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl<'a, T> Middleware<'a, Context> for JWTMiddleware<T>
 where
     T: DeserializeOwned + Sync + Send + 'static + Debug,

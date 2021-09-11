@@ -1,8 +1,6 @@
 use std::{future::Future, pin::Pin};
 
-use viz_core::{http, Context, Middleware, Response, Result};
-
-use viz_utils::anyhow::anyhow;
+use viz_core::{http, Context, Error, Middleware, Response, Result};
 
 const HEADER: &str = "x-request-id";
 
@@ -43,7 +41,7 @@ impl RequestIDMiddleware {
             match cx.header_value(&self.header).cloned() {
                 Some(id) => id,
                 None => (self.generator)()
-                    .and_then(|id| http::HeaderValue::from_str(&id).map_err(|e| anyhow!(e)))?,
+                    .and_then(|id| http::HeaderValue::from_str(&id).map_err(Error::new))?,
             },
         );
 

@@ -15,7 +15,7 @@ impl Extract for Multipart {
     type Error = PayloadError;
 
     #[inline]
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+    fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         Box::pin(async move { cx.multipart() })
     }
 }
@@ -36,7 +36,7 @@ impl Context {
 
         payload.set_limit(limits.stream_size.unwrap_or(Limits::DEFAULT_STREAM_SIZE));
 
-        let m = payload.check_header(self.mime(), self.len())?;
+        let m = payload.check_header(self.mime(), self.size())?;
 
         let boundary = m.get_param(mime::BOUNDARY);
 

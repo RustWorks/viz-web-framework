@@ -5,11 +5,12 @@ use viz_core::{
     HandlerWrapper, Middleware, Middlewares, Response, Result,
 };
 
-use crate::{Method};
+use crate::Method;
 
 macro_rules! verbs {
     ($(($name:ident, $verb:ident),)*) => {
         $(
+            /// Appends a route, handle HTTP $verb without `Context`
             pub fn $name<F, T>(self, handler: F) -> Self
             where
                 F: HandlerBase<T> + Send + Sync + 'static,
@@ -25,6 +26,7 @@ macro_rules! verbs {
 macro_rules! verbs2 {
     ($(($name:ident, $verb:ident),)*) => {
         $(
+            /// Appends a route, handle HTTP $verb with `Context` and others
             pub fn $name<F, T>(self, handler: F) -> Self
             where
                 F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
@@ -61,21 +63,25 @@ impl Route {
         }
     }
 
+    /// Sets a path
     pub fn path(mut self, path: &str) -> Self {
         self.path.insert_str(0, path);
         self
     }
 
+    /// Sets a name
     pub fn name(mut self, name: &str) -> Self {
         self.name.replace(name.to_owned());
         self
     }
 
+    /// Sets a carry
     pub fn carry(mut self, b: bool) -> Self {
         self.carry = b;
         self
     }
 
+    /// Appends a middle
     pub fn mid<M>(mut self, m: M) -> Self
     where
         M: for<'m> Middleware<'m, Context, Output = Result>,
@@ -84,6 +90,7 @@ impl Route {
         self
     }
 
+    /// Sets a gurad
     pub fn guard<G>(mut self, g: G) -> Self
     where
         G: Into<Box<dyn Guard>>,
@@ -92,6 +99,7 @@ impl Route {
         self
     }
 
+    /// Appends a route, handle HTTP verb without `Context`
     pub fn on<F, T>(mut self, method: Method, handler: F) -> Self
     where
         F: HandlerBase<T> + Send + Sync + 'static,
@@ -113,6 +121,7 @@ impl Route {
         (trace, TRACE),
     }
 
+    /// Appends a route, handle all HTTP verbs without `Context`
     pub fn all<F, T>(self, handler: F) -> Self
     where
         F: HandlerBase<T> + Send + Sync + 'static,
@@ -122,6 +131,7 @@ impl Route {
         self.on(Method::All, handler)
     }
 
+    /// Appends a route, only handle HTTP verbs without `Context`
     pub fn only<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
     where
         F: HandlerBase<T> + Send + Sync + 'static,
@@ -134,6 +144,7 @@ impl Route {
         self
     }
 
+    /// Appends a route, except handle verbs without `Context`
     pub fn except<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
     where
         F: HandlerBase<T> + Send + Sync + 'static,
@@ -160,6 +171,7 @@ impl Route {
         self
     }
 
+    /// Appends a route, handle HTTP verb with `Context` and others
     pub fn on2<F, T>(mut self, method: Method, handler: F) -> Self
     where
         F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
@@ -181,6 +193,7 @@ impl Route {
         (trace2, TRACE),
     }
 
+    /// Appends a route, handle all HTTP verbs with `Context` and others
     pub fn all2<F, T>(self, handler: F) -> Self
     where
         F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
@@ -190,6 +203,7 @@ impl Route {
         self.on2(Method::All, handler)
     }
 
+    /// Appends a route, only handle HTTP verbs with `Context` and others
     pub fn only2<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
     where
         F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
@@ -202,6 +216,7 @@ impl Route {
         self
     }
 
+    /// Appends a route, except handle HTTP verbs with `Context` and others
     pub fn except2<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
     where
         F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
@@ -228,6 +243,7 @@ impl Route {
         self
     }
 
+    /// Appends a route, handle all HTTP verbs just only with `Context`
     pub fn all3<H>(mut self, handler: H) -> Self
     where
         H: for<'m> Middleware<'m, Context, Output = Result>,
@@ -237,6 +253,7 @@ impl Route {
     }
 }
 
+/// Creates a `Route`
 pub fn route() -> Route {
     Route::new("")
 }
