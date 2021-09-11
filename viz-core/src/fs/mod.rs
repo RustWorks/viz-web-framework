@@ -49,9 +49,8 @@ impl Config {
         self.unlisted.as_mut()
     }
 
-    pub fn try_file(&mut self, file: &'static str) -> &mut Self {
+    pub fn try_file(&mut self, file: &'static str) {
         self.try_file.replace(file);
-        self
     }
 }
 
