@@ -32,6 +32,7 @@ pub struct Config {
     pub extras: Map<String, Value>,
 
     /// Dir
+    #[serde(skip_deserializing)]
     pub dir: PathBuf,
 }
 
