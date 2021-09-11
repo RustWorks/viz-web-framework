@@ -36,15 +36,22 @@ use crate::{http, Context, Middleware, Response, Result};
 pub struct Config {
     public: PathBuf,
     unlisted: Option<Vec<&'static str>>,
+    listing: bool,
+    try_file: Option<&'static str>,
 }
 
 impl Config {
     pub fn new(path: impl Into<PathBuf>) -> Self {
-        Self { public: path.into(), unlisted: Some(vec![".DS_Store", ".git"]) }
+        Self { public: path.into(), unlisted: Some(vec![".DS_Store", ".git"]), listing: false, try_file: None }
     }
 
     pub fn unlisted(&mut self) -> Option<&mut Vec<&'static str>> {
         self.unlisted.as_mut()
+    }
+
+    pub fn try_file(&mut self, file: &'static str) -> &mut Self {
+        self.try_file.replace(file);
+        self
     }
 }
 
@@ -100,17 +107,29 @@ impl Serve {
             }
         }
 
-        let res = if is_dir {
+        if self.config.listing && is_dir {
             let body = render(&self.config, path, Path::new(cx.path()), suffix_path).await?;
             let len = body.len();
             let mut res = Response::html(body);
             res.headers_mut().typed_insert(ContentLength(len as u64));
-            res
-        } else {
-            Response::new().with_status(hyper::StatusCode::NOT_FOUND)
+
+            return Ok(res)
+        } else if let Some(file) = self.config.try_file {
+            path = self.config.public.clone();
+
+            let index_file = path.join(file);
+
+            if index_file.exists() {
+                let file = File::open(index_file.clone()).await?;
+                let metadata = file.metadata().await?;
+
+                if metadata.file_type().is_file() {
+                    return Ok(respond(file, metadata, cx.headers(), mime::TEXT_HTML_UTF_8));
+                }
+            }
         };
 
-        Ok(res)
+        Ok(Response::new().with_status(hyper::StatusCode::NOT_FOUND))
     }
 }
 
@@ -118,7 +137,6 @@ impl<'m> Middleware<'m, Context> for Serve {
     type Output = Result;
 
     fn call<'a>(&'a self, cx: &'a mut Context) -> BoxFuture<'a, Result> {
-        dbg!(&cx);
         let fut = self.send_file(cx);
         Box::pin(async move { fut.await })
     }
