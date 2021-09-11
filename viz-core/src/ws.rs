@@ -20,9 +20,7 @@ use tokio_tungstenite::{
 use viz_utils::{
     futures::{
         future::{self, BoxFuture, FutureExt, TryFutureExt},
-        ready,
-        sink::Sink,
-        stream::Stream,
+        Sink, Stream, StreamExt,
     },
     tracing,
 };
@@ -46,10 +44,8 @@ impl WsContextExt for crate::Context {
             .and(headers.typed_get::<SecWebsocketVersion>())
             .filter(|version| version == &SecWebsocketVersion::V13)
             .and(headers.typed_get::<SecWebsocketKey>())
-            .zip(self.take_body())
-            .map(|(key, body)| Ws {
+            .map(|key| Ws {
                 key,
-                body,
                 on_upgrade: self.extensions_mut().remove::<::hyper::upgrade::OnUpgrade>(),
                 config: None,
             })
@@ -70,7 +66,6 @@ impl Extract for Ws {
 
 /// Extracted by the [`ws`](ws) filter, and used to finish an upgrade.
 pub struct Ws {
-    body: ::hyper::Body,
     key: SecWebsocketKey,
     config: Option<WebSocketConfig>,
     on_upgrade: Option<::hyper::upgrade::OnUpgrade>,
@@ -128,14 +123,14 @@ where
 {
     fn from(v: WsResponse<F>) -> crate::Response {
         if let Some(on_upgrade) = v.ws.on_upgrade {
-            let on_upgrade_cb = v.on_upgrade;
+            let callback = v.on_upgrade;
             let config = v.ws.config;
             let fut = on_upgrade
                 .and_then(move |upgraded| {
                     tracing::trace!("websocket upgrade complete");
                     WebSocket::from_raw_socket(upgraded, protocol::Role::Server, config).map(Ok)
                 })
-                .and_then(move |socket| on_upgrade_cb(socket).map(Ok))
+                .and_then(move |socket| callback(socket).map(Ok))
                 .map(|result| {
                     if let Err(err) = result {
                         tracing::debug!("ws upgrade error: {}", err);
@@ -164,6 +159,7 @@ where
 /// Ping messages sent from the client will be handled internally by replying with a Pong message.
 /// Close messages need to be handled explicitly: usually by closing the `Sink` end of the
 /// `WebSocket`.
+#[derive(Debug)]
 pub struct WebSocket {
     inner: WebSocketStream<::hyper::upgrade::Upgraded>,
 }
@@ -189,17 +185,9 @@ impl Stream for WebSocket {
     type Item = Result<Message, Error>;
 
     fn poll_next(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        match ready!(Pin::new(&mut self.inner).poll_next(cx)) {
-            Some(Ok(item)) => Poll::Ready(Some(Ok(Message { inner: item }))),
-            Some(Err(e)) => {
-                tracing::debug!("websocket poll error: {}", e);
-                Poll::Ready(Some(Err(Error::new(e))))
-            }
-            None => {
-                tracing::trace!("websocket closed");
-                Poll::Ready(None)
-            }
-        }
+        self.inner.poll_next_unpin(cx).map(|option_msg| {
+            option_msg.map(|result_msg| result_msg.map_err(Error::new).map(From::from))
+        })
     }
 }
 
@@ -207,43 +195,19 @@ impl Sink<Message> for WebSocket {
     type Error = Error;
 
     fn poll_ready(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        match ready!(Pin::new(&mut self.inner).poll_ready(cx)) {
-            Ok(()) => Poll::Ready(Ok(())),
-            Err(e) => Poll::Ready(Err(Error::new(e))),
-        }
+        Pin::new(&mut self.inner).poll_ready(cx).map_err(Error::new)
     }
 
     fn start_send(mut self: Pin<&mut Self>, item: Message) -> Result<(), Self::Error> {
-        match Pin::new(&mut self.inner).start_send(item.inner) {
-            Ok(()) => Ok(()),
-            Err(e) => {
-                tracing::debug!("websocket start_send error: {}", e);
-                Err(Error::new(e))
-            }
-        }
+        Pin::new(&mut self.inner).start_send(item.inner).map_err(Error::new)
     }
 
     fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        match ready!(Pin::new(&mut self.inner).poll_flush(cx)) {
-            Ok(()) => Poll::Ready(Ok(())),
-            Err(e) => Poll::Ready(Err(Error::new(e))),
-        }
+        Pin::new(&mut self.inner).poll_flush(cx).map_err(Error::new)
     }
 
     fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        match ready!(Pin::new(&mut self.inner).poll_close(cx)) {
-            Ok(()) => Poll::Ready(Ok(())),
-            Err(err) => {
-                tracing::debug!("websocket close error: {}", err);
-                Poll::Ready(Err(Error::new(err)))
-            }
-        }
-    }
-}
-
-impl fmt::Debug for WebSocket {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("WebSocket").finish()
+        Pin::new(&mut self.inner).poll_close(cx).map_err(Error::new)
     }
 }
 
@@ -251,7 +215,7 @@ impl fmt::Debug for WebSocket {
 ///
 /// This will likely become a `non-exhaustive` enum in the future, once that
 /// language feature has stabilized.
-#[derive(Eq, PartialEq, Clone)]
+#[derive(Debug, Eq, PartialEq, Clone)]
 pub struct Message {
     inner: protocol::Message,
 }
@@ -355,14 +319,14 @@ impl Message {
     }
 }
 
-impl fmt::Debug for Message {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        fmt::Debug::fmt(&self.inner, f)
-    }
-}
-
 impl Into<Vec<u8>> for Message {
     fn into(self) -> Vec<u8> {
         self.into_bytes()
+    }
+}
+
+impl From<protocol::Message> for Message {
+    fn from(inner: protocol::Message) -> Self {
+        Self { inner }
     }
 }
