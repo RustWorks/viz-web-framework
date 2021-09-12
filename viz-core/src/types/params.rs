@@ -39,7 +39,7 @@ pub enum ParamsError {
 
 impl From<ParamsError> for Response {
     fn from(e: ParamsError) -> Self {
-        (http::StatusCode::INTERNAL_SERVER_ERROR, e).into()
+        (http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into()
     }
 }
 

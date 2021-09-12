@@ -24,7 +24,7 @@ pub enum CookiesError {
 
 impl From<CookiesError> for Response {
     fn from(e: CookiesError) -> Self {
-        (http::StatusCode::INTERNAL_SERVER_ERROR, e).into()
+        (http::StatusCode::INTERNAL_SERVER_ERROR, e.to_string()).into()
     }
 }
 
