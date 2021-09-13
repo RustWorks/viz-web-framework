@@ -166,7 +166,7 @@ impl<S> IntoMakeService<S> {
     }
 }
 
-#[cfg(not(feature = "uds"))]
+#[cfg(any(windows, not(feature = "uds")))]
 impl Service<&hyper::server::conn::AddrStream> for IntoMakeService<App> {
     type Response = AppStream;
     type Error = Infallible;
