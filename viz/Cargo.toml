@@ -1,6 +1,6 @@
 [package]
 name = "viz"
-version = "0.1.0-alpha.7"
+version = "0.1.0-alpha.8"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Fast, flexible, minimalist web framework for Rust"
 homepage = "https://viz.rs"
@@ -44,10 +44,10 @@ middleware-compression = ["viz-middleware/compression"]
 middleware-jwt = ["viz-middleware/jwt"]
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0-alpha.7" }
-viz-router = { path = "../viz-router", version = "0.1.0-alpha.7" }
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.7" }
-viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.7", optional = true }
+viz-core = { path = "../viz-core", version = "0.1.0-alpha.8" }
+viz-router = { path = "../viz-router", version = "0.1.0-alpha.8" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.8" }
+viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.8", optional = true }
 
 hyper = { version = "0.14", features = ["server", "tcp", "stream", "http1"] }
 tower-service = "0.3"

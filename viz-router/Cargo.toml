@@ -1,14 +1,14 @@
 [package]
 name = "viz-router"
-version = "0.1.0-alpha.7"
+version = "0.1.0-alpha.8"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Router"
 license = "Apache-2.0/MIT"
 edition = "2018"
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0-alpha.7" }
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.7" }
+viz-core = { path = "../viz-core", version = "0.1.0-alpha.8" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.8" }
 path-tree = "0.2"
 
 [dev-dependencies]
