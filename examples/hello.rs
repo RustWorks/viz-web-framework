@@ -42,7 +42,11 @@ static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Result<Message, Error>>>>>;
 
 async fn my_mid_error(cx: &mut Context) -> Result<Response> {
-    if cx.path() == "/error" { bail!("my mid error") } else { cx.next().await }
+    if cx.path() == "/error" {
+        bail!("my mid error")
+    } else {
+        cx.next().await
+    }
 }
 
 async fn my_mid(cx: &mut Context) -> Result<Response> {
@@ -401,9 +405,8 @@ async fn main() -> Result<()> {
             listener.set_nonblocking(true)?;
 
             let stream = tokio_stream::wrappers::UnixListenerStream::new(tokio::net::UnixListener::from_std(listener)?);
-            let incoming = hyper::server::accept::from_stream(stream);
 
-            Server::builder(incoming)
+            Server::builder(viz::hyper_accept_from_stream(stream))
                 .serve(app.into_make_service()).await
                 .map_err(Error::new)
         } else {

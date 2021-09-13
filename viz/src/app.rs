@@ -181,7 +181,7 @@ impl Service<&hyper::server::conn::AddrStream> for IntoMakeService<App> {
     }
 }
 
-#[cfg(feature = "uds")]
+#[cfg(all(unix, feature = "uds"))]
 impl Service<&tokio::net::UnixStream> for IntoMakeService<App> {
     type Response = AppStream;
     type Error = Infallible;

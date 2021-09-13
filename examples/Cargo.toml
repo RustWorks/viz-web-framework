@@ -9,8 +9,12 @@ publish = false
 name = "hello"
 path = "hello.rs"
 
+[features]
+default = ["viz/tcp", "viz/http1"]
+uds = ["viz/uds", "viz/http2"]
+
 [dependencies]
-viz = { path = "../viz", features = [
+viz = { path = "../viz", default-features = false, features = [
   "middleware",
   "middleware-auth",
   "middleware-session",
@@ -20,7 +24,6 @@ viz = { path = "../viz", features = [
   "fs",
   "sse",
   "ws",
-  "uds",
 ] }
 
 serde = { version = "1.0", features = ["derive"] }
@@ -32,9 +35,8 @@ futures = "0.3"
 cfg-if = "1.0"
 
 redis = "0.21"
-hyper = { version = "0.14", features = ["stream"] }
 tokio = { version = "1.11", features = ["full"] }
-tokio-stream = "0.1"
+tokio-stream = { version = "0.1", features = ["net"] }
 tracing-subscriber = "0.2"
 async-stream = "0.3"
 pin-project = "1.0"

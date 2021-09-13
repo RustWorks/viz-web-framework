@@ -25,3 +25,6 @@ pub use viz_utils as utils;
 pub fn new() -> App {
     App::new()
 }
+
+#[cfg(all(unix, feature = "uds"))]
+pub use hyper::server::accept::from_stream as hyper_accept_from_stream;
