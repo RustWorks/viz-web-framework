@@ -1,6 +1,6 @@
 [package]
 name = "viz"
-version = "0.1.0-alpha.8"
+version = "0.1.0-alpha.9"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Fast, flexible, minimalist web framework for Rust"
 homepage = "https://viz.rs"
@@ -17,12 +17,14 @@ readme = "README.md"
 edition = "2018"
 
 [features]
-default = []
+default = ["tcp", "http1"]
 
 sse = ["viz-core/sse"]
 ws = ["viz-core/ws"]
 fs = ["viz-core/fs"]
+tcp = ["hyper/tcp", "hyper/stream"]
 uds = ["tokio/net", "tokio-stream/net"]
+http1 = ["hyper/http1"]
 http2 = ["hyper/http2"]
 
 middleware = ["viz-middleware/default"]
@@ -49,8 +51,10 @@ viz-router = { path = "../viz-router", version = "0.1.0-alpha.8" }
 viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.8" }
 viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.8", optional = true }
 
-hyper = { version = "0.14", features = ["server", "tcp", "stream", "http1"] }
+hyper = { version = "0.14", features = ["server"] }
 tower-service = "0.3"
 
-tokio = { version = "1.11", default-features = false, features = ["net"] }
-tokio-stream = { version = "0.1", default-features = false, features = ["net"] }
+tokio = { version = "1.11", default-features = false, features = [ "net" ], optional = true }
+tokio-stream = { version = "0.1", default-features = false, features = [
+  "net",
+], optional = true }

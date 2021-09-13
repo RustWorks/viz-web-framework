@@ -393,7 +393,7 @@ async fn main() -> Result<()> {
     );
 
     cfg_if::cfg_if! {
-        if #[cfg(unix)]
+        if #[cfg(all(unix, feature = "uds"))]
         {
             let path = "tmp.sock";
             let _ = std::fs::remove_file(path);

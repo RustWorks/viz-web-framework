@@ -166,7 +166,7 @@ impl<S> IntoMakeService<S> {
     }
 }
 
-#[cfg(any(windows, not(feature = "uds")))]
+#[cfg(feature = "tcp")]
 impl Service<&hyper::server::conn::AddrStream> for IntoMakeService<App> {
     type Response = AppStream;
     type Error = Infallible;
@@ -181,7 +181,7 @@ impl Service<&hyper::server::conn::AddrStream> for IntoMakeService<App> {
     }
 }
 
-#[cfg(all(unix, feature = "uds"))]
+#[cfg(feature = "uds")]
 impl Service<&tokio::net::UnixStream> for IntoMakeService<App> {
     type Response = AppStream;
     type Error = Infallible;
