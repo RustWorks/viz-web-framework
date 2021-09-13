@@ -10,17 +10,20 @@ name = "hello"
 path = "hello.rs"
 
 [dependencies]
-viz = { path="../viz", features=[
-	"middleware",
-	"middleware-auth",
-	"middleware-session",
-	"middleware-cookies",
-	"middleware-compression",
-	"middleware-jwt",
-	"fs", "sse", "ws", "std"
+viz = { path = "../viz", features = [
+  "middleware",
+  "middleware-auth",
+  "middleware-session",
+  "middleware-cookies",
+  "middleware-compression",
+  "middleware-jwt",
+  "fs",
+  "sse",
+  "ws",
+  "uds",
 ] }
 
-serde = { version="1.0", features=["derive"] }
+serde = { version = "1.0", features = ["derive"] }
 nano-id = "0.1"
 ramhorns = "0.12"
 bytes = "1.0"
@@ -29,10 +32,9 @@ futures = "0.3"
 cfg-if = "1.0"
 
 redis = "0.21"
-hyper = { version="0.14", features=["http1", "http2", "stream", "tcp", "server"] }
-tokio = { version="1.11", features=["full"] }
+hyper = { version = "0.14", features = ["stream"] }
+tokio = { version = "1.11", features = ["full"] }
 tokio-stream = "0.1"
 tracing-subscriber = "0.2"
 async-stream = "0.3"
 pin-project = "1.0"
-

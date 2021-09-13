@@ -25,8 +25,6 @@ use viz::utils::{
     tracing,
 };
 
-
-
 use fs::{Config as ServeConfig, Serve};
 use jwt::jsonwebtoken;
 use sse::*;
@@ -44,11 +42,7 @@ static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Result<Message, Error>>>>>;
 
 async fn my_mid_error(cx: &mut Context) -> Result<Response> {
-    if cx.path() == "/error" {
-        bail!("my mid error")
-    } else {
-        cx.next().await
-    }
+    if cx.path() == "/error" { bail!("my mid error") } else { cx.next().await }
 }
 
 async fn my_mid(cx: &mut Context) -> Result<Response> {
@@ -401,16 +395,21 @@ async fn main() -> Result<()> {
     cfg_if::cfg_if! {
         if #[cfg(unix)]
         {
-            use std::{fs::remove_file, os::unix::net::UnixListener};
-
             let path = "tmp.sock";
-            let _ = remove_file(path);
-            let unix_listener = UnixListener::bind(path)?;
-            unix_listener.set_nonblocking(true)?;
+            let _ = std::fs::remove_file(path);
+            let listener = std::os::unix::net::UnixListener::bind(path)?;
+            listener.set_nonblocking(true)?;
 
-            app.listen_from_std(unix_listener).await
+            let stream = tokio_stream::wrappers::UnixListenerStream::new(tokio::net::UnixListener::from_std(listener)?);
+            let incoming = hyper::server::accept::from_stream(stream);
+
+            Server::builder(incoming)
+                .serve(app.into_make_service()).await
+                .map_err(Error::new)
         } else {
-            app.listen("127.0.0.1:8080").await
+            Server::bind(&"127.0.0.1:8080".parse()?)
+                .serve(app.into_make_service()).await
+                .map_err(Error::new)
         }
     }
 }

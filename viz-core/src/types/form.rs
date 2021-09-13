@@ -76,10 +76,7 @@ impl Context {
         payload.check_header(self.mime(), self.size())?;
 
         urlencoded::from_reader(
-            payload
-                .check_real_length(self.take_body().ok_or(PayloadError::Read)?)
-                .await?
-                .reader(),
+            payload.check_real_length(self.take_body().ok_or(PayloadError::Read)?).await?.reader(),
         )
         .map_err(|e| {
             tracing::debug!("{}", e);

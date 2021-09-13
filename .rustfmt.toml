@@ -1,5 +1,11 @@
-use_field_init_shorthand = true
+
+version = "Two"
+unstable_features = true
+
 newline_style = "Unix"
+condense_wildcard_suffixes = true
+use_field_init_shorthand = true
+use_try_shorthand = true
 use_small_heuristics = "Max"
 
 # The following lines may be uncommented on nightly Rust.

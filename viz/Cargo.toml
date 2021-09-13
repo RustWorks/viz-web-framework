@@ -7,7 +7,11 @@ homepage = "https://viz.rs"
 documentation = "https://docs.rs/viz"
 repository = "https://github.com/viz-rs/viz"
 keywords = ["viz", "http", "web", "framework", "async"]
-categories = ["asynchronous", "network-programming", "web-programming::http-server"]
+categories = [
+  "asynchronous",
+  "network-programming",
+  "web-programming::http-server",
+]
 license = "MIT/Apache-2.0"
 readme = "README.md"
 edition = "2018"
@@ -18,7 +22,7 @@ default = []
 sse = ["viz-core/sse"]
 ws = ["viz-core/ws"]
 fs = ["viz-core/fs"]
-std = ["tokio/net", "tokio-stream/net"]
+uds = ["tokio/net", "tokio-stream/net"]
 http2 = ["hyper/http2"]
 
 middleware = ["viz-middleware/default"]
@@ -40,12 +44,13 @@ middleware-compression = ["viz-middleware/compression"]
 middleware-jwt = ["viz-middleware/jwt"]
 
 [dependencies]
-viz-core = { path="../viz-core", version="0.1.0-alpha.7" }
-viz-router = { path="../viz-router", version="0.1.0-alpha.7" }
-viz-utils = { path="../viz-utils", version="0.1.0-alpha.7" }
-viz-middleware = { path="../viz-middleware", version="0.1.0-alpha.7", optional=true }
+viz-core = { path = "../viz-core", version = "0.1.0-alpha.7" }
+viz-router = { path = "../viz-router", version = "0.1.0-alpha.7" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.7" }
+viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.7", optional = true }
 
-hyper = { version="0.14", features=["server", "tcp", "stream", "http1"] }
+hyper = { version = "0.14", features = ["server", "tcp", "stream", "http1"] }
+tower-service = "0.3"
 
 tokio = { version = "1.11", default-features = false, features = ["net"] }
 tokio-stream = { version = "0.1", default-features = false, features = ["net"] }

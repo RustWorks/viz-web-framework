@@ -133,7 +133,7 @@ where
     }
 }
 
-impl<T> Default for JWTMiddleware<T> 
+impl<T> Default for JWTMiddleware<T>
 where
     T: DeserializeOwned + Sync + Send + 'static + Debug,
 {

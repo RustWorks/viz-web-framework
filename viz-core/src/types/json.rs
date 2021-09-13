@@ -89,10 +89,7 @@ impl Context {
         payload.check_header(self.mime(), self.size())?;
 
         json::from_slice(
-            payload
-                .check_real_length(self.take_body().ok_or(PayloadError::Read)?)
-                .await?
-                .chunk(),
+            payload.check_real_length(self.take_body().ok_or(PayloadError::Read)?).await?.chunk(),
         )
         .map_err(|e| {
             tracing::debug!("Json deserialize error: {}", e);

@@ -163,11 +163,7 @@ impl CorsMiddleware {
     }
 
     fn is_origin_allowed(&self, origin: &HeaderValue) -> bool {
-        if let Some(ref allowed) = self.allow_origins {
-            allowed.contains(origin)
-        } else {
-            true
-        }
+        if let Some(ref allowed) = self.allow_origins { allowed.contains(origin) } else { true }
     }
 
     fn is_header_allowed(&self, header: &str) -> bool {
@@ -281,10 +277,7 @@ where
     H: IntoIterator,
     T: TryFrom<H::Item>,
 {
-    headers
-        .into_iter()
-        .map(|m| TryFrom::try_from(m).ok())
-        .flatten()
+    headers.into_iter().map(|m| TryFrom::try_from(m).ok()).flatten()
 }
 
 /// Into to Origin

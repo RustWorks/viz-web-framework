@@ -56,11 +56,7 @@ impl Context {
 
     /// Returns a reference to the associated query portion of the URL.
     pub fn query_str(&self) -> &str {
-        if let Some(query) = self.uri().query().as_ref() {
-            query
-        } else {
-            ""
-        }
+        if let Some(query) = self.uri().query().as_ref() { query } else { "" }
     }
 
     /// Returns a reference to the associated host portion of the URL.

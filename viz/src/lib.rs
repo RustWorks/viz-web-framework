@@ -3,18 +3,14 @@
 
 //! Viz
 
-mod server;
+mod app;
 
-pub use server::serve;
-pub use server::Server;
-
-/// Creats a `Server`
-pub fn new() -> Server {
-    Server::new()
-}
+pub use app::{serve, App};
+pub use hyper::Server;
 
 /// Prelude some stuff
 pub mod prelude {
+    pub use super::{App, Server};
     pub use types::*;
     pub use viz_core::*;
     pub use viz_router::*;
@@ -24,3 +20,8 @@ pub mod prelude {
 pub use viz_middleware as middleware;
 
 pub use viz_utils as utils;
+
+/// Creats a `Server`
+pub fn new() -> App {
+    App::new()
+}

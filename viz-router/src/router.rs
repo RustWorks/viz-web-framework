@@ -303,15 +303,17 @@ mod tests {
 
                     assert_eq!(r.1, vec![("id", "fundon")]);
 
-                    assert!(block_on(async move {
-                        let res: http::Response = cx.next().await?.into();
+                    assert!(
+                        block_on(async move {
+                            let res: http::Response = cx.next().await?.into();
 
-                        assert_eq!(res.status(), 200);
-                        assert_eq!(to_bytes(res.into_body()).await.unwrap(), "Edit user");
+                            assert_eq!(res.status(), 200);
+                            assert_eq!(to_bytes(res.into_body()).await.unwrap(), "Edit user");
 
-                        Ok::<_, Error>(())
-                    })
-                    .is_ok());
+                            Ok::<_, Error>(())
+                        })
+                        .is_ok()
+                    );
                 }
 
                 // Open Edit Post Page
@@ -329,15 +331,17 @@ mod tests {
 
                     assert_eq!(r.1, vec![("user_id", "fundon"), ("id", "233")]);
 
-                    assert!(block_on(async move {
-                        let res: http::Response = cx.next().await?.into();
+                    assert!(
+                        block_on(async move {
+                            let res: http::Response = cx.next().await?.into();
 
-                        assert_eq!(res.status(), 200);
-                        assert_eq!(to_bytes(res.into_body()).await.unwrap(), "Edit post");
+                            assert_eq!(res.status(), 200);
+                            assert_eq!(to_bytes(res.into_body()).await.unwrap(), "Edit post");
 
-                        Ok::<_, Error>(())
-                    })
-                    .is_ok());
+                            Ok::<_, Error>(())
+                        })
+                        .is_ok()
+                    );
                 }
 
                 // Open Get Post Page
@@ -355,15 +359,17 @@ mod tests {
 
                     assert_eq!(r.1, vec![("user_id", "fundon"), ("id", "233")]);
 
-                    assert!(block_on(async move {
-                        let res: http::Response = cx.next().await?.into();
+                    assert!(
+                        block_on(async move {
+                            let res: http::Response = cx.next().await?.into();
 
-                        assert_eq!(res.status(), 404);
-                        assert_eq!(to_bytes(res.into_body()).await.unwrap(), "");
+                            assert_eq!(res.status(), 404);
+                            assert_eq!(to_bytes(res.into_body()).await.unwrap(), "");
 
-                        Ok::<_, Error>(())
-                    })
-                    .is_ok());
+                            Ok::<_, Error>(())
+                        })
+                        .is_ok()
+                    );
                 }
             }
 

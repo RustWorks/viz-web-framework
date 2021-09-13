@@ -46,7 +46,12 @@ pub struct Config {
 impl Config {
     /// Creates `Config` with a path
     pub fn new(path: impl Into<PathBuf>) -> Self {
-        Self { public: path.into(), unlisted: Some(vec![".DS_Store", ".git"]), listing: false, try_file: None }
+        Self {
+            public: path.into(),
+            unlisted: Some(vec![".DS_Store", ".git"]),
+            listing: false,
+            try_file: None,
+        }
     }
 
     /// Gets a mutable unlisted
@@ -94,7 +99,7 @@ impl Serve {
         }
 
         if is_err {
-            return Ok(Response::new().with_status(hyper::StatusCode::NOT_FOUND))
+            return Ok(Response::new().with_status(hyper::StatusCode::NOT_FOUND));
         }
 
         let file = resource.unwrap();
@@ -111,7 +116,8 @@ impl Serve {
                         ext.to_str().and_then(|ext| {
                             mime_db::lookup(ext).and_then(|ext| mime::Mime::from_str(ext).ok())
                         })
-                    }).unwrap_or(mime::APPLICATION_OCTET_STREAM),
+                    })
+                    .unwrap_or(mime::APPLICATION_OCTET_STREAM),
             ));
         }
 
@@ -135,7 +141,7 @@ impl Serve {
             let len = body.len();
             let mut res = Response::html(body);
             res.headers_mut().typed_insert(ContentLength(len as u64));
-            return Ok(res)
+            return Ok(res);
         };
 
         Ok(Response::new().with_status(hyper::StatusCode::NOT_FOUND))
