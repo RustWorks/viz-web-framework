@@ -89,6 +89,7 @@
 Some ideas from them:
 
 * [Actix Web](https://docs.rs/actix-web/)
+* [Axum](https://docs.rs/axum/)
 * [Ntex](https://docs.rs/ntex/)
 * [Rocket](https://docs.rs/rocket/)
 * [Tide](https://docs.rs/tide/)
