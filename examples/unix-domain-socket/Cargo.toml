@@ -1,0 +1,10 @@
+[package]
+name = "unix-domain-socket"
+version = "0.1.0"
+edition = "2018"
+publish = false
+
+[dependencies]
+viz = { path = "../../viz", features = ["uds"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tokio-stream = { version = "0.1", features = ["net"] }
