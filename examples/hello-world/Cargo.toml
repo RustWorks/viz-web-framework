@@ -1,0 +1,9 @@
+[package]
+name = "hello-world"
+version = "0.1.0"
+edition = "2018"
+publish = false
+
+[dependencies]
+viz = { path = "../../viz" }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }

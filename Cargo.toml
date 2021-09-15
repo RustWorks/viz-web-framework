@@ -9,5 +9,5 @@ members = [
   "viz-utils",
   "viz-middleware",
 
-  "examples",
+  "examples/*",
 ]

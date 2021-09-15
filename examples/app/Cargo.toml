@@ -1,20 +1,16 @@
 [package]
-name = "examples"
+name = "app"
 version = "0.1.0-alpha"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 edition = "2018"
 publish = false
-
-[[example]]
-name = "hello"
-path = "hello.rs"
 
 [features]
 default = ["viz/tcp", "viz/http1"]
 uds = ["viz/uds", "viz/http2"]
 
 [dependencies]
-viz = { path = "../viz", default-features = false, features = [
+viz = { path = "../../viz", default-features = false, features = [
   "middleware",
   "middleware-auth",
   "middleware-cookies",

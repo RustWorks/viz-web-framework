@@ -60,7 +60,7 @@
 
 * [ ] More friendly Routing
 * [ ] Template engines
-* [ ] TLS
+* [x] TLS
 * [ ] GraphQL?
 * [ ] RPC?
 * [x] Configuration
@@ -76,7 +76,7 @@
     * [x] `request_id`
     * [x] `timeout`
     * [x] `cookies`
-    * [x] `session`
+    * [x] `sessions`
     * [x] `cors`
     * [x] `compression`
     * [x] `jwt`
