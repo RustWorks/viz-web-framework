@@ -34,22 +34,31 @@ middleware-full = [
   "middleware-auth",
   "middleware-cors",
   "middleware-cookies",
-  "middleware-session",
+  "middleware-sessions",
   "middleware-compression",
 ]
 
 middleware-auth = ["viz-middleware/auth"]
 middleware-cors = ["viz-middleware/cors"]
 middleware-cookies = ["viz-middleware/cookies"]
-middleware-session = ["viz-middleware/session"]
-middleware-compression = ["viz-middleware/compression"]
+middleware-sessions = ["viz-middleware/sessions"]
+
 middleware-jwt = ["viz-middleware/jwt"]
+middleware-jwt-param = ["viz-middleware/jwt-param"]
+middleware-jwt-query = ["viz-middleware/jwt-query"]
+middleware-jwt-cookie = ["viz-middleware/jwt-cookie"]
+middleware-jwt-header = ["viz-middleware/jwt-header"]
+
+middleware-compression = ["viz-middleware/compression"]
+middleware-compression-gzip = ["viz-middleware/compression-gzip"]
+middleware-compression-brotli = ["viz-middleware/compression-brotli"]
+middleware-compression-deflate = ["viz-middleware/compression-deflate"]
 
 [dependencies]
 viz-core = { path = "../viz-core", version = "0.1.0-alpha.10" }
 viz-router = { path = "../viz-router", version = "0.1.0-alpha.10" }
 viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.10" }
-viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.10", optional = true }
+viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.10", default-features = false, optional = true }
 
 hyper = { version = "0.14", features = ["server"] }
 tower-service = "0.3"

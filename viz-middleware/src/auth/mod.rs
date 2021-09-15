@@ -4,5 +4,5 @@
 mod basic;
 mod bearer;
 
-pub use basic::BasicMiddleware;
-pub use bearer::BearerMiddleware;
+pub use basic::Basic;
+pub use bearer::Bearer;

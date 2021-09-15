@@ -7,25 +7,48 @@ license = "Apache-2.0/MIT"
 edition = "2018"
 
 [features]
-default = ["logger", "recover", "request_id", "timeout", "jwt", "jwt-header"]
+default = ["logger", "recover", "request_id", "timeout", "jwt"]
 
 logger = []
-recover = []
+recover = ["pin-project-lite"]
 request_id = ["nano-id"]
 timeout = ["tokio/time"]
 
-cookies = []
-session = ["sessions"]
-
 auth = []
+cookies = []
 cors = []
-compression = ["async-compression", "bytes", "pin-project", "tokio-util/io"]
+
+compression = [
+  "bytes",
+  "pin-project-lite",
+  "tokio-util/io",
+  "async-compression/tokio",
+]
+compression-gzip = ["async-compression/gzip"]
+compression-brotli = ["async-compression/brotli"]
+compression-deflate = ["async-compression/deflate"]
 
 jwt = ["jsonwebtoken"]
 jwt-header = []
 jwt-query = []
 jwt-param = []
 jwt-cookie = []
+
+full = [
+  "logger",
+  "recover",
+  "request_id",
+  "timeout",
+  "auth",
+  "cookies",
+  "cors",
+
+  "compression",
+  "compression-brotli",
+
+  "jwt",
+  "jwt-header",
+]
 
 [dependencies]
 viz-core = { path = "../viz-core", version = "0.1.0-alpha.10" }
@@ -34,20 +57,15 @@ viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.10" }
 serde = "1.0"
 nano-id = { version = "0.1", optional = true }
 
-sessions = { version = "0.1", features = ["redis"], optional = true }
+sessions = { version = "0.2.1", features = ["redis"], optional = true }
 
 tokio = { version = "1.11", features = ["time"], optional = true }
 tokio-util = { version = "0.6", features = ["io"], optional = true }
 
 # compression
-async-compression = { version = "0.3", features = [
-  "brotli",
-  "deflate",
-  "gzip",
-  "tokio",
-], optional = true }
+async-compression = { version = "0.3", features = ["tokio"], optional = true }
 bytes = { version = "1.0", optional = true }
-pin-project = { version = "1.0", optional = true }
+pin-project-lite = { version = "0.2.7", optional = true }
 
 # jwt
 jsonwebtoken = { version = "7.2", optional = true }

@@ -2,14 +2,11 @@ use std::{future::Future, pin::Pin};
 
 use viz_core::{http, Context, Middleware, Response, Result};
 
-use viz_utils::tracing;
-
 /// Cookies Middleware
 #[derive(Debug, Default)]
-pub struct CookiesMiddleware {}
+pub struct Cookies {}
 
-impl CookiesMiddleware {
-    #[tracing::instrument(skip(cx))]
+impl Cookies {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         cx.cookies()?;
 
@@ -30,7 +27,7 @@ impl CookiesMiddleware {
     }
 }
 
-impl<'a> Middleware<'a, Context> for CookiesMiddleware {
+impl<'a> Middleware<'a, Context> for Cookies {
     type Output = Result<Response>;
 
     #[must_use]

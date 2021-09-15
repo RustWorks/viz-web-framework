@@ -3,31 +3,29 @@ use std::{future::Future, pin::Pin, time::Duration};
 use tokio::time::timeout;
 
 use viz_core::{http, Context, Middleware, Response, Result};
-
 use viz_utils::tracing;
 
 /// Timeout Middleware
 #[derive(Debug)]
-pub struct TimeoutMiddleware {
+pub struct Timeout {
     /// 0.256s
     delay: Duration,
 }
 
-impl TimeoutMiddleware {
+impl Timeout {
     /// Creates Timeout Middleware
     pub fn new(delay: Duration) -> Self {
         Self { delay }
     }
 }
 
-impl Default for TimeoutMiddleware {
+impl Default for Timeout {
     fn default() -> Self {
         Self::new(Duration::from_millis(256))
     }
 }
 
-impl TimeoutMiddleware {
-    #[tracing::instrument(skip(cx))]
+impl Timeout {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         let method = cx.method().to_owned();
         let path = cx.path().to_owned();
@@ -35,14 +33,14 @@ impl TimeoutMiddleware {
         match timeout(self.delay, cx.next()).await {
             Ok(r) => r,
             Err(e) => {
-                tracing::debug!("Timeout: {} {} {}", method, path, e);
+                tracing::trace!(" {:>7} {} {}", method, path, e);
                 Ok(http::StatusCode::REQUEST_TIMEOUT.into())
             }
         }
     }
 }
 
-impl<'a> Middleware<'a, Context> for TimeoutMiddleware {
+impl<'a> Middleware<'a, Context> for Timeout {
     type Output = Result<Response>;
 
     #[must_use]

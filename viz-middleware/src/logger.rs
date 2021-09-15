@@ -5,16 +5,15 @@ use viz_utils::tracing;
 
 /// Logger Middleware
 #[derive(Debug, Default)]
-pub struct LoggerMiddleware {}
+pub struct Logger {}
 
-impl LoggerMiddleware {
-    #[tracing::instrument(skip(cx))]
+impl Logger {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         let start = Instant::now();
         let method = cx.method().to_string();
         let path = cx.uri().path().to_owned();
 
-        tracing::info!("> {:>7} {}", method, path);
+        tracing::trace!("> {:>7} {}", method, path);
 
         match cx.next().await {
             Ok(res) => {
@@ -29,7 +28,7 @@ impl LoggerMiddleware {
                         start.elapsed(),
                     );
                 } else {
-                    tracing::info!(
+                    tracing::trace!(
                         "< {:>7} {} {} {:?}",
                         method,
                         path,
@@ -48,7 +47,7 @@ impl LoggerMiddleware {
     }
 }
 
-impl<'a> Middleware<'a, Context> for LoggerMiddleware {
+impl<'a> Middleware<'a, Context> for Logger {
     type Output = Result<Response>;
 
     #[must_use]

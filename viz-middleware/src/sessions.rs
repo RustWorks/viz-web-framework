@@ -13,23 +13,22 @@ pub use sessions::*;
 
 /// Session Middleware
 #[derive(Debug)]
-pub struct SessionMiddleware {
+pub struct Sessions {
     /// Session's `Config`
     config: Arc<Config>,
 }
 
-impl SessionMiddleware {
+impl Sessions {
     /// Create a new session middleware
     pub fn new(config: Config) -> Self {
         Self { config: Arc::new(config) }
     }
 
-    #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         let id = cx
             .cookie(&self.config.cookie.name)
             .map(|c| c.value().to_string())
-            .filter(|s| self.config.verify(s))
+            .filter(|v| self.config.verify(v))
             .unwrap_or_else(|| self.config.generate());
 
         let session = Session::new(&id, 0, self.config.clone());
@@ -43,6 +42,8 @@ impl SessionMiddleware {
         let res = cx.next().await?;
 
         let session = cx.session();
+
+        tracing::trace!(" {:?}", session);
 
         let session_status = session.status();
         if session_status > 0 {
@@ -71,7 +72,7 @@ impl SessionMiddleware {
     }
 }
 
-impl<'a> Middleware<'a, Context> for SessionMiddleware {
+impl<'a> Middleware<'a, Context> for Sessions {
     type Output = Result<Response>;
 
     #[must_use]

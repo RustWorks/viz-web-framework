@@ -15,7 +15,7 @@ use tokio::{
 };
 use tokio_stream::wrappers::IntervalStream;
 
-use viz::middleware::*;
+use viz::middleware;
 use viz::prelude::*;
 use viz::utils::{
     anyhow,
@@ -26,7 +26,6 @@ use viz::utils::{
 };
 
 use fs::{Config as ServeConfig, Serve};
-use jwt::jsonwebtoken;
 use sse::*;
 use ws::*;
 
@@ -133,18 +132,18 @@ async fn create_user(user: Json<User>) -> Result<String> {
     json::to_string_pretty(&*user).map_err(Error::new)
 }
 
-async fn login(session: State<session::Session>) -> Result<String> {
+async fn login(session: State<middleware::sessions::Session>) -> Result<String> {
     session.set::<String>("name", String::from("viz"));
     session.save().await?;
     Ok("Session Logined".to_string())
 }
 
-async fn renew(mut session: State<session::Session>) -> Result<String> {
+async fn renew(mut session: State<middleware::sessions::Session>) -> Result<String> {
     session.renew().await?;
     Ok("Session Renewed".to_string())
 }
 
-async fn logout(session: State<session::Session>) -> Result<String> {
+async fn logout(session: State<middleware::sessions::Session>) -> Result<String> {
     session.destroy().await?;
     Ok("Session Logouted".to_string())
 }
@@ -308,6 +307,19 @@ static INDEX_HTML: &str = r#"<!DOCTYPE html>
 </html>
 "#;
 
+async fn panic_fn() -> Result<Response> {
+    dbg!(233);
+    panic!("panic")
+}
+
+fn generate() -> String {
+    nano_id::base64(32)
+}
+
+fn verify(sid: &str) -> bool {
+    sid.len() == 32
+}
+
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt()
@@ -332,45 +344,43 @@ async fn main() -> Result<()> {
 
     let my_claims = Claims { sub: "hello".to_string(), company: "viz".to_string() };
 
-    let token = jsonwebtoken::encode(
-        &jsonwebtoken::Header::default(),
+    let token = middleware::jwt::jsonwebtoken::encode(
+        &middleware::jwt::jsonwebtoken::Header::default(),
         &my_claims,
-        &jsonwebtoken::EncodingKey::from_secret("secret".as_ref()),
+        &middleware::jwt::jsonwebtoken::EncodingKey::from_secret("secret".as_ref()),
     )?;
 
     dbg!(token);
 
     app.state(Arc::new(AtomicUsize::new(0))).state(users).routes(
         router()
-            .mid(LoggerMiddleware::default())
-            .mid(RecoverMiddleware::default())
-            .mid(RequestIDMiddleware::default())
-            .mid(TimeoutMiddleware::default())
-            .mid(CookiesMiddleware::default())
-            // .mid(
-            //     jwt::JWTMiddleware::<Claims>::new().validation(jsonwebtoken::Validation {
-            //         validate_exp: false,
-            //         ..Default::default()
-            //     }),
-            // )
-            // .mid(
-            //     auth::BasicMiddleware::new().users(
-            //         [("viz".to_string(), "rust".to_string())]
-            //             .iter()
-            //             .cloned()
-            //             .collect(),
-            //     ),
-            // )
-            // .mid(session::SessionMiddleware::new(session::Config {
-            //     cookie: session::CookieOptions::new(),
-            //     // storage: Arc::new(middleware::session::MemoryStorage::default()),
-            //     storage: Arc::new(session::RedisStorage::new(RedisClient::open(
-            //         "redis://127.0.0.1",
-            //     )?)),
-            //     generate: Box::new(|| nano_id::base64(32)),
-            //     verify: Box::new(|sid: &str| sid.len() == 32),
-            // }))
-            // .mid(compression::brotli())
+            .mid(middleware::Logger::default())
+            .mid(middleware::Recover::default())
+            .mid(middleware::RequestID::default())
+            .mid(middleware::Timeout::default())
+            .mid(middleware::Cookies::default())
+            /*
+            .mid(middleware::jwt::Jwt::<Claims>::new().validation(
+                middleware::jwt::jsonwebtoken::Validation {
+                    validate_exp: false,
+                    ..Default::default()
+                },
+            ))
+            .mid(
+                middleware::auth::Basic::new()
+                    .users([("viz".to_string(), "rust".to_string())].iter().cloned().collect()),
+            )
+            */
+            .mid(middleware::sessions::Sessions::new(middleware::sessions::Config {
+                cookie: middleware::sessions::CookieOptions::new(),
+                // storage: Arc::new(middleware::session::MemoryStorage::default()),
+                storage: Arc::new(middleware::sessions::RedisStorage::new(
+                    middleware::sessions::RedisClient::open("redis://127.0.0.1")?,
+                )),
+                generate: Box::new(generate),
+                verify: Box::new(verify),
+            }))
+            // .mid(middleware::compression::brotli())
             .mid(my_mid_error)
             .mid(my_mid)
             .at(
@@ -393,6 +403,7 @@ async fn main() -> Result<()> {
             .at("/chat", route().get(|| async { Response::html(INDEX_HTML) }))
             .at("/chat/", route().get2(chat))
             .at("/public/*", route().all3(Serve::new(ServeConfig::new(config.dir.join("public")))))
+            .at("/panic", route().get(panic_fn))
             .at("/*", route().all(not_found)),
     );
 

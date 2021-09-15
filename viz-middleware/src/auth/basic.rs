@@ -3,10 +3,7 @@ use std::{collections::HashMap, future::Future, pin::Pin};
 use viz_core::{
     http::{
         header::{HeaderValue, WWW_AUTHENTICATE},
-        headers::{
-            authorization::{Authorization, Basic},
-            HeaderMapExt,
-        },
+        headers::{authorization, HeaderMapExt},
         StatusCode,
     },
     Context, Middleware, Response, Result,
@@ -16,12 +13,12 @@ use viz_utils::tracing;
 
 /// Basic Auth Middleware
 #[derive(Debug)]
-pub struct BasicMiddleware {
+pub struct Basic {
     users: HashMap<String, String>,
     realm: String,
 }
 
-impl BasicMiddleware {
+impl Basic {
     /// Creates new `BasicMiddleware`
     pub fn new() -> Self {
         Self { users: HashMap::new(), realm: String::from("Restricted") }
@@ -40,23 +37,23 @@ impl BasicMiddleware {
     }
 }
 
-impl Default for BasicMiddleware {
+impl Default for Basic {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl BasicMiddleware {
+impl Basic {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        tracing::trace!("Basic Auth Middleware");
-
         let verified = cx
             .headers()
-            .typed_get::<Authorization<Basic>>()
+            .typed_get::<authorization::Authorization<authorization::Basic>>()
             .and_then(|auth| {
                 self.users.get(auth.0.username()).filter(|password| *password == auth.0.password())
             })
             .is_some();
+
+        tracing::trace!(" {:>7}", verified);
 
         if verified {
             return cx.next().await;
@@ -65,11 +62,12 @@ impl BasicMiddleware {
         let mut res: Response = StatusCode::UNAUTHORIZED.into();
         res.headers_mut()
             .insert(WWW_AUTHENTICATE, HeaderValue::from_str("invalid authorization header")?);
+
         Ok(res)
     }
 }
 
-impl<'a> Middleware<'a, Context> for BasicMiddleware {
+impl<'a> Middleware<'a, Context> for Basic {
     type Output = Result<Response>;
 
     #[must_use]

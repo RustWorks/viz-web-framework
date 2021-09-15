@@ -70,9 +70,9 @@ impl App {
 pub async fn serve(
     req: http::Request,
     mut addr: Option<SocketAddr>,
+    tree: Arc<Tree>,
     state: Vec<Arc<dyn StateFactory>>,
     config: Arc<Config>,
-    tree: Arc<Tree>,
 ) -> Result<http::Response> {
     let mut cx = VizContext::from(req);
     if addr.is_some() {
@@ -147,9 +147,9 @@ impl Service<http::Request<http::Body>> for AppStream {
         Box::pin(serve(
             req,
             self.addr,
+            self.tree.clone(),
             self.state.clone().unwrap_or_default(),
             self.config.clone().unwrap_or_default(),
-            self.tree.clone(),
         ))
     }
 }

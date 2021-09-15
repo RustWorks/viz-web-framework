@@ -18,20 +18,11 @@ use viz_core::http::headers::{
     HeaderMapExt,
 };
 
-#[cfg(feature = "jwt-query")]
-#[cfg(not(all(feature = "jwt-header", feature = "jwt-param", feature = "jwt-cookie")))]
+#[cfg(all(
+    feature = "jwt-query",
+    not(all(feature = "jwt-header", feature = "jwt-param", feature = "jwt-cookie"))
+))]
 use std::collections::HashMap;
-#[cfg(feature = "jwt-query")]
-#[cfg(not(all(feature = "jwt-header", feature = "jwt-param", feature = "jwt-cookie")))]
-use viz_core::types::QueryContextExt;
-
-#[cfg(feature = "jwt-param")]
-#[cfg(not(all(feature = "jwt-header", feature = "jwt-query", feature = "jwt-cookie")))]
-use viz_core::types::ParamsContextExt;
-
-#[cfg(feature = "jwt-cookie")]
-#[cfg(not(all(feature = "jwt-header", feature = "jwt-query", feature = "jwt-param")))]
-use viz_core::types::CookieContextExt;
 
 use jsonwebtoken::{decode, DecodingKey, Validation};
 use serde::de::DeserializeOwned;
@@ -40,27 +31,31 @@ pub use jsonwebtoken;
 
 /// JWT Middleware
 #[derive(Debug)]
-pub struct JWTMiddleware<T>
+pub struct Jwt<T>
 where
     T: Debug,
 {
-    #[cfg(not(feature = "jwt-header"))]
-    #[cfg(any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie"))]
+    #[cfg(all(
+        not(feature = "jwt-header"),
+        any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie")
+    ))]
     n: String,
     s: String,
     v: Validation,
     t: PhantomData<T>,
 }
 
-impl<T> JWTMiddleware<T>
+impl<T> Jwt<T>
 where
     T: DeserializeOwned + Sync + Send + 'static + Debug,
 {
     /// Creates JWT
     pub fn new() -> Self {
         Self {
-            #[cfg(not(feature = "jwt-header"))]
-            #[cfg(any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie"))]
+            #[cfg(all(
+                not(feature = "jwt-header"),
+                any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie")
+            ))]
             n: "token".to_owned(),
             s: "secret".to_owned(),
             v: Validation::default(),
@@ -81,14 +76,15 @@ where
     }
 
     /// Creates JWT Middleware with a name
-    #[cfg(not(feature = "jwt-header"))]
-    #[cfg(any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie"))]
+    #[cfg(all(
+        not(feature = "jwt-header"),
+        any(feature = "jwt-query", feature = "jwt-param", feature = "jwt-cookie")
+    ))]
     pub fn name(mut self, name: &str) -> Self {
         self.n = name.to_owned();
         self
     }
 
-    #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         let (status, error) = if let Some(val) = self.get(cx) {
             match decode::<T>(&val, &DecodingKey::from_secret(self.s.as_ref()), &self.v) {
@@ -107,10 +103,11 @@ where
 
         let mut res: Response = status.into();
         res.headers_mut().insert(WWW_AUTHENTICATE, HeaderValue::from_str(error)?);
+
         Ok(res)
     }
 
-    #[allow(unused_variables)]
+    /// Gets token via Header|Query|Param|Cookie.
     fn get(&self, cx: &mut Context) -> Option<String> {
         cfg_if::cfg_if! {
             if #[cfg(feature = "jwt-header")] {
@@ -125,7 +122,7 @@ where
             } else if #[cfg(feature = "jwt-param")] {
                 cx.param(&self.n).ok()
             }  else if #[cfg(feature = "jwt-cookie")] {
-                cx.cookie(&self.n).map(|c| c.to_string())
+                cx.cookie(&self.n).map(std::string::ToString::to_string)
             } else {
                 None
             }
@@ -133,7 +130,7 @@ where
     }
 }
 
-impl<T> Default for JWTMiddleware<T>
+impl<T> Default for Jwt<T>
 where
     T: DeserializeOwned + Sync + Send + 'static + Debug,
 {
@@ -142,7 +139,7 @@ where
     }
 }
 
-impl<'a, T> Middleware<'a, Context> for JWTMiddleware<T>
+impl<'a, T> Middleware<'a, Context> for Jwt<T>
 where
     T: DeserializeOwned + Sync + Send + 'static + Debug,
 {

@@ -3,10 +3,7 @@ use std::{future::Future, pin::Pin};
 use viz_core::{
     http::{
         header::{HeaderValue, WWW_AUTHENTICATE},
-        headers::{
-            authorization::{Authorization, Bearer},
-            HeaderMapExt,
-        },
+        headers::{authorization, HeaderMapExt},
         StatusCode,
     },
     Context, Middleware, Response, Result,
@@ -16,14 +13,14 @@ use viz_utils::tracing;
 
 /// Bearer Auth Middleware
 #[derive(Debug)]
-pub struct BearerMiddleware<F>
+pub struct Bearer<F>
 where
     F: Fn(&str) -> bool,
 {
     f: F,
 }
 
-impl<F> BearerMiddleware<F>
+impl<F> Bearer<F>
 where
     F: Fn(&str) -> bool,
 {
@@ -33,25 +30,27 @@ where
     }
 
     async fn run(&self, cx: &mut Context) -> Result<Response> {
-        tracing::trace!("Bearer Auth Middleware");
-
-        if cx
+        let verified = cx
             .headers()
-            .typed_get::<Authorization<Bearer>>()
+            .typed_get::<authorization::Authorization<authorization::Bearer>>()
             .map(|auth| (self.f)(auth.0.token()))
-            .unwrap_or_default()
-        {
+            .unwrap_or_default();
+
+        tracing::trace!(" {:>7}", verified);
+
+        if verified {
             return cx.next().await;
         }
 
         let mut res: Response = StatusCode::UNAUTHORIZED.into();
         res.headers_mut()
             .insert(WWW_AUTHENTICATE, HeaderValue::from_str("invalid authorization header")?);
+
         Ok(res)
     }
 }
 
-impl<'a, F> Middleware<'a, Context> for BearerMiddleware<F>
+impl<'a, F> Middleware<'a, Context> for Bearer<F>
 where
     F: Sync + Send + 'static + Fn(&str) -> bool,
 {

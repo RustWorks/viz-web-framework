@@ -10,30 +10,30 @@
 #[cfg(feature = "logger")]
 mod logger;
 #[cfg(feature = "logger")]
-pub use logger::LoggerMiddleware;
+pub use logger::Logger;
 
 #[cfg(feature = "recover")]
 mod recover;
 #[cfg(feature = "recover")]
-pub use recover::RecoverMiddleware;
+pub use recover::Recover;
 
 #[cfg(feature = "request_id")]
 mod request_id;
 #[cfg(feature = "request_id")]
-pub use request_id::RequestIDMiddleware;
+pub use request_id::RequestID;
 
 #[cfg(feature = "timeout")]
 mod timeout;
 #[cfg(feature = "timeout")]
-pub use timeout::TimeoutMiddleware;
+pub use timeout::Timeout;
 
 #[cfg(feature = "cookies")]
 mod cookies;
 #[cfg(feature = "cookies")]
-pub use cookies::CookiesMiddleware;
+pub use cookies::Cookies;
 
-#[cfg(feature = "session")]
-pub mod session;
+#[cfg(feature = "sessions")]
+pub mod sessions;
 
 #[cfg(feature = "auth")]
 pub mod auth;

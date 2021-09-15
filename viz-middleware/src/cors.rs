@@ -21,7 +21,6 @@ use viz_core::{
     },
     Context, Middleware, Response, Result,
 };
-
 use viz_utils::{thiserror::Error as ThisError, tracing};
 
 /// Cors Error
@@ -46,7 +45,7 @@ impl From<CorsError> for Response {
 
 /// CORS Middleware
 #[derive(Debug)]
-pub struct CorsMiddleware {
+pub struct Cors {
     allow_credentials: bool,
     allow_headers: HashSet<HeaderName>,
     allow_methods: HashSet<Method>,
@@ -55,7 +54,7 @@ pub struct CorsMiddleware {
     max_age: Option<u64>,
 }
 
-impl Default for CorsMiddleware {
+impl Default for Cors {
     fn default() -> Self {
         Self {
             allow_credentials: false,
@@ -68,7 +67,7 @@ impl Default for CorsMiddleware {
     }
 }
 
-impl CorsMiddleware {
+impl Cors {
     /// Adds a method to the existing list of allowed request methods.
     pub fn allow_method<M>(mut self, method: M) -> Self
     where
@@ -206,7 +205,6 @@ impl CorsMiddleware {
         }
     }
 
-    #[tracing::instrument(skip(cx))]
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         match (cx.header_value(ORIGIN).cloned(), cx.method()) {
             (Some(origin), &Method::OPTIONS) => {
@@ -253,7 +251,7 @@ impl CorsMiddleware {
     }
 }
 
-impl<'a> Middleware<'a, Context> for CorsMiddleware {
+impl<'a> Middleware<'a, Context> for Cors {
     type Output = Result<Response>;
 
     #[must_use]
