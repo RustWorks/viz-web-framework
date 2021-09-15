@@ -50,7 +50,7 @@
 * request_id
 * timeout
 * cookies
-* session
+* sessions
 * cors
 * auth
 * compression
