@@ -63,6 +63,4 @@ viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.10", defau
 hyper = { version = "0.14", features = ["server"] }
 tower-service = "0.3"
 
-tokio = { version = "1.11", default-features = false, features = [
-  "net",
-], optional = true }
+tokio = { version = "1.11", default-features = false, features = ["net"], optional = true }

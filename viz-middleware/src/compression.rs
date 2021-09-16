@@ -229,14 +229,14 @@ pub fn gzip() -> Compression<GzipEncoder<StreamReader<CompressableBody<Body, Hyp
 
 #[cfg(feature = "compression-brotli")]
 /// compresses the Body of Response using brotli
-pub fn brotli(
-) -> Compression<BrotliEncoder<StreamReader<CompressableBody<Body, HyperError>, Bytes>>> {
+pub fn brotli()
+-> Compression<BrotliEncoder<StreamReader<CompressableBody<Body, HyperError>, Bytes>>> {
     Compression::new()
 }
 
 #[cfg(feature = "compression-deflate")]
 /// compresses the Body of Response using deflate
-pub fn deflate(
-) -> Compression<DeflateEncoder<StreamReader<CompressableBody<Body, HyperError>, Bytes>>> {
+pub fn deflate()
+-> Compression<DeflateEncoder<StreamReader<CompressableBody<Body, HyperError>, Bytes>>> {
     Compression::new()
 }
