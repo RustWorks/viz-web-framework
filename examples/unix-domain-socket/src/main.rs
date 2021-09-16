@@ -22,7 +22,7 @@ async fn main() -> Result<()> {
         .map_err(Error::new)
 }
 
-#[cfg(not(unix))]
+#[cfg(windows)]
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut app = viz::new();
