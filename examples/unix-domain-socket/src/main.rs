@@ -7,6 +7,7 @@ async fn hello() -> &'static str {
     "Hello World!"
 }
 
+#[cfg(unix)]
 #[tokio::main]
 async fn main() -> Result<()> {
     let mut app = viz::new();
@@ -22,3 +23,6 @@ async fn main() -> Result<()> {
         .await
         .map_err(Error::new)
 }
+
+#[cfg(not(unix))]
+fn main () {}
