@@ -107,6 +107,7 @@ where
         Ok(res)
     }
 
+    #[allow(unused_variables)]
     /// Gets token via Header|Query|Param|Cookie.
     fn get(&self, cx: &mut Context) -> Option<String> {
         cfg_if::cfg_if! {
