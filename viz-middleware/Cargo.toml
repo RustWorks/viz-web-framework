@@ -1,6 +1,6 @@
 [package]
 name = "viz-middleware"
-version = "0.1.0-alpha.10"
+version = "0.1.0-alpha.11"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Middleware"
 license = "Apache-2.0/MIT"
