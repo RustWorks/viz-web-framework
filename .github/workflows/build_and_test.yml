@@ -2,6 +2,8 @@ name: Build and test
 
 on:
   push:
+    paths:
+      - '!.cirrus.yml'
     branches:
       - master
   pull_request:
