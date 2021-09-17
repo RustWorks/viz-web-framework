@@ -1,6 +1,6 @@
 [package]
 name = "viz-utils"
-version = "0.1.0-alpha.11"
+version = "0.1.0-alpha.12"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz utils"
 license = "Apache-2.0/MIT"

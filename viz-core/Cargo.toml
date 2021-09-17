@@ -1,6 +1,6 @@
 [package]
 name = "viz-core"
-version = "0.1.0-alpha.11"
+version = "0.1.0-alpha.12"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Core"
 license = "Apache-2.0/MIT"
@@ -17,7 +17,7 @@ ws = ["tokio/rt", "tokio-tungstenite", "pin-project"]
 fs = ["mime-db", "tokio-util/io"]
 
 [dependencies]
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.10" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.12" }
 
 handle = "1.0"
 form-data = "0.2"
