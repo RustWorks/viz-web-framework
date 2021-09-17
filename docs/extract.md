@@ -12,7 +12,7 @@ struct Info {
 impl Extract for Info {
     type Error = Error;
 
-    fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+    fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         Box::pin(async move {
             let method = cx.method().to_string();
             // if method is PUT, throw an error
@@ -34,16 +34,18 @@ async fn handler(info: Info) -> String {
 
 ### Built-in Extractors
 
-* `State<T>`
+* `Cookies`
 
 * `Form<T>`
+
+* `Header<T>`
 
 * `Json<T>`
 
 * `Multipart<T>`
 
-* `Query<T>`
-
 * `Params<T>`
 
-* `Cookies`
+* `Query<T>`
+
+* `State<T>`
