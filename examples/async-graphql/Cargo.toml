@@ -6,7 +6,9 @@ publish = false
 
 [dependencies]
 viz = { version = "0.1.0-alpha.11" }
+
 async-graphql = "2.10.0"
-async-graphql-viz = { version = "0.1.1" }
+async-graphql-viz = { version = "0.1.2" }
+
 slab = "0.4.4"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
