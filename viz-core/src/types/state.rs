@@ -15,7 +15,7 @@ pub trait StateFactory: Send + Sync + 'static {
 
 /// Application state.
 #[derive(Clone)]
-pub struct State<T>(T);
+pub struct State<T>(pub T);
 
 impl<T> State<T> {
     /// Create new `State` instance.

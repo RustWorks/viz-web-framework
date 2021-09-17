@@ -159,15 +159,9 @@ impl Display for Event {
 /// Gets the optional last event id from request.
 /// Typically this identifier represented as number or string.
 /// Context Extends
-pub trait SseContextExt {
+impl crate::Context {
     /// Gets the last event id
-    fn last_event_id<T>(&self) -> Option<T>
-    where
-        T: FromStr + Send + Sync + 'static;
-}
-
-impl SseContextExt for crate::Context {
-    fn last_event_id<T>(&self) -> Option<T>
+    pub fn last_event_id<T>(&self) -> Option<T>
     where
         T: FromStr + Send + Sync + 'static,
     {

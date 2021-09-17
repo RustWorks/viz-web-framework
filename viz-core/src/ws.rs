@@ -26,44 +26,7 @@ use viz_utils::{
     tracing,
 };
 
-use crate::{Error, Extract};
-
-/// Context Extends
-pub trait WsContextExt {
-    /// Get Ws
-    fn ws(&mut self) -> Result<Ws, crate::Response>;
-}
-
-impl WsContextExt for crate::Context {
-    fn ws(&mut self) -> Result<Ws, crate::Response> {
-        let headers = self.headers();
-        headers
-            .typed_get::<Upgrade>()
-            .filter(|upgrade| upgrade == &Upgrade::websocket())
-            .and(headers.typed_get::<Connection>())
-            .filter(|connection| connection.contains(::hyper::header::UPGRADE))
-            .and(headers.typed_get::<SecWebsocketVersion>())
-            .filter(|version| version == &SecWebsocketVersion::V13)
-            .and(headers.typed_get::<SecWebsocketKey>())
-            .map(|key| Ws {
-                key,
-                on_upgrade: self.extensions_mut().remove::<::hyper::upgrade::OnUpgrade>(),
-                config: None,
-            })
-            .ok_or_else(|| {
-                (::hyper::StatusCode::BAD_REQUEST, "invalid websocket upgrade request").into()
-            })
-    }
-}
-
-impl Extract for Ws {
-    type Error = crate::Response;
-
-    #[inline]
-    fn extract(cx: &mut crate::Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
-        Box::pin(async move { cx.ws() })
-    }
-}
+use crate::{Context as VizContext, Error, Extract, Response};
 
 /// Extracted by the [`ws`](ws) filter, and used to finish an upgrade.
 pub struct Ws {
@@ -76,7 +39,7 @@ impl Ws {
     /// Finish the upgrade, passing a function to handle the `WebSocket`.
     ///
     /// The passed function must return a `Future`.
-    pub fn on_upgrade<F, U>(self, func: F) -> crate::Response
+    pub fn on_upgrade<F, U>(self, func: F) -> Response
     where
         F: FnOnce(WebSocket) -> U + Send + 'static,
         U: Future<Output = ()> + Send + 'static,
@@ -111,18 +74,51 @@ impl fmt::Debug for Ws {
     }
 }
 
+/// Context Extends
+impl VizContext {
+    /// Gets ws
+    pub fn ws(&mut self) -> Result<Ws, Response> {
+        let headers = self.headers();
+        headers
+            .typed_get::<Upgrade>()
+            .filter(|upgrade| upgrade == &Upgrade::websocket())
+            .and(headers.typed_get::<Connection>())
+            .filter(|connection| connection.contains(::hyper::header::UPGRADE))
+            .and(headers.typed_get::<SecWebsocketVersion>())
+            .filter(|version| version == &SecWebsocketVersion::V13)
+            .and(headers.typed_get::<SecWebsocketKey>())
+            .map(|key| Ws {
+                key,
+                on_upgrade: self.extensions_mut().remove::<::hyper::upgrade::OnUpgrade>(),
+                config: None,
+            })
+            .ok_or_else(|| {
+                (::hyper::StatusCode::BAD_REQUEST, "invalid websocket upgrade request").into()
+            })
+    }
+}
+
+impl Extract for Ws {
+    type Error = Response;
+
+    #[inline]
+    fn extract(cx: &mut VizContext) -> BoxFuture<'_, Result<Self, Self::Error>> {
+        Box::pin(async move { cx.ws() })
+    }
+}
+
 #[allow(missing_debug_implementations)]
 struct WsResponse<F> {
     ws: Ws,
     on_upgrade: F,
 }
 
-impl<F, U> From<WsResponse<F>> for crate::Response
+impl<F, U> From<WsResponse<F>> for Response
 where
     F: FnOnce(WebSocket) -> U + Send + 'static,
     U: Future<Output = ()> + Send + 'static,
 {
-    fn from(v: WsResponse<F>) -> crate::Response {
+    fn from(v: WsResponse<F>) -> Response {
         if let Some(on_upgrade) = v.ws.on_upgrade {
             let callback = v.on_upgrade;
             let config = v.ws.config;
