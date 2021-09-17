@@ -63,7 +63,7 @@ where
 
     #[inline]
     fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
-        Box::pin(async move { cx.json().await.map(Json) })
+        Box::pin(async move { cx.json().await.map(Self) })
     }
 }
 
@@ -92,7 +92,7 @@ impl Context {
             payload.check_real_length(self.take_body().ok_or(PayloadError::Read)?).await?.chunk(),
         )
         .map_err(|e| {
-            tracing::debug!("Json deserialize error: {}", e);
+            tracing::error!("Json deserialize error: {}", e);
             PayloadError::Parse
         })
     }

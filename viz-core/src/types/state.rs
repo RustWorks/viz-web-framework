@@ -78,7 +78,7 @@ where
     #[inline]
     fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         let state = cx.extensions().get::<Self>().cloned().ok_or_else(|| {
-            tracing::debug!("State extract error: {}", std::any::type_name::<T>());
+            tracing::error!("State extract error: {}", std::any::type_name::<T>());
             anyhow!("State is not configured")
         });
         Box::pin(async move { state })
@@ -95,7 +95,7 @@ impl Context {
             .get::<State<T>>()
             .cloned()
             .ok_or_else(|| {
-                tracing::debug!("State extract error: {}", std::any::type_name::<T>());
+                tracing::error!("State extract error: {}", std::any::type_name::<T>());
                 anyhow!("State is not configured")
             })
             .map(State::into_inner)

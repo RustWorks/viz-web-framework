@@ -52,7 +52,7 @@ where
 
     #[inline]
     fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
-        Box::pin(async move { cx.form().await.map(Form) })
+        Box::pin(async move { cx.form().await.map(Self) })
     }
 }
 
@@ -79,7 +79,7 @@ impl Context {
             payload.check_real_length(self.take_body().ok_or(PayloadError::Read)?).await?.reader(),
         )
         .map_err(|e| {
-            tracing::debug!("{}", e);
+            tracing::error!("{}", e);
             PayloadError::Parse
         })
     }

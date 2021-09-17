@@ -126,7 +126,7 @@ where
 
         while let Some(item) = stream.next().await {
             let chunk = item.map_err(|e| {
-                tracing::trace!("{}", e);
+                tracing::error!("{}", e);
                 PayloadError::Read
             })?;
             if ((body.len() + chunk.len()) as u64) > limit {

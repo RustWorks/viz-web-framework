@@ -125,13 +125,13 @@ impl Context {
             for pair in raw_cookie
                 .to_str()
                 .map_err(|e| {
-                    tracing::debug!("failed to extract cookies: {}", e);
+                    tracing::error!("failed to extract cookies: {}", e);
                     CookiesError::Read
                 })?
                 .split(';')
             {
                 jar.add_original(Cookie::parse_encoded(pair.trim().to_string()).map_err(|e| {
-                    tracing::debug!("failed to parse cookies: {}", e);
+                    tracing::error!("failed to parse cookies: {}", e);
                     CookiesError::Parse
                 })?)
             }

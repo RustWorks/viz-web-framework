@@ -54,7 +54,7 @@ where
 
     #[inline]
     fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
-        Box::pin(async move { cx.query().map(Query) })
+        Box::pin(async move { cx.query().map(Self) })
     }
 }
 
@@ -65,7 +65,7 @@ impl Context {
         T: DeserializeOwned,
     {
         urlencoded::from_str(self.query_str()).map_err(|e| {
-            tracing::debug!("Query deserialize error: {}", e);
+            tracing::error!("Query deserialize error: {}", e);
             PayloadError::Parse
         })
     }

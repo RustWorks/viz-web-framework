@@ -133,7 +133,7 @@ impl Context {
                 .ok_or(ParamsError::Read)?,
         ))
         .map_err(|e| {
-            tracing::debug!("Params deserialize error: {}", e);
+            tracing::error!("Params deserialize error: {}", e);
             ParamsError::Parse
         })
     }
