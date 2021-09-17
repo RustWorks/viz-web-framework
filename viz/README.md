@@ -60,7 +60,6 @@
 
 * [ ] More friendly Routing
 * [ ] Template engines
-* [ ] GraphQL?
 * [ ] RPC?
 * [x] Configuration
 * [x] Data State
@@ -82,6 +81,7 @@
     * [x] `serve static files`
 * [x] Unix Domain Socket
 * [x] TLS
+* [x] GraphQL
 
 
 ## Thanks

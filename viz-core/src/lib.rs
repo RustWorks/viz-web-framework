@@ -29,6 +29,7 @@ pub mod http {
     pub use http::*;
     pub use hyper::Body;
     pub use hyper::Error;
+    pub use mime;
 
     pub type Request<T = Body> = ::http::Request<T>;
     pub type Response<T = Body> = ::http::Response<T>;

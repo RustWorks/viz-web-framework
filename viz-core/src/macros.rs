@@ -15,7 +15,7 @@ macro_rules! tuple {
             type Error = Error;
 
             #[inline]
-            fn extract<'a>(_: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+            fn extract(_: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
                 Box::pin(async { Ok(()) })
             }
         }
@@ -61,7 +61,7 @@ macro_rules! tuple {
             type Error = Response;
 
             #[inline]
-            fn extract<'a>(cx: &'a mut Context) -> BoxFuture<'a, Result<Self, Self::Error>> {
+            fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
                 Box::pin(async move {
                     Ok((
                         $(
