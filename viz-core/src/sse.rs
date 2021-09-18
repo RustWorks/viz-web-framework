@@ -1,5 +1,5 @@
 //! Server-Sent Events (SSE)
-//! Thanks: https://github.com/seanmonstar/warp
+//! Thanks: <https://github.com/seanmonstar/warp>
 
 use std::{
     borrow::Cow,

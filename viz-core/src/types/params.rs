@@ -1,7 +1,6 @@
 //! Extract typed information from the request's path.
 //!
-//! Thanks to https://github.com/fafhrd91
-//! Some codes from https://github.com/ntex-rs/ntex/blob/master/ntex-router/src/de.rs
+//! Thanks: <https://github.com/ntex-rs>
 
 use std::{
     fmt::Display,

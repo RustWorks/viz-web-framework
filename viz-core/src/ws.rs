@@ -1,5 +1,5 @@
 //! WebSockets
-//! Thanks: https://github.com/seanmonstar/warp
+//! Thanks: <https://github.com/seanmonstar/warp>
 
 use std::{
     borrow::Cow,
@@ -28,7 +28,7 @@ use viz_utils::{
 
 use crate::{Context as VizContext, Error, Extract, Response};
 
-/// Extracted by the [`ws`](ws) filter, and used to finish an upgrade.
+/// Extracted by the Ws filter, and used to finish an upgrade.
 pub struct Ws {
     key: SecWebsocketKey,
     config: Option<WebSocketConfig>,
