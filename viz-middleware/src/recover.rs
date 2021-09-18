@@ -31,7 +31,7 @@ impl<'a> Middleware<'a, Context> for Recover {
     }
 }
 
-/// Via https://docs.rs/futures-util/latest/futures_util/future/struct.CatchUnwind.html
+/// Thanks: <https://docs.rs/futures-util/latest/futures_util/future/struct.CatchUnwind.html>
 mod internal {
     use std::{
         any::Any,

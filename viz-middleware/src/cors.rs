@@ -1,5 +1,5 @@
 //! CORS
-//! https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS
+//! <https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS>
 
 use std::{
     collections::HashSet, convert::TryFrom, future::Future, hash::Hash, pin::Pin, str::FromStr,

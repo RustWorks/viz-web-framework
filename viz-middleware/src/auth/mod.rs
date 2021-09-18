@@ -1,5 +1,5 @@
 //! Authentication
-//! https://ec.haxx.se/http/http-auth
+//! Thanks: <https://ec.haxx.se/http/http-auth>
 
 mod basic;
 mod bearer;
