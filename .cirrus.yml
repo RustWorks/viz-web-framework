@@ -1,9 +1,41 @@
-freebsd_instance:
-  image_family: freebsd-13-0
+cargo_cache:
+  folder: $CARGO_HOME/registry
+  fingerprint_script: cat Cargo.lock || echo ""
+
+env:
+  BUILD: build
+  RUSTFLAGS: -D warnings
+  RUSTDOCFLAGS: -D warnings
+  TOOL: cargo
+  TOOLCHAIN: 1.55.0
+  ZFLAGS:
+
+build: &BUILD
+  build_script:
+    - . $HOME/.cargo/env || true
+    - $TOOL +$TOOLCHAIN $BUILD $ZFLAGS --target $TARGET --all-targets
+    - $TOOL +$TOOLCHAIN doc $ZFLAGS --no-deps --target $TARGET
+
+test: &TEST
+  << : *BUILD
+  test_script:
+    - . $HOME/.cargo/env || true
+    - $TOOL +$TOOLCHAIN test --target $TARGET
 
 task:
-  install_script: pkg install -y rust
-
-test_task:
-  build_script: cargo build
-  test_script: cargo test
+  name: FreeBSD amd64 & aarch64
+  env:
+    TARGET: x86_64-unknown-freebsd
+  freebsd_instance:
+    image: freebsd-13-0-release-amd64
+  setup_script:
+    - fetch https://sh.rustup.rs -o rustup.sh
+    - sh rustup.sh -y --profile=minimal --default-toolchain $TOOLCHAIN
+    - $HOME/.cargo/bin/rustup target add aarch64-unknown-freebsd
+  << : *TEST
+  aarch64_test_script:
+    - . $HOME/.cargo/env
+    - cargo build --target aarch64-unknown-freebsd
+    - cargo doc --no-deps --target aarch64-unknown-freebsd
+    - cargo test --target aarch64-unknown-freebsd
+  before_cache_script: rm -rf $CARGO_HOME/registry/index
