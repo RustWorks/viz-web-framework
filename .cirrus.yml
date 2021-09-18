@@ -33,9 +33,9 @@ task:
     - sh rustup.sh -y --profile=minimal --default-toolchain $TOOLCHAIN
     - $HOME/.cargo/bin/rustup target add aarch64-unknown-freebsd
   << : *TEST
-  aarch64_test_script:
-    - . $HOME/.cargo/env
-    - cargo build --target aarch64-unknown-freebsd
-    - cargo doc --no-deps --target aarch64-unknown-freebsd
-    - cargo test --target aarch64-unknown-freebsd
+  # aarch64_test_script:
+  #   - . $HOME/.cargo/env
+  #   - cargo build --target aarch64-unknown-freebsd
+  #   - cargo doc --no-deps --target aarch64-unknown-freebsd
+  #   - cargo test --target aarch64-unknown-freebsd
   before_cache_script: rm -rf $CARGO_HOME/registry/index
