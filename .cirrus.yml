@@ -31,7 +31,7 @@ task:
   setup_script:
     - fetch https://sh.rustup.rs -o rustup.sh
     - sh rustup.sh -y --profile=minimal --default-toolchain $TOOLCHAIN
-    - $HOME/.cargo/bin/rustup target add aarch64-unknown-freebsd
+    # - $HOME/.cargo/bin/rustup target add aarch64-unknown-freebsd
   << : *TEST
   # aarch64_test_script:
   #   - . $HOME/.cargo/env
