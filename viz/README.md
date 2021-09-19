@@ -51,9 +51,10 @@
 * timeout
 * cookies
 * sessions
-* cors
-* auth
 * compression
+* serve static files
+* auth
+* cors
 * jwt
 
 ## Todos
@@ -68,20 +69,20 @@
 * [x] Server-Sent Events
 * [x] Sessions
 * [x] Middlewares
-    * [x] `auth`
     * [x] `logger`
     * [x] `recover`
     * [x] `request_id`
     * [x] `timeout`
     * [x] `cookies`
     * [x] `sessions`
-    * [x] `cors`
     * [x] `compression`
-    * [x] `jwt`
     * [x] `serve static files`
-* [x] Unix Domain Socket
+    * [x] `auth`
+    * [x] `cors`
+    * [x] `jwt`
 * [x] TLS
 * [x] GraphQL
+* [x] Unix Domain Socket
 
 
 ## Thanks

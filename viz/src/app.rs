@@ -7,7 +7,7 @@ use std::{
     {fmt, net::SocketAddr, sync::Arc},
 };
 
-use tower_service::Service;
+use hyper::service::Service;
 
 use viz_core::{
     config::Config,
@@ -18,7 +18,7 @@ use viz_core::{
 use viz_router::{Method, Router, Tree};
 use viz_utils::tracing;
 
-/// Viz Server
+/// Viz App
 #[derive(Clone)]
 pub struct App {
     tree: Arc<Tree>,
@@ -35,7 +35,14 @@ impl Default for App {
 impl App {
     /// Creates a server
     pub fn new() -> Self {
-        Self { state: None, config: None, tree: Arc::new(Tree::new()) }
+        Self {
+            state: None,
+            config: None,
+            tree: Arc::new(Tree::new()),
+            // cert: Vec::new(),
+            // key: Vec::new(),
+            // acceptor: None,
+        }
     }
 
     /// Sets a `State`
@@ -61,9 +68,27 @@ impl App {
     }
 
     /// Into to the Tower Service
-    pub fn into_make_service(self) -> IntoMakeService<Self> {
-        IntoMakeService::new(self)
+    pub fn into_service(self) -> IntoService<Self> {
+        IntoService::new(self)
     }
+
+    // /// Sets the certificates.
+    // pub fn cert(mut self, cert: impl Into<Vec<u8>>) -> Self {
+    //     self.cert = cert.into();
+    //     self
+    // }
+
+    // /// Sets the private key.
+    // pub fn key(mut self, key: impl Into<Vec<u8>>) -> Self {
+    //     self.key = key.into();
+    //     self
+    // }
+
+    // pub fn tls(mut self) -> Self {
+    //     let config = ServerConfig::new(NoClientAuth::new());
+    //     self.acceptor.replace(TlsAcceptor::from(Arc::new(config)));
+    //     self
+    // }
 }
 
 /// Serves a request and returns a response.
@@ -154,23 +179,23 @@ impl Service<http::Request<http::Body>> for AppStream {
     }
 }
 
-/// Via https://docs.rs/axum/latest/axum/routing/struct.IntoMakeService.html
+/// Via https://docs.rs/axum/latest/axum/routing/struct.IntoService.html
 #[derive(Debug, Clone)]
-pub struct IntoMakeService<S> {
-    service: S,
+pub struct IntoService<S> {
+    pub(crate) service: S,
 }
 
-impl<S> IntoMakeService<S> {
+impl<S> IntoService<S> {
     fn new(service: S) -> Self {
         Self { service }
     }
 }
 
 #[cfg(feature = "tcp")]
-impl Service<&hyper::server::conn::AddrStream> for IntoMakeService<App> {
+impl Service<&hyper::server::conn::AddrStream> for IntoService<App> {
     type Response = AppStream;
     type Error = Infallible;
-    type Future = Ready<Result<AppStream, Infallible>>;
+    type Future = Ready<Result<Self::Response, Self::Error>>;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
@@ -182,10 +207,10 @@ impl Service<&hyper::server::conn::AddrStream> for IntoMakeService<App> {
 }
 
 #[cfg(all(unix, feature = "uds"))]
-impl Service<&tokio::net::UnixStream> for IntoMakeService<App> {
+impl Service<&tokio::net::UnixStream> for IntoService<App> {
     type Response = AppStream;
     type Error = Infallible;
-    type Future = Ready<Result<AppStream, Infallible>>;
+    type Future = Ready<Result<Self::Response, Self::Error>>;
 
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))

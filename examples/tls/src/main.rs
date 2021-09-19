@@ -6,7 +6,6 @@ async fn hello() -> &'static str {
     "Hello World!"
 }
 
-#[cfg(unix)]
 #[tokio::main]
 async fn main() -> Result<()> {
     tracing_subscriber::fmt::init();
@@ -15,18 +14,17 @@ async fn main() -> Result<()> {
 
     app.routes(router().at("/", route().get(hello)));
 
-    let path = "/tmp/viz.sock";
-    let _ = std::fs::remove_file(path);
-    let stream =
-        tokio_stream::wrappers::UnixListenerStream::new(tokio::net::UnixListener::bind(path)?);
+    let stream = viz::tls::Listener::new(
+        viz::tls::AddrIncoming::bind(&"127.0.0.1:3000".parse()?)?,
+        viz::tls::Config::new()
+            .cert(include_bytes!("./cert.cer").to_vec())
+            .key(include_bytes!("./key.rsa").to_vec())
+            .build()?,
+    );
 
-    Server::builder(viz::hyper_accept_from_stream(stream))
+    Server::builder(stream)
+    // Server::builder(viz::hyper_accept_from_stream(stream))
         .serve(app.into_service())
         .await
         .map_err(Error::new)
-}
-
-#[cfg(windows)]
-fn main() {
-    println!("please run this example on unix");
 }

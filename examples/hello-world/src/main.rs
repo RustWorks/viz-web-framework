@@ -10,8 +10,5 @@ async fn main() -> Result<()> {
 
     app.routes(router().at("/", route().get(hello)));
 
-    Server::bind(&"127.0.0.1:3000".parse()?)
-        .serve(app.into_make_service())
-        .await
-        .map_err(Error::new)
+    Server::bind(&"127.0.0.1:3000".parse()?).serve(app.into_service()).await.map_err(Error::new)
 }

@@ -52,8 +52,5 @@ async fn main() -> Result<()> {
             .at("/ws", route().get(graphql_subscription_handler)),
     );
 
-    Server::bind(&"127.0.0.1:3000".parse()?)
-        .serve(app.into_make_service())
-        .await
-        .map_err(Error::new)
+    Server::bind(&"127.0.0.1:3000".parse()?).serve(app.into_service()).await.map_err(Error::new)
 }

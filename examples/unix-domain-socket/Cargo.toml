@@ -8,3 +8,6 @@ publish = false
 viz = { path = "../../viz", features = ["uds"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros", "net"] }
 tokio-stream = { version = "0.1", features = ["net"] }
+
+tracing = "0.1"
+tracing-subscriber = "0.2"

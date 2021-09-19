@@ -414,11 +414,11 @@ async fn main() -> Result<()> {
             let stream = tokio_stream::wrappers::UnixListenerStream::new(tokio::net::UnixListener::from_std(listener)?);
 
             Server::builder(viz::hyper_accept_from_stream(stream))
-                .serve(app.into_make_service()).await
+                .serve(app.into_service()).await
                 .map_err(Error::new)
         } else {
             Server::bind(&"127.0.0.1:8080".parse()?)
-                .serve(app.into_make_service()).await
+                .serve(app.into_service()).await
                 .map_err(Error::new)
         }
     }
