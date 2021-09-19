@@ -5,8 +5,8 @@ edition = "2018"
 publish = false
 
 [dependencies]
-viz = { version = "0.1.0-alpha.12" }
-async-graphql-viz = { version = "0.1.0-alpha.12" }
+viz = { version = "0.1.0-alpha.13" }
+async-graphql-viz = { version = "0.1.0-alpha.13" }
 
 async-graphql = "2.10.0"
 
