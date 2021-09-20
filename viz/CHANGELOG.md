@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.0-alpha.13] - 2021-09-20
+
+### Features
+
+* tls
+
 ## [0.1.0-alpha.7] - 2021-07-24
 
 ### Updated
@@ -32,11 +38,13 @@ Internal Middleware
 * request_id
 * timeout
 * cookies
-* session
-* cors
+* sessions
 * auth
+* cors
 * compression
 
-[0.1.0-alpha.7]: https://github.com/viz-rs/path-tree/releases/tag/v0.1.0-alpha.7
-[0.1.0-alpha.4]: https://github.com/viz-rs/path-tree/releases/tag/v0.1.0-alpha.4
-[0.1.0-alpha.1]: https://github.com/viz-rs/path-tree/releases/tag/v0.1.0-alpha.1
+[Unreleased]: https://github.com/viz-rs/path-tree/compare/v0.1.0-alpha.13...HEAD
+[0.1.0-alpha.13]: https://github.com/viz-rs/viz/releases/tag/v0.1.0-alpha.13
+[0.1.0-alpha.7]: https://github.com/viz-rs/viz/releases/tag/v0.1.0-alpha.7
+[0.1.0-alpha.4]: https://github.com/viz-rs/viz/releases/tag/v0.1.0-alpha.4
+[0.1.0-alpha.1]: https://github.com/viz-rs/viz/releases/tag/v0.1.0-alpha.1
