@@ -39,9 +39,6 @@ impl App {
             state: None,
             config: None,
             tree: Arc::new(Tree::new()),
-            // cert: Vec::new(),
-            // key: Vec::new(),
-            // acceptor: None,
         }
     }
 
@@ -71,24 +68,6 @@ impl App {
     pub fn into_service(self) -> IntoService<Self> {
         IntoService::new(self)
     }
-
-    // /// Sets the certificates.
-    // pub fn cert(mut self, cert: impl Into<Vec<u8>>) -> Self {
-    //     self.cert = cert.into();
-    //     self
-    // }
-
-    // /// Sets the private key.
-    // pub fn key(mut self, key: impl Into<Vec<u8>>) -> Self {
-    //     self.key = key.into();
-    //     self
-    // }
-
-    // pub fn tls(mut self) -> Self {
-    //     let config = ServerConfig::new(NoClientAuth::new());
-    //     self.acceptor.replace(TlsAcceptor::from(Arc::new(config)));
-    //     self
-    // }
 }
 
 /// Serves a request and returns a response.
