@@ -56,10 +56,10 @@ middleware-compression-brotli = ["viz-middleware/compression-brotli"]
 middleware-compression-deflate = ["viz-middleware/compression-deflate"]
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0-alpha.13" }
-viz-router = { path = "../viz-router", version = "0.1.0-alpha.13" }
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.13" }
-viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.13", default-features = false, optional = true }
+viz-core = { path = "../viz-core", version = "0.1.0-alpha.14" }
+viz-router = { path = "../viz-router", version = "0.1.0-alpha.14" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.14" }
+viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.14", default-features = false, optional = true }
 
 hyper = { version = "0.14", features = ["server"] }
 

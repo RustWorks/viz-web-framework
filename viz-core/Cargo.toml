@@ -17,7 +17,7 @@ ws = ["tokio/rt", "tokio-tungstenite", "pin-project"]
 fs = ["mime-db", "tokio-util/io"]
 
 [dependencies]
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.13" }
+viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.14" }
 
 handle = "1.0"
 form-data = "0.2"
