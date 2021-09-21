@@ -63,5 +63,5 @@ viz-middleware = { path = "../viz-middleware", version = "0.1.0-alpha.13", defau
 
 hyper = { version = "0.14", features = ["server"] }
 
-tokio = { version = "1.11", default-features = false, features = ["net"], optional = true }
+tokio = { version = "1.12", default-features = false, features = ["net"], optional = true }
 tokio-rustls = { version = "0.22.0", optional = true }
