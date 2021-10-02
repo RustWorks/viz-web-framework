@@ -6,7 +6,7 @@ use viz_utils::tracing;
 const HEADER: &str = "x-request-id";
 
 fn generate_id() -> Result<String> {
-    Ok(nano_id::base64(21))
+    Ok(nano_id::base64::<21>())
 }
 
 /// RequestID Middleware
