@@ -621,12 +621,12 @@ mod tests {
         val: TestEnum,
     }
 
+    #[allow(clippy::unit_cmp)]
     #[test]
     fn test_request_extract() {
         let params = Params(vec![("key", "name"), ("value", "user1")]);
 
         let s: () = de::Deserialize::deserialize(ParamsDeserializer::new(&params)).unwrap();
-        #[allow(clippy::unit_cmp)]
         assert_eq!(s, ());
 
         let s: MyStruct = de::Deserialize::deserialize(ParamsDeserializer::new(&params)).unwrap();
