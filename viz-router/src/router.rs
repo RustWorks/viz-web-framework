@@ -2,20 +2,20 @@ use std::collections::HashMap;
 use std::fmt;
 use std::sync::Arc;
 
-use viz_core::{Context, Middleware, Middlewares, Response, Result};
+use viz_core::{Context, Middleware, Response, Result, VecMiddleware};
 use viz_utils::tracing;
 
-use crate::{Method, PathTree, Route, RouteHandler};
+use crate::{Method, PathTree, Route};
 
 /// Router
 pub struct Router {
     // inherit parrent's middleware
-    carry: bool,
+    inherit: bool,
     path: String,
     name: Option<String>,
     routes: Option<Vec<Route>>,
     children: Option<Vec<Router>>,
-    middleware: Option<Middlewares>,
+    middleware: Option<VecMiddleware>,
 }
 
 impl Router {
@@ -23,7 +23,7 @@ impl Router {
     pub fn new(path: &str) -> Self {
         Self {
             name: None,
-            carry: true,
+            inherit: true,
             routes: None,
             children: None,
             middleware: None,
@@ -44,13 +44,13 @@ impl Router {
     }
 
     /// Inherits parrent's middleware
-    pub fn carry(mut self, b: bool) -> Self {
-        self.carry = b;
+    pub fn inherit(mut self, b: bool) -> Self {
+        self.inherit = b;
         self
     }
 
     /// Appends middleware to the Router.
-    pub fn mid<M>(mut self, m: M) -> Self
+    pub fn with<M>(mut self, m: M) -> Self
     where
         M: for<'a> Middleware<'a, Context, Output = Result<Response>>,
     {
@@ -77,31 +77,26 @@ impl Router {
     }
 
     /// Outputs the routes to map.
-    pub fn finish(mut self, tree: &mut HashMap<Method, PathTree<Middlewares>>) {
+    pub fn finish(mut self, tree: &mut HashMap<Method, PathTree<VecMiddleware>>) {
         let m0 = self.middleware.take().unwrap_or_default();
         let h0 = !m0.is_empty();
 
         if let Some(routes) = self.routes.take() {
             for mut route in routes {
                 let m1 = route.middleware.take().unwrap_or_default();
-                let carry = route.carry;
-                let guard = route.guard.take().map(Arc::new);
+                let inherit = route.inherit;
                 let path = join_paths(&self.path, &route.path);
 
                 for (method, handler) in route.handlers {
                     tracing::info!("{:>6}:{}", method.as_str(), &path);
 
-                    let mut m = vec![if let Some(guard) = guard.clone().take() {
-                        Arc::new(RouteHandler::new(guard, handler))
-                    } else {
-                        handler
-                    }];
+                    let mut m = vec![handler];
 
                     if !m1.is_empty() {
                         m.extend_from_slice(&m1);
                     }
 
-                    if h0 && carry {
+                    if h0 && inherit {
                         m.extend_from_slice(&m0);
                     }
 
@@ -113,25 +108,13 @@ impl Router {
         if let Some(children) = self.children.take() {
             for mut child in children {
                 let path = join_paths(&self.path, &child.path);
-                // log::debug!("{}", &path);
                 child.path = path;
-                if h0 && child.carry {
+                if h0 && child.inherit {
                     child.middleware.get_or_insert_with(Vec::new).extend_from_slice(&m0);
                 }
                 child.finish(tree);
             }
         }
-
-        //         if h0 && self.path.is_empty() {
-        //             let method = Method::All;
-        //             let path = "/*";
-
-        //             log::info!("{:>6}:{}", method.as_str(), &path);
-
-        //             tree.entry(method)
-        //                 .or_insert_with(PathTree::new)
-        //                 .insert(path, m0);
-        //         }
     }
 }
 
@@ -152,7 +135,7 @@ impl fmt::Debug for Router {
         f.debug_struct("Router")
             .field("path", &self.path)
             .field("name", &self.name.as_ref().map_or_else(String::new, |v| v.to_owned()))
-            .field("carry", &self.carry)
+            .field("inherit", &self.inherit)
             .field("middle", &self.middleware.as_ref().map_or_else(|| 0, |v| v.len()))
             .field("routes", &self.routes.as_ref().map_or_else(|| &[][..], |v| v))
             .field("children", &self.children.as_ref().map_or_else(|| &[][..], |v| v))
@@ -167,42 +150,41 @@ mod tests {
     use futures_executor::block_on;
     use hyper::body::to_bytes;
 
-    use viz_core::{http, Context, Error, Guard, Response, Result};
+    use viz_core::{http, Context, Error, Response, Result};
 
     use crate::*;
 
     #[test]
     fn routing() {
         let routes = router()
-            .mid(m_0)
+            .with(m_0)
             // `/`
-            .route(route().path("/").get(hello_world))
-            .at("/*any", route().all(any))
+            .route(route("/").get(hello_world))
+            .at("/*any", all(any))
             // `/users`
             .scope(
                 "/users",
                 router()
-                    .mid(m_1)
+                    .with(m_1)
                     // `/users`
-                    .route(route().get(index_users).post(create_user))
+                    .route(get(index_users).post(create_user))
                     // `/users/new`
-                    .at("/new", route().guard(edit_guard).get(new_user))
+                    .at("/new", get(new_user))
                     // `/users/:id`
                     .scope(
                         "/:id",
                         router()
                             // `/users/:id`
                             .route(
-                                route()
-                                    .get(show_user)
+                                    get(show_user)
                                     .patch(update_user)
                                     .put(update_user)
                                     .delete(delete_user),
                             )
                             // `/users/:id/edit`
-                            .at("/edit", route().guard(edit_guard).get(edit_user))
+                            .at("/edit", get(edit_user))
                             // `/users/*``
-                            .at("*any", route().all(any)),
+                            .at("*any", all(any)),
                     )
                     .scope(
                         "/:user_id",
@@ -212,37 +194,29 @@ mod tests {
                             .scope(
                                 "/posts",
                                 router()
-                                    .carry(false)
-                                    .mid(m_2)
-                                    .at("/*any", route().all(any))
+                                    .inherit(false)
+                                    .with(m_2)
+                                    .at("/*any", all(any))
                                     // `/users/:user_id/posts`
-                                    .route(route().get(index_posts).post(create_post))
+                                    .route(get(index_posts).post(create_post))
                                     // `/users/:user_id/posts/new`
-                                    .at("/new", route().guard(edit_guard).get(new_post))
+                                    .at("/new", get(new_post))
                                     // `/users/:user_id/posts/:id`
                                     .scope(
                                         "/:id",
                                         router()
                                             // `/users/:user_id/posts/:id`
                                             .route(
-                                                route()
-                                                    .guard(
-                                                        <Box<dyn Guard>>::from(edit_guard)
-                                                            & Into::<Box<dyn Guard>>::into(
-                                                                get_guard,
-                                                            ),
-                                                    )
-                                                    .get(show_post),
+                                                    get(show_post),
                                             )
                                             .route(
-                                                route()
-                                                    // .get(show_post)
-                                                    .patch(update_post)
+                                                    // get(show_post)
+                                                    patch(update_post)
                                                     .put(update_post)
                                                     .delete(delete_post),
                                             )
                                             // `/users/:user_id/posts/:id/edit`
-                                            .at("/edit", route().guard(edit_guard).get(edit_post)),
+                                            .at("/edit", get(edit_post)),
                                     ),
                             ),
                     ),
@@ -252,28 +226,28 @@ mod tests {
                 "/posts",
                 router()
                     // `/posts`
-                    .route(route().get(index_posts))
+                    .route(get(index_posts))
                     // `/posts/:id`
-                    .at("/:id", route().get(show_post)),
+                    .at("/:id", get(show_post)),
             )
             // `/comments`
             .scope(
                 "/comments",
                 router()
                     // `/comments`
-                    .route(route().get(index_comments).post(create_comment))
+                    .route(get(index_comments).post(create_comment))
                     // `/comments/new`
-                    .at("/new", route().guard(edit_guard).get(new_comment))
+                    .at("/new", get(new_comment))
                     // `/comments/:id`
                     .scope(
                         "/:id",
                         router()
                             // `/comments/:id`
                             .route(
-                                route().get(show_comment).patch(update_comment).put(update_comment),
+                                get(show_comment).patch(update_comment).put(update_comment),
                             )
                             // `/comments/:id/edit`
-                            .at("/edit", route().get(edit_comment)),
+                            .at("/edit", get(edit_comment)),
                     ),
             );
 
@@ -350,7 +324,7 @@ mod tests {
                 *req.body_mut() = "Open Get Post Page".into();
 
                 println!();
-                println!("request {} {}", i, req.uri());
+                println!("request {} {} {}", i, req.uri(), req.method());
 
                 if let Some(r) = t.find(&req.uri().to_string()) {
                     let mut cx = Context::from(req);
@@ -363,8 +337,8 @@ mod tests {
                         block_on(async move {
                             let res: http::Response = cx.next().await?.into();
 
-                            assert_eq!(res.status(), 404);
-                            assert_eq!(to_bytes(res.into_body()).await.unwrap(), "");
+                            assert_eq!(res.status(), 200);
+                            assert_eq!(to_bytes(res.into_body()).await.unwrap(), "Show post");
 
                             Ok::<_, Error>(())
                         })
@@ -386,14 +360,6 @@ mod tests {
             //         dbg!(r.1);
             //     }
             // }
-        }
-
-        fn edit_guard(_cx: &Context) -> bool {
-            true
-        }
-
-        fn get_guard(_cx: &Context) -> bool {
-            false
         }
 
         async fn m_0(cx: &mut Context) -> Result<Response> {

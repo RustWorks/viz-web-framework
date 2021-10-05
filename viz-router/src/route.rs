@@ -1,8 +1,8 @@
 use std::{collections::HashMap, fmt, sync::Arc};
 
 use viz_core::{
-    http, Context, DynMiddleware, Extract, Guard, HandlerBase, HandlerCamp, HandlerSuper,
-    HandlerWrapper, Middleware, Middlewares, Response, Result,
+    http, Context, DynMiddleware, Endpoint, Extract, Future, Handler, Middleware, Response, Result,
+    VecMiddleware,
 };
 
 use crate::Method;
@@ -10,30 +10,37 @@ use crate::Method;
 macro_rules! verbs {
     ($(($name:ident, $verb:ident),)*) => {
         $(
-            /// Appends a route, handle HTTP $verb without `Context`
-            pub fn $name<F, T>(self, handler: F) -> Self
+            #[doc = concat!("Appends a route, handle HTTP verb `", stringify!($verb), "`")]
+            pub fn $name<H, A>(self, h: H) -> Self
             where
-                F: HandlerBase<T> + Send + Sync + 'static,
-                T: Extract + Send + Sync + 'static,
-                T::Error: Into<Response> + Send,
+                A: Extract,
+                A::Error: Into<Response>,
+                H: Handler<A>,
+                H::Output: Into<Response>,
+                H::Future: Future<Output = H::Output> + Send + 'static,
+                Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
             {
-                self.on(Method::Verb(http::Method::$verb), handler)
+                self.on(Method::Verb(http::Method::$verb), h)
             }
         )*
     }
 }
 
-macro_rules! verbs2 {
+macro_rules! stand_alone_verbs {
     ($(($name:ident, $verb:ident),)*) => {
         $(
-            /// Appends a route, handle HTTP $verb with `Context` and others
-            pub fn $name<F, T>(self, handler: F) -> Self
+            #[doc = concat!("Appends a route, handle HTTP verb `", stringify!($verb), "`")]
+            pub fn $name<H, A>(h: H) -> Route
             where
-                F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
-                T: Extract + Send + Sync + 'static,
-                T::Error: Into<Response> + Send,
+                A: Extract,
+                A::Error: Into<Response>,
+                H: Handler<A>,
+                H::Output: Into<Response>,
+                H::Future: Future<Output = H::Output> + Send + 'static,
+                Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
             {
-                self.on2(Method::Verb(http::Method::$verb), handler)
+
+                Route::on(Route::new(""), Method::Verb(http::Method::$verb), h)
             }
         )*
     }
@@ -42,11 +49,10 @@ macro_rules! verbs2 {
 /// Route
 pub struct Route {
     // inherit parrent's middleware
-    pub(crate) carry: bool,
+    pub(crate) inherit: bool,
     pub(crate) path: String,
     pub(crate) name: Option<String>,
-    pub(crate) guard: Option<Box<dyn Guard>>,
-    pub(crate) middleware: Option<Middlewares>,
+    pub(crate) middleware: Option<VecMiddleware>,
     pub(crate) handlers: HashMap<Method, Arc<DynMiddleware>>,
 }
 
@@ -57,8 +63,7 @@ impl Route {
             handlers: HashMap::new(),
             path: path.to_owned(),
             middleware: None,
-            carry: true,
-            guard: None,
+            inherit: true,
             name: None,
         }
     }
@@ -75,14 +80,14 @@ impl Route {
         self
     }
 
-    /// Sets a carry
-    pub fn carry(mut self, b: bool) -> Self {
-        self.carry = b;
+    /// Sets a inherit
+    pub fn inherit(mut self, b: bool) -> Self {
+        self.inherit = b;
         self
     }
 
-    /// Appends a middle
-    pub fn mid<M>(mut self, m: M) -> Self
+    /// Appends a middleware
+    pub fn with<M>(mut self, m: M) -> Self
     where
         M: for<'m> Middleware<'m, Context, Output = Result>,
     {
@@ -90,23 +95,17 @@ impl Route {
         self
     }
 
-    /// Sets a gurad
-    pub fn guard<G>(mut self, g: G) -> Self
+    /// Appends a route, handle HTTP verb
+    pub fn on<H, A>(mut self, method: Method, h: H) -> Self
     where
-        G: Into<Box<dyn Guard>>,
+        A: Extract,
+        A::Error: Into<Response>,
+        H: Handler<A>,
+        H::Output: Into<Response>,
+        H::Future: Future<Output = H::Output> + Send + 'static,
+        Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
     {
-        self.guard.replace(g.into());
-        self
-    }
-
-    /// Appends a route, handle HTTP verb without `Context`
-    pub fn on<F, T>(mut self, method: Method, handler: F) -> Self
-    where
-        F: HandlerBase<T> + Send + Sync + 'static,
-        T: Extract + Send + Sync + 'static,
-        T::Error: Into<Response> + Send,
-    {
-        self.handlers.insert(method, Arc::new(HandlerWrapper::new(handler)));
+        self.handlers.insert(method, Arc::new(Endpoint::new(h)));
         self
     }
 
@@ -121,35 +120,44 @@ impl Route {
         (trace, TRACE),
     }
 
-    /// Appends a route, handle all HTTP verbs without `Context`
-    pub fn all<F, T>(self, handler: F) -> Self
+    /// Appends a route, handle all HTTP verbs
+    pub fn all<H, A>(self, h: H) -> Self
     where
-        F: HandlerBase<T> + Send + Sync + 'static,
-        T: Extract + Send + Sync + 'static,
-        T::Error: Into<Response> + Send,
+        A: Extract,
+        A::Error: Into<Response>,
+        H: Handler<A>,
+        H::Output: Into<Response>,
+        H::Future: Future<Output = H::Output> + Send + 'static,
+        Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
     {
-        self.on(Method::All, handler)
+        self.on(Method::All, h)
     }
 
-    /// Appends a route, only handle HTTP verbs without `Context`
-    pub fn only<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
+    /// Appends a route, only handle HTTP verbs
+    pub fn only<H, A, const S: usize>(mut self, methods: [Method; S], h: H) -> Self
     where
-        F: HandlerBase<T> + Send + Sync + 'static,
-        T: Extract + Send + Sync + 'static,
-        T::Error: Into<Response> + Send,
+        A: Extract,
+        A::Error: Into<Response>,
+        H: Handler<A>,
+        H::Output: Into<Response>,
+        H::Future: Future<Output = H::Output> + Send + 'static,
+        Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
     {
         methods.iter().cloned().for_each(|method| {
-            self.handlers.insert(method, Arc::new(HandlerWrapper::new(handler.clone())));
+            self.handlers.insert(method, Arc::new(Endpoint::new(h.clone())));
         });
         self
     }
 
-    /// Appends a route, except handle verbs without `Context`
-    pub fn except<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
+    /// Appends a route, except handle verbs
+    pub fn except<H, A, const S: usize>(mut self, methods: [Method; S], h: H) -> Self
     where
-        F: HandlerBase<T> + Send + Sync + 'static,
-        T: Extract + Send + Sync + 'static,
-        T::Error: Into<Response> + Send,
+        A: Extract,
+        A::Error: Into<Response>,
+        H: Handler<A>,
+        H::Output: Into<Response>,
+        H::Future: Future<Output = H::Output> + Send + 'static,
+        Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
     {
         let mut verbs = vec![
             Method::Verb(http::Method::GET),
@@ -165,97 +173,11 @@ impl Route {
         verbs.dedup_by_key(|m| methods.contains(m));
 
         verbs.iter().cloned().for_each(|method| {
-            self.handlers.insert(method, Arc::new(HandlerWrapper::new(handler.clone())));
+            self.handlers.insert(method, Arc::new(Endpoint::new(h.clone())));
         });
 
         self
     }
-
-    /// Appends a route, handle HTTP verb with `Context` and others
-    pub fn on2<F, T>(mut self, method: Method, handler: F) -> Self
-    where
-        F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
-        T: Extract + Send + Sync + 'static,
-        T::Error: Into<Response> + Send,
-    {
-        self.handlers.insert(method, Arc::new(HandlerSuper::new(handler)));
-        self
-    }
-
-    verbs2! {
-        (get2, GET),
-        (post2, POST),
-        (put2, PUT),
-        (delete2, DELETE),
-        (options2, OPTIONS),
-        (connect2, CONNECT),
-        (patch2, PATCH),
-        (trace2, TRACE),
-    }
-
-    /// Appends a route, handle all HTTP verbs with `Context` and others
-    pub fn all2<F, T>(self, handler: F) -> Self
-    where
-        F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
-        T: Extract + Send + Sync + 'static,
-        T::Error: Into<Response> + Send,
-    {
-        self.on2(Method::All, handler)
-    }
-
-    /// Appends a route, only handle HTTP verbs with `Context` and others
-    pub fn only2<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
-    where
-        F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
-        T: Extract + Send + Sync + 'static,
-        T::Error: Into<Response> + Send,
-    {
-        methods.iter().cloned().for_each(|method| {
-            self.handlers.insert(method, Arc::new(HandlerSuper::new(handler.clone())));
-        });
-        self
-    }
-
-    /// Appends a route, except handle HTTP verbs with `Context` and others
-    pub fn except2<F, T, const S: usize>(mut self, methods: [Method; S], handler: F) -> Self
-    where
-        F: for<'h> HandlerCamp<'h, T> + Send + Sync + 'static,
-        T: Extract + Send + Sync + 'static,
-        T::Error: Into<Response> + Send,
-    {
-        let mut verbs = vec![
-            Method::Verb(http::Method::GET),
-            Method::Verb(http::Method::POST),
-            Method::Verb(http::Method::PUT),
-            Method::Verb(http::Method::DELETE),
-            Method::Verb(http::Method::OPTIONS),
-            Method::Verb(http::Method::CONNECT),
-            Method::Verb(http::Method::PATCH),
-            Method::Verb(http::Method::TRACE),
-        ];
-
-        verbs.dedup_by_key(|m| methods.contains(m));
-
-        verbs.iter().cloned().for_each(|method| {
-            self.handlers.insert(method, Arc::new(HandlerSuper::new(handler.clone())));
-        });
-
-        self
-    }
-
-    /// Appends a route, handle all HTTP verbs just only with `Context`
-    pub fn all3<H>(mut self, handler: H) -> Self
-    where
-        H: for<'m> Middleware<'m, Context, Output = Result>,
-    {
-        self.handlers.insert(Method::All, Arc::new(handler));
-        self
-    }
-}
-
-/// Creates a `Route`
-pub fn route() -> Route {
-    Route::new("")
 }
 
 impl fmt::Debug for Route {
@@ -266,11 +188,73 @@ impl fmt::Debug for Route {
                 f.debug_struct("Route")
                     .field("path", &self.path)
                     .field("name", &self.name.as_ref().map_or_else(String::new, |v| v.to_owned()))
-                    .field("carry", &self.carry)
-                    .field("middle", &self.middleware.as_ref().map_or_else(|| 0, |v| v.len()))
-                    .field("guard", &self.guard.as_ref().map_or_else(|| 0, |_| 1)),
+                    .field("inherit", &self.inherit)
+                    .field("middle", &self.middleware.as_ref().map_or_else(|| 0, |v| v.len())),
                 |acc, x| acc.field("verb", &x),
             )
             .finish()
     }
+}
+
+/// Creates new Route
+pub fn route(path: &str) -> Route {
+    Route::new(path)
+}
+
+/// Appends a middleware
+pub fn with<M>(m: M) -> Route
+where
+    M: for<'m> Middleware<'m, Context, Output = Result>,
+{
+    Route::with(Route::new(""), m)
+}
+
+stand_alone_verbs! {
+    (get, GET),
+    (post, POST),
+    (put, PUT),
+    (delete, DELETE),
+    (options, OPTIONS),
+    (connect, CONNECT),
+    (patch, PATCH),
+    (trace, TRACE),
+}
+
+/// Appends a route, handle all HTTP verbs
+pub fn all<H, A>(h: H) -> Route
+where
+    A: Extract,
+    A::Error: Into<Response>,
+    H: Handler<A>,
+    H::Output: Into<Response>,
+    H::Future: Future<Output = H::Output> + Send + 'static,
+    Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
+{
+    Route::all(Route::new(""), h)
+}
+
+/// Appends a route, only handle HTTP verbs
+pub fn only<H, A, const S: usize>(methods: [Method; S], h: H) -> Route
+where
+    A: Extract,
+    A::Error: Into<Response>,
+    H: Handler<A>,
+    H::Output: Into<Response>,
+    H::Future: Future<Output = H::Output> + Send + 'static,
+    Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
+{
+    Route::only(Route::new(""), methods, h)
+}
+
+/// Appends a route, except handle verbs
+pub fn except<H, A, const S: usize>(methods: [Method; S], h: H) -> Route
+where
+    A: Extract,
+    A::Error: Into<Response>,
+    H: Handler<A>,
+    H::Output: Into<Response>,
+    H::Future: Future<Output = H::Output> + Send + 'static,
+    Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
+{
+    Route::except(Route::new(""), methods, h)
 }

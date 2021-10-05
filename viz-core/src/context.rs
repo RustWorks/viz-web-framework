@@ -2,7 +2,7 @@
 
 use std::fmt;
 
-use crate::{http, Extract, Middlewares, Result};
+use crate::{http, Extract, Result, VecMiddleware};
 
 /// The `Context` of an HTTP `request - response`.
 pub struct Context {
@@ -25,7 +25,7 @@ pub struct Context {
     body: Option<http::Body>,
 
     /// The request's middleware
-    middleware: Middlewares,
+    middleware: VecMiddleware,
 }
 
 impl Context {
@@ -107,12 +107,12 @@ impl Context {
     }
 
     /// Returns a reference to the associated middleware.
-    pub fn middleware(&self) -> &Middlewares {
+    pub fn middleware(&self) -> &VecMiddleware {
         &self.middleware
     }
 
     /// Returns a mutable reference to the associated middleware.
-    pub fn middleware_mut(&mut self) -> &mut Middlewares {
+    pub fn middleware_mut(&mut self) -> &mut VecMiddleware {
         &mut self.middleware
     }
 
@@ -131,7 +131,6 @@ impl Context {
 }
 
 impl From<http::Request> for Context {
-    #[inline]
     fn from(req: http::Request) -> Self {
         let (::http::request::Parts { uri, method, headers, version, extensions, .. }, body) =
             req.into_parts();

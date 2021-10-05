@@ -1,6 +1,6 @@
 use tracing_subscriber;
 
-use viz::prelude::{route, router, Error, Result, Server};
+use viz::prelude::{get, router, Error, Result, Server};
 
 async fn hello() -> &'static str {
     "Hello World!"
@@ -12,7 +12,7 @@ async fn main() -> Result<()> {
 
     let mut app = viz::new();
 
-    app.routes(router().at("/", route().get(hello)));
+    app.routes(router().at("/", get(hello)));
 
     let stream = viz::tls::Listener::new(
         viz::tls::AddrIncoming::bind(&"127.0.0.1:3000".parse()?)?,

@@ -1,13 +1,11 @@
-//! Trait implemented by types that can be extracted from Context.
+use super::BoxFuture;
 
-use viz_utils::{futures::future::BoxFuture, tracing};
-
-use crate::{Context, Error, Result};
+use crate::{Context, Response};
 
 /// A Extractor trait.
 pub trait Extract: Sized {
     /// The type of failures extracted by this Extractor.
-    type Error;
+    type Error: Into<Response>;
 
     /// Extract the value from Context.
     fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>>;
@@ -16,21 +14,11 @@ pub trait Extract: Sized {
 impl<T> Extract for Option<T>
 where
     T: Extract,
-    T::Error: Into<Error>,
 {
     type Error = T::Error;
 
-    #[inline]
     fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
-        Box::pin(async move {
-            Ok(match T::extract(cx).await {
-                Ok(v) => Some(v),
-                Err(e) => {
-                    tracing::debug!("Error for Option<T> extractor: {}", e.into());
-                    None
-                }
-            })
-        })
+        Box::pin(async move { Ok(T::extract(cx).await.ok()) })
     }
 }
 
@@ -40,7 +28,6 @@ where
 {
     type Error = T::Error;
 
-    #[inline]
     fn extract(cx: &mut Context) -> BoxFuture<'_, Result<Self, Self::Error>> {
         Box::pin(async move { Ok(T::extract(cx).await) })
     }

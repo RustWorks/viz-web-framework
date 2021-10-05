@@ -108,16 +108,6 @@ async fn server_error() -> Result<Response, UserError> {
     // reject!(UserError::NotFound)
 }
 
-fn allow_get(cx: &Context) -> bool {
-    tracing::info!("{:>8} Get: {}", "", cx.method() == http::Method::GET);
-    cx.method() == http::Method::GET
-}
-
-fn allow_head(cx: &Context) -> bool {
-    tracing::info!("{:>8}Head: {}", "", cx.method() == http::Method::HEAD);
-    cx.method() == http::Method::HEAD
-}
-
 #[derive(Debug, Deserialize, Serialize)]
 struct User {
     id: usize,
@@ -350,24 +340,24 @@ async fn main() -> Result<()> {
 
     app.state(Arc::new(AtomicUsize::new(0))).state(users).routes(
         router()
-            .mid(middleware::Logger::default())
-            .mid(middleware::Recover::default())
-            .mid(middleware::RequestID::default())
-            .mid(middleware::Timeout::default())
-            .mid(middleware::Cookies::default())
+            .with(middleware::Logger::default())
+            .with(middleware::Recover::default())
+            .with(middleware::RequestID::default())
+            .with(middleware::Timeout::default())
+            .with(middleware::Cookies::default())
             /*
-            .mid(middleware::jwt::Jwt::<Claims>::new().validation(
+            .with(middleware::jwt::Jwt::<Claims>::new().validation(
                 middleware::jwt::jsonwebtoken::Validation {
                     validate_exp: false,
                     ..Default::default()
                 },
             ))
-            .mid(
+            .with(
                 middleware::auth::Basic::new()
                     .users([("viz".to_string(), "rust".to_string())].iter().cloned().collect()),
             )
             */
-            .mid(middleware::sessions::Sessions::new(middleware::sessions::Config {
+            .with(middleware::sessions::Sessions::new(middleware::sessions::Config {
                 cookie: middleware::sessions::CookieOptions::new(),
                 // storage: Arc::new(middleware::session::MemoryStorage::default()),
                 storage: Arc::new(middleware::sessions::RedisStorage::new(
@@ -376,31 +366,25 @@ async fn main() -> Result<()> {
                 generate: Box::new(generate),
                 verify: Box::new(verify),
             }))
-            // .mid(middleware::compression::brotli())
-            .mid(my_mid_error)
-            .mid(my_mid)
+            // .with(middleware::compression::brotli())
+            .with(my_mid_error)
+            .with(my_mid)
             .at(
                 "/",
-                route()
-                    // .guard(allow_get)
-                    .guard(
-                        <Box<dyn Guard>>::from(allow_get)
-                            | Into::<Box<dyn Guard>>::into(allow_head),
-                    )
-                    .all(hello_world),
+                    all(hello_world),
             )
-            .at("/users", route().post(create_user))
-            .at("/login", route().post(login))
-            .at("/renew", route().post(renew))
-            .at("/logout", route().get(logout))
-            .at("/404", route().all(server_error))
-            .at("/ticks", route().get(ticks))
-            .at("/echo", route().get(echo))
-            .at("/chat", route().get(|| async { Response::html(INDEX_HTML) }))
-            .at("/chat/", route().get2(chat))
-            .at("/public/*", route().all3(Serve::new(ServeConfig::new(config.dir.join("public")))))
-            .at("/panic", route().get(panic_fn))
-            .at("/*", route().all(not_found)),
+            .at("/users", post(create_user))
+            .at("/login", post(login))
+            .at("/renew", post(renew))
+            .at("/logout", get(logout))
+            .at("/404", all(server_error))
+            .at("/ticks", get(ticks))
+            .at("/echo", get(echo))
+            .at("/chat", get(|| async { Response::html(INDEX_HTML) }))
+            .at("/chat/", with(chat))
+            .at("/public/*", with(Serve::new(ServeConfig::new(config.dir.join("public")))))
+            .at("/panic", get(panic_fn))
+            .at("/*", all(not_found)),
     );
 
     cfg_if::cfg_if! {

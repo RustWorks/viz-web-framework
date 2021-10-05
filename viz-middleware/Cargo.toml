@@ -1,6 +1,6 @@
 [package]
 name = "viz-middleware"
-version = "0.1.0-alpha.14"
+version = "0.1.0"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Middleware"
 license = "Apache-2.0/MIT"
@@ -51,8 +51,8 @@ full = [
 ]
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0-alpha.14" }
-viz-utils = { path = "../viz-utils", version = "0.1.0-alpha.14" }
+viz-core = { path = "../viz-core", version = "0.1.0" }
+viz-utils = { path = "../viz-utils", version = "0.1.0" }
 
 serde = "1.0"
 nano-id = { version = "0.2", optional = true }

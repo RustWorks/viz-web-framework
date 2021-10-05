@@ -35,11 +35,7 @@ impl Default for App {
 impl App {
     /// Creates a server
     pub fn new() -> Self {
-        Self {
-            state: None,
-            config: None,
-            tree: Arc::new(Tree::new()),
-        }
+        Self { state: None, config: None, tree: Arc::new(Tree::new()) }
     }
 
     /// Sets a `State`
@@ -103,7 +99,7 @@ pub async fn serve(
         .or_else(|| tree.get(&Method::All).and_then(|t| t.find(path)))
     {
         let params: Params = params.into();
-        *cx.middleware_mut() = handler.to_owned();
+        *cx.middleware_mut() = handler.clone();
         cx.extensions_mut().insert(params);
     }
 

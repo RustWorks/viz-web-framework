@@ -3,11 +3,11 @@ cargo-features = ["resolver"]
 resolver = "2"
 members = [
   "viz",
-  # "viz-cli",
   "viz-core",
+  "viz-middleware",
   "viz-router",
   "viz-utils",
-  "viz-middleware",
+  # "viz-cli",
 
   "examples/*",
 ]

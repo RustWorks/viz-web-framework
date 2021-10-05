@@ -1,6 +1,6 @@
 use tracing_subscriber;
 
-use viz::prelude::{route, router, Error, Result, Server};
+use viz::prelude::{get, router, Error, Result, Server};
 
 async fn hello() -> &'static str {
     "Hello World!"
@@ -13,7 +13,7 @@ async fn main() -> Result<()> {
 
     let mut app = viz::new();
 
-    app.routes(router().at("/", route().get(hello)));
+    app.routes(router().at("/", get(hello)));
 
     let path = "/tmp/viz.sock";
     let _ = std::fs::remove_file(path);

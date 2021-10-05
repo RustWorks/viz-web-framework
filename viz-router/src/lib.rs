@@ -3,20 +3,14 @@
 
 //! Viz Router
 
-use std::collections::HashMap;
-
-use viz_core::Middlewares;
-
 /// Tree
-pub type Tree = HashMap<Method, PathTree<Middlewares>>;
+pub type Tree = std::collections::HashMap<Method, PathTree<viz_core::VecMiddleware>>;
 
-mod handler;
 mod method;
 mod route;
 mod router;
 
-pub use handler::RouteHandler;
 pub use method::Method;
 pub use path_tree::PathTree;
-pub use route::{route, Route};
+pub use route::*;
 pub use router::{router, Router};

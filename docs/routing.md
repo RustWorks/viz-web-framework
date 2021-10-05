@@ -13,5 +13,3 @@ Based on **[path-tree](https://github.com/viz-rs/path-tree)**.
 ### Router
 
 ### Route
-
-### Guard

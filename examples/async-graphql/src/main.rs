@@ -4,7 +4,7 @@ use async_graphql_viz::{
     graphql_subscription, GraphQLRequest, GraphQLResponse, SecWebsocketProtocol,
 };
 
-use viz::prelude::{http, route, router, ws::Ws, Error, Header, Response, Result, Server, State};
+use viz::prelude::{get, http, router, ws::Ws, Error, Header, Response, Result, Server, State};
 
 mod starwars;
 
@@ -48,8 +48,8 @@ async fn main() -> Result<()> {
 
     app.state(schema).routes(
         router()
-            .at("/", route().get(graphql_playground).post(graphql_handler))
-            .at("/ws", route().get(graphql_subscription_handler)),
+            .at("/", get(graphql_playground).post(graphql_handler))
+            .at("/ws", get(graphql_subscription_handler)),
     );
 
     Server::bind(&"127.0.0.1:3000".parse()?).serve(app.into_service()).await.map_err(Error::new)

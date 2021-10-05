@@ -1,16 +1,16 @@
+//! Viz's Core
+
 #![forbid(unsafe_code)]
 #![warn(missing_debug_implementations, missing_docs, rust_2018_idioms, unreachable_pub)]
 
-//! Viz Core
+pub use std::future::Future;
 
 use viz_utils::anyhow;
 
 mod context;
 mod extract;
-mod guard;
 mod handler;
 mod macros;
-mod middleware;
 mod response;
 
 pub mod config;
@@ -35,20 +35,25 @@ pub mod http {
     pub type Response<T = Body> = ::http::Response<T>;
 }
 
-/// Handle Trait
-pub use handle::Handle as Middleware;
-
 /// Error
-pub use anyhow::Error;
+pub use anyhow::{anyhow, bail, ensure, Error};
 
 /// Result
 pub type Result<T = Response, E = anyhow::Error> = anyhow::Result<T, E>;
 
+/// Dyn Middleware
+pub type DynMiddleware = dyn for<'a> Middleware<'a, Context, Output = Result>;
+
+/// Middleware List
+pub type VecMiddleware = Vec<std::sync::Arc<DynMiddleware>>;
+
+/// Middleware Extends
+pub trait MiddlewareExt<'a>: Middleware<'a, Context> {}
+
 pub use context::Context;
 pub use extract::Extract;
-pub use guard::Guard;
-pub use handler::{Handler, HandlerBase, HandlerCamp, HandlerSuper, HandlerWrapper};
-pub use middleware::{DynMiddleware, Middlewares};
+pub use handle::{BoxFuture, Handle as Middleware};
+pub use handler::{Endpoint, Handler};
 pub use response::Response;
 
 /// Responds a custom error to response.
@@ -66,5 +71,3 @@ macro_rules! how {
         Into::<Error>::into(Into::<Response>::into($err))
     };
 }
-
-pub use anyhow::{anyhow, bail, ensure};
