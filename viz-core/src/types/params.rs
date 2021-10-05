@@ -626,6 +626,7 @@ mod tests {
         let params = Params(vec![("key", "name"), ("value", "user1")]);
 
         let s: () = de::Deserialize::deserialize(ParamsDeserializer::new(&params)).unwrap();
+        #[allow(clippy::unit_cmp)]
         assert_eq!(s, ());
 
         let s: MyStruct = de::Deserialize::deserialize(ParamsDeserializer::new(&params)).unwrap();
