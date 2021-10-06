@@ -60,7 +60,6 @@
 ## Todos
 
 * [ ] More friendly Routing
-* [ ] Template engines
 * [ ] RPC?
 * [x] Configuration
 * [x] Data State
@@ -83,6 +82,7 @@
 * [x] TLS
 * [x] GraphQL
 * [x] Unix Domain Socket
+* [x] Working with Template engines
 
 
 ## Thanks
