@@ -10,7 +10,7 @@ use crate::Method;
 macro_rules! verbs {
     ($(($name:ident, $verb:ident),)*) => {
         $(
-            #[doc = concat!("Appends a route, handle HTTP verb `", stringify!($verb), "`")]
+            #[doc = concat!(" Appends a route, handle HTTP verb `", stringify!($verb), "`")]
             pub fn $name<H, A>(self, h: H) -> Self
             where
                 A: Extract,
@@ -29,7 +29,7 @@ macro_rules! verbs {
 macro_rules! stand_alone_verbs {
     ($(($name:ident, $verb:ident),)*) => {
         $(
-            #[doc = concat!("Appends a route, handle HTTP verb `", stringify!($verb), "`")]
+            #[doc = concat!(" Appends a route, handle HTTP verb `", stringify!($verb), "`")]
             pub fn $name<H, A>(h: H) -> Route
             where
                 A: Extract,
