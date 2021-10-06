@@ -59,7 +59,7 @@ where
             n: "token".to_owned(),
             s: "secret".to_owned(),
             v: Validation::default(),
-            t: PhantomData::default(),
+            t: PhantomData,
         }
     }
 

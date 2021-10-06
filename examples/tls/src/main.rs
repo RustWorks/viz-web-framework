@@ -1,5 +1,3 @@
-
-
 use viz::prelude::{get, router, Error, Result, Server};
 
 async fn hello() -> &'static str {

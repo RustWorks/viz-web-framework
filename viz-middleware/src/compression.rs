@@ -62,7 +62,7 @@ pub struct Compression<Algo> {
 impl<Algo> Compression<Algo> {
     /// Creates a Compression
     pub fn new() -> Self {
-        Self { level: Level::Default, algo: PhantomData::default() }
+        Self { level: Level::Default, algo: PhantomData }
     }
 
     /// Creates a Compression with a quality

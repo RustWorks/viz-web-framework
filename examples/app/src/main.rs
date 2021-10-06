@@ -41,11 +41,7 @@ static NEXT_USER_ID: AtomicUsize = AtomicUsize::new(1);
 type Users = Arc<RwLock<HashMap<usize, mpsc::UnboundedSender<Result<Message, Error>>>>>;
 
 async fn my_mid_error(cx: &mut Context) -> Result<Response> {
-    if cx.path() == "/error" {
-        bail!("my mid error")
-    } else {
-        cx.next().await
-    }
+    if cx.path() == "/error" { bail!("my mid error") } else { cx.next().await }
 }
 
 async fn my_mid(cx: &mut Context) -> Result<Response> {

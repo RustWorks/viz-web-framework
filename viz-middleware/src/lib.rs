@@ -17,9 +17,9 @@ mod recover;
 #[cfg(feature = "recover")]
 pub use recover::Recover;
 
-#[cfg(feature = "request_id")]
+#[cfg(any(feature = "request-nanoid", feature = "request-uuid"))]
 mod request_id;
-#[cfg(feature = "request_id")]
+#[cfg(any(feature = "request-nanoid", feature = "request-uuid"))]
 pub use request_id::RequestID;
 
 #[cfg(feature = "timeout")]

@@ -15,12 +15,12 @@ pub trait Handler<Args>: Clone + 'static {
 
 /// Endpoint
 #[derive(Debug, Clone)]
-pub struct Endpoint<Handler, Args>(Handler, PhantomData<fn() -> Args>);
+pub struct Endpoint<Handler, Args>(Handler, PhantomData<fn(Args)>);
 
 impl<Handler, Args> Endpoint<Handler, Args> {
     /// Creates new Endpoint with a [Handler]
     pub fn new(h: Handler) -> Self {
-        Self(h, PhantomData::default())
+        Self(h, PhantomData)
     }
 }
 

@@ -7,11 +7,12 @@ license = "Apache-2.0/MIT"
 edition = "2018"
 
 [features]
-default = ["logger", "recover", "request_id", "timeout", "jwt"]
+default = ["logger", "recover", "timeout", "request-nanoid", "jwt"]
 
 logger = []
 recover = ["pin-project-lite"]
-request_id = ["nano-id"]
+request-nanoid = ["nano-id"]
+request-uuid = ["uuid"]
 timeout = ["tokio/time"]
 
 auth = []
@@ -37,7 +38,7 @@ jwt-cookie = []
 full = [
   "logger",
   "recover",
-  "request_id",
+  "request-nanoid",
   "timeout",
   "auth",
   "cookies",
@@ -56,6 +57,7 @@ viz-utils = { path = "../viz-utils", version = "0.1.0" }
 
 serde = "1.0"
 nano-id = { version = "0.2", optional = true }
+uuid = { version = "0.8", default-features = false, features = ["v4"], optional = true }
 
 sessions = { version = "0.2.1", features = ["redis"], optional = true }
 
