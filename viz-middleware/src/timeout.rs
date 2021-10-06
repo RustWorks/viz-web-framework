@@ -12,13 +12,6 @@ pub struct Timeout {
     delay: Duration,
 }
 
-impl Timeout {
-    /// Creates Timeout Middleware
-    pub fn new(delay: Duration) -> Self {
-        Self { delay }
-    }
-}
-
 impl Default for Timeout {
     fn default() -> Self {
         Self::new(Duration::from_millis(256))
@@ -26,6 +19,11 @@ impl Default for Timeout {
 }
 
 impl Timeout {
+    /// Creates Timeout Middleware
+    pub fn new(delay: Duration) -> Self {
+        Self { delay }
+    }
+
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         let method = cx.method().to_owned();
         let path = cx.path().to_owned();
