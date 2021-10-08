@@ -61,14 +61,14 @@ impl Basic {
 
         let mut res: Response = StatusCode::UNAUTHORIZED.into();
 
-        if self.realm.len() > 0 {
+        if self.realm.is_empty() {
+            res.headers_mut().insert(WWW_AUTHENTICATE, HeaderValue::from_static(Self::INVALID));
+        } else {
             let mut value = String::with_capacity(8 + self.realm.len());
             value.push_str("realm=\"");
             value.push_str(&self.realm);
             value.push('"');
             res.headers_mut().insert(WWW_AUTHENTICATE, HeaderValue::from_str(&value)?);
-        } else {
-            res.headers_mut().insert(WWW_AUTHENTICATE, HeaderValue::from_static(Self::INVALID));
         }
 
         Ok(res)

@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
             .with(Sessions::new(Config {
                 cookie: CookieOptions::new(),
                 storage: MemoryStorage::new(),
-                generate: Box::new(|| nano_id::base64::<21>()),
+                generate: Box::new(nano_id::base64::<21>),
                 verify: Box::new(|a| a.len() == 21),
             }))
             .at("/", get(index))

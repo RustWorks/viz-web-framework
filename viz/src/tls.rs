@@ -24,9 +24,8 @@ use viz_utils::{
 };
 
 #[cfg(feature = "tcp")]
-// pub use tokio::net::TcpListener;
 pub use hyper::server::conn::AddrIncoming;
-#[cfg(feature = "uds")]
+#[cfg(all(unix, feature = "uds"))]
 pub use tokio::net::UnixListener;
 
 use crate::app::{App, AppStream, IntoService};

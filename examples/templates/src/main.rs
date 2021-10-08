@@ -50,17 +50,11 @@ mod tpl_ramhorns {
         name: String,
     }
 
-    static RAMHORNS: Lazy<Ramhorns> = Lazy::new(|| {
-        Ramhorns::from_folder_with_extension("templates", "txt")
-            .map_err(|e| {
-                dbg!(&e);
-                e
-            })
-            .unwrap()
-    });
+    static RAMHORNS: Lazy<Ramhorns> =
+        Lazy::new(|| Ramhorns::from_folder_with_extension("templates", "txt").unwrap());
 
     pub async fn hello() -> Result {
-        let template = RAMHORNS.get("hello.txt").ok_or(anyhow!("missing template"))?;
+        let template = RAMHORNS.get("hello.txt").ok_or_else(|| anyhow!("missing template"))?;
         Ok(template.render(&Context { name: "ramhorns".into() }).into())
     }
 }
