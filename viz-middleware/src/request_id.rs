@@ -3,13 +3,14 @@ use std::{future::Future, pin::Pin};
 use viz_core::{http, Context, Error, Middleware, Response, Result};
 use viz_utils::tracing;
 
-#[cfg(all(feature = "request-nanoid", not(feature = "request-uuid")))]
 fn generate_id() -> Result<String> {
-    Ok(nano_id::base64::<21>())
-}
-#[cfg(all(feature = "request-uuid", not(feature = "request-nanoid")))]
-fn generate_id() -> Result<String> {
-    Ok(uuid::Uuid::new_v4())
+    cfg_if::cfg_if! {
+        if #[cfg(feature = "request-nanoid")] {
+            Ok(nano_id::base64::<21>())
+        }  else if #[cfg(feature = "request-uuid")] {
+            Ok(uuid::Uuid::new_v4().to_string())
+        }
+    }
 }
 
 /// RequestID Middleware

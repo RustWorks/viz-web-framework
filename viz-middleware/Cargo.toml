@@ -11,9 +11,10 @@ default = ["logger", "recover", "timeout", "request-nanoid", "jwt"]
 
 logger = []
 recover = ["pin-project-lite"]
+timeout = ["tokio/time"]
+
 request-nanoid = ["nano-id"]
 request-uuid = ["uuid/v4"]
-timeout = ["tokio/time"]
 
 auth = []
 auth-basic = []
