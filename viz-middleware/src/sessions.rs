@@ -18,10 +18,7 @@ pub struct Sessions<S: Storage> {
     config: Arc<Config<S>>,
 }
 
-impl<S> Sessions<S>
-where
-    S: Storage,
-{
+impl<S: Storage> Sessions<S> {
     /// Create a new session middleware
     pub fn new(config: Config<S>) -> Self {
         Self { config: Arc::new(config) }
@@ -75,10 +72,7 @@ where
     }
 }
 
-impl<'a, S> Middleware<'a, Context> for Sessions<S>
-where
-    S: Storage,
-{
+impl<'a, S: Storage> Middleware<'a, Context> for Sessions<S> {
     type Output = Result<Response>;
 
     #[must_use]
@@ -93,16 +87,11 @@ where
 /// Session Ext for Context
 pub trait ContextExt {
     /// Gets a session
-    fn session<S>(&self) -> &Session<S>
-    where
-        S: Storage;
+    fn session<S: Storage>(&self) -> &Session<S>;
 }
 
 impl ContextExt for Context {
-    fn session<S>(&self) -> &Session<S>
-    where
-        S: Storage,
-    {
+    fn session<S: Storage>(&self) -> &Session<S> {
         self.extensions().get::<State<Session<S>>>().unwrap()
     }
 }
