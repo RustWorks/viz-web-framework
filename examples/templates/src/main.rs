@@ -33,10 +33,8 @@ mod tpl_minijinja {
     }
 
     pub async fn hello(State(jinja): State<Environment<'_>>) -> Result<impl Into<Response>> {
-        let template = jinja.get_template("hello.txt").map_err(|e| anyhow!(e.to_string()))?;
-        Ok(template
-            .render(&Context { name: "minijinja".into() })
-            .map_err(|e| anyhow!(e.to_string()))?)
+        let tpl = jinja.get_template("hello.txt").map_err(|e| anyhow!(e.to_string()))?;
+        tpl.render(&Context { name: "minijinja".into() }).map_err(|e| anyhow!(e.to_string()))
     }
 }
 
@@ -55,13 +53,13 @@ mod tpl_ramhorns {
         Lazy::new(|| Ramhorns::from_folder_with_extension("templates", "txt").unwrap());
 
     pub async fn hello() -> Result<impl Into<Response>> {
-        let template = RAMHORNS.get("hello.txt").ok_or_else(|| anyhow!("missing template"))?;
-        Ok(template.render(&Context { name: "ramhorns".into() }))
+        let tpl = RAMHORNS.get("hello.txt").ok_or_else(|| anyhow!("missing template"))?;
+        Ok(tpl.render(&Context { name: "ramhorns".into() }))
     }
 }
 
 mod tpl_sailfish {
-    use super::Result;
+    use super::{Error, Result};
     use sailfish::TemplateOnce;
     use viz::prelude::Response;
 
@@ -72,7 +70,7 @@ mod tpl_sailfish {
     }
 
     pub async fn hello() -> Result<impl Into<Response>> {
-        let ctx = Hello { messages: vec![String::from("Hello"), String::from("sailfish")] };
-        Ok(ctx.render_once()?)
+        let tpl = Hello { messages: vec![String::from("Hello"), String::from("sailfish")] };
+        tpl.render_once().map_err(Error::new)
     }
 }
