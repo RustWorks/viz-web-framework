@@ -55,8 +55,8 @@ full = [
 ]
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.0" }
-viz-utils = { path = "../viz-utils", version = "0.1.0" }
+viz-core = { path = "../viz-core", version = "0.1.1" }
+viz-utils = { path = "../viz-utils", version = "0.1.1" }
 
 serde = "1.0"
 
