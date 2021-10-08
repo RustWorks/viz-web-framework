@@ -18,25 +18,6 @@ pub struct Basic {
     realm: String,
 }
 
-impl Basic {
-    /// Creates new `BasicMiddleware`
-    pub fn new() -> Self {
-        Self { users: HashMap::new(), realm: String::from("Restricted") }
-    }
-
-    /// Creates new `BasicMiddleware` with users
-    pub fn users(mut self, users: HashMap<String, String>) -> Self {
-        self.users = users;
-        self
-    }
-
-    /// Creates new `BasicMiddleware` with realm
-    pub fn realm(mut self, realm: String) -> Self {
-        self.realm = realm;
-        self
-    }
-}
-
 impl Default for Basic {
     fn default() -> Self {
         Self::new()
@@ -44,6 +25,25 @@ impl Default for Basic {
 }
 
 impl Basic {
+    const INVALID: &'static str = "invalid authorization header";
+
+    /// Creates new `Basic`
+    pub fn new() -> Self {
+        Self { users: HashMap::new(), realm: String::from("Restricted") }
+    }
+
+    /// Creates new `Basic` with users
+    pub fn users(mut self, users: HashMap<String, String>) -> Self {
+        self.users = users;
+        self
+    }
+
+    /// Creates new `Basic` with realm
+    pub fn realm(mut self, realm: String) -> Self {
+        self.realm = realm;
+        self
+    }
+
     async fn run(&self, cx: &mut Context) -> Result<Response> {
         let verified = cx
             .headers()
@@ -60,8 +60,16 @@ impl Basic {
         }
 
         let mut res: Response = StatusCode::UNAUTHORIZED.into();
-        res.headers_mut()
-            .insert(WWW_AUTHENTICATE, HeaderValue::from_str("invalid authorization header")?);
+
+        if self.realm.len() > 0 {
+            let mut value = String::with_capacity(8 + self.realm.len());
+            value.push_str("realm=\"");
+            value.push_str(&self.realm);
+            value.push('"');
+            res.headers_mut().insert(WWW_AUTHENTICATE, HeaderValue::from_str(&value)?);
+        } else {
+            res.headers_mut().insert(WWW_AUTHENTICATE, HeaderValue::from_static(Self::INVALID));
+        }
 
         Ok(res)
     }

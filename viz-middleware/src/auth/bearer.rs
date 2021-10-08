@@ -24,7 +24,9 @@ impl<F> Bearer<F>
 where
     F: Fn(&str) -> bool,
 {
-    /// Creates a `BearerMiddleware`
+    const INVALID: &'static str = "invalid authorization header";
+
+    /// Creates a `Bearer`
     pub fn new(f: F) -> Self {
         Self { f }
     }
@@ -43,8 +45,7 @@ where
         }
 
         let mut res: Response = StatusCode::UNAUTHORIZED.into();
-        res.headers_mut()
-            .insert(WWW_AUTHENTICATE, HeaderValue::from_str("invalid authorization header")?);
+        res.headers_mut().insert(WWW_AUTHENTICATE, HeaderValue::from_static(Self::INVALID));
 
         Ok(res)
     }

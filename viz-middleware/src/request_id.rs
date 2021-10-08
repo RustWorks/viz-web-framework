@@ -3,15 +3,13 @@ use std::{future::Future, pin::Pin};
 use viz_core::{http, Context, Error, Middleware, Response, Result};
 use viz_utils::tracing;
 
-const HEADER: &str = "x-request-id";
-
 #[cfg(all(feature = "request-nanoid", not(feature = "request-uuid")))]
 fn generate_id() -> Result<String> {
     Ok(nano_id::base64::<21>())
 }
 #[cfg(all(feature = "request-uuid", not(feature = "request-nanoid")))]
 fn generate_id() -> Result<String> {
-    Ok(uuid::v4())
+    Ok(uuid::Uuid::new_v4())
 }
 
 /// RequestID Middleware
@@ -24,7 +22,7 @@ pub struct RequestID<F = fn() -> Result<String>> {
 
 impl Default for RequestID {
     fn default() -> Self {
-        Self::new(HEADER, generate_id)
+        Self::new(Self::HEADER, generate_id)
     }
 }
 
@@ -32,6 +30,8 @@ impl<F> RequestID<F>
 where
     F: Fn() -> Result<String>,
 {
+    const HEADER: &'static str = "x-request-id";
+
     /// Creates new `RequestID` Middleware.
     pub fn new(header: &'static str, generator: F) -> Self {
         Self { header, generator }
@@ -48,7 +48,7 @@ where
 
         tracing::trace!(" {:>7?}", id);
 
-        res.headers_mut().insert(http::header::HeaderName::from_static(self.header), id);
+        res.headers_mut().insert(http::header::HeaderName::from_static(Self::HEADER), id);
 
         Ok(res)
     }
