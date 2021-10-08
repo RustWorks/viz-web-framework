@@ -1,0 +1,10 @@
+[package]
+name = "cookies"
+version = "0.1.0"
+edition = "2018"
+publish = false
+
+[dependencies]
+viz = { path = "../../viz", features = ["middleware", "middleware-cookies"] }
+tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
+tracing-subscriber = "0.2.25"

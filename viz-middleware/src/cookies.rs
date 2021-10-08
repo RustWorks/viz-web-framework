@@ -4,7 +4,7 @@ use viz_core::{http, Context, Middleware, Response, Result};
 
 /// Cookies Middleware
 #[derive(Debug, Default)]
-pub struct Cookies {}
+pub struct Cookies;
 
 impl Cookies {
     async fn run(&self, cx: &mut Context) -> Result<Response> {
