@@ -18,6 +18,7 @@ mod tpl_minijinja {
     use super::{anyhow, Result, State};
     use minijinja::Environment;
     use serde::Serialize;
+    use viz::prelude::Response;
 
     #[derive(Serialize)]
     pub struct Context {
@@ -31,12 +32,11 @@ mod tpl_minijinja {
         Ok(env)
     }
 
-    pub async fn hello(State(jinja): State<Environment<'_>>) -> Result {
+    pub async fn hello(State(jinja): State<Environment<'_>>) -> Result<impl Into<Response>> {
         let template = jinja.get_template("hello.txt").map_err(|e| anyhow!(e.to_string()))?;
         Ok(template
             .render(&Context { name: "minijinja".into() })
-            .map_err(|e| anyhow!(e.to_string()))?
-            .into())
+            .map_err(|e| anyhow!(e.to_string()))?)
     }
 }
 
@@ -44,6 +44,7 @@ mod tpl_ramhorns {
     use super::{anyhow, Result};
     use once_cell::sync::Lazy;
     use ramhorns::{Content, Ramhorns};
+    use viz::prelude::Response;
 
     #[derive(Content)]
     pub struct Context {
@@ -53,15 +54,16 @@ mod tpl_ramhorns {
     static RAMHORNS: Lazy<Ramhorns> =
         Lazy::new(|| Ramhorns::from_folder_with_extension("templates", "txt").unwrap());
 
-    pub async fn hello() -> Result {
+    pub async fn hello() -> Result<impl Into<Response>> {
         let template = RAMHORNS.get("hello.txt").ok_or_else(|| anyhow!("missing template"))?;
-        Ok(template.render(&Context { name: "ramhorns".into() }).into())
+        Ok(template.render(&Context { name: "ramhorns".into() }))
     }
 }
 
 mod tpl_sailfish {
     use super::Result;
     use sailfish::TemplateOnce;
+    use viz::prelude::Response;
 
     #[derive(TemplateOnce)]
     #[template(path = "../templates/hello.stpl")]
@@ -69,8 +71,8 @@ mod tpl_sailfish {
         messages: Vec<String>,
     }
 
-    pub async fn hello() -> Result {
+    pub async fn hello() -> Result<impl Into<Response>> {
         let ctx = Hello { messages: vec![String::from("Hello"), String::from("sailfish")] };
-        Ok(ctx.render_once()?.into())
+        Ok(ctx.render_once()?)
     }
 }
