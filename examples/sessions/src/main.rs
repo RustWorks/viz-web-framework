@@ -16,7 +16,7 @@ async fn login(State(session): State<Session<MemoryStorage>>) -> Result<impl Int
     Ok("Session Logined")
 }
 
-/// `curl -X PUT 127.0.0.1:3000/new -H 'Cookie: viz.sid=x' -vvv`
+/// `curl -X PUT 127.0.0.1:3000/renew -H 'Cookie: viz.sid=x' -vvv`
 async fn renew(State(mut session): State<Session<MemoryStorage>>) -> Result<impl Into<Response>> {
     session.renew().await?;
     Ok("Session Renewed")
