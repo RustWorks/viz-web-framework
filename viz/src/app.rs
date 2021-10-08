@@ -96,7 +96,7 @@ pub async fn serve(
                 None
             }
         })
-        .or_else(|| tree.get(&Method::All).and_then(|t| t.find(path)))
+        .or_else(|| tree.get(&Method::Any).and_then(|t| t.find(path)))
     {
         let params: Params = params.into();
         *cx.middleware_mut() = handler.clone();

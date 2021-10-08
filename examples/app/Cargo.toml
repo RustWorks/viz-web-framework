@@ -15,6 +15,7 @@ viz = { path = "../../viz", default-features = false, features = [
   "middleware-auth",
   "middleware-cookies",
   "middleware-sessions",
+  "middleware-sessions-redis",
   "middleware-jwt",
   "middleware-jwt-header",
   "middleware-compression",

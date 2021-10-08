@@ -120,8 +120,8 @@ impl Route {
         (trace, TRACE),
     }
 
-    /// Appends a route, handle all HTTP verbs
-    pub fn all<H, A>(self, h: H) -> Self
+    /// Appends a route, handle any HTTP verbs
+    pub fn any<H, A>(self, h: H) -> Self
     where
         A: Extract,
         A::Error: Into<Response>,
@@ -130,7 +130,7 @@ impl Route {
         H::Future: Future<Output = H::Output> + Send + 'static,
         Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
     {
-        self.on(Method::All, h)
+        self.on(Method::Any, h)
     }
 
     /// Appends a route, only handle HTTP verbs
@@ -220,8 +220,8 @@ stand_alone_verbs! {
     (trace, TRACE),
 }
 
-/// Appends a route, handle all HTTP verbs
-pub fn all<H, A>(h: H) -> Route
+/// Appends a route, handle any HTTP verbs
+pub fn any<H, A>(h: H) -> Route
 where
     A: Extract,
     A::Error: Into<Response>,
@@ -230,7 +230,7 @@ where
     H::Future: Future<Output = H::Output> + Send + 'static,
     Endpoint<H, A>: for<'m> Middleware<'m, Context, Output = Result>,
 {
-    Route::all(Route::new(""), h)
+    Route::any(Route::new(""), h)
 }
 
 /// Appends a route, only handle HTTP verbs

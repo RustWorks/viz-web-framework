@@ -160,7 +160,7 @@ mod tests {
             .with(m_0)
             // `/`
             .route(route("/").get(hello_world))
-            .at("/*any", all(any))
+            .at("/*any", any(all))
             // `/users`
             .scope(
                 "/users",
@@ -184,7 +184,7 @@ mod tests {
                             // `/users/:id/edit`
                             .at("/edit", get(edit_user))
                             // `/users/*``
-                            .at("*any", all(any)),
+                            .at("*any", any(all)),
                     )
                     .scope(
                         "/:user_id",
@@ -196,7 +196,7 @@ mod tests {
                                 router()
                                     .inherit(false)
                                     .with(m_2)
-                                    .at("/*any", all(any))
+                                    .at("/*any", any(all))
                                     // `/users/:user_id/posts`
                                     .route(get(index_posts).post(create_post))
                                     // `/users/:user_id/posts/new`
@@ -347,7 +347,7 @@ mod tests {
                 }
             }
 
-            // let tr = tree.get(&Method::All);
+            // let tr = tree.get(&Method::Any);
 
             // if let Some(t) = tr {
             //     if let Some(r) = t.find("/user") {
@@ -383,8 +383,8 @@ mod tests {
         }
 
         // `/*`
-        async fn any() -> &'static str {
-            "* any!"
+        async fn all() -> &'static str {
+            "* all!"
         }
 
         // `/users`

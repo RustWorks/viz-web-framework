@@ -28,7 +28,7 @@ http1 = ["hyper/http1"]
 http2 = ["hyper/http2"]
 tls = ["tokio-rustls", "tokio/io-util"]
 
-middleware = ["viz-middleware/default"]
+middleware = []
 
 middleware-full = [
   "middleware",
@@ -37,12 +37,16 @@ middleware-full = [
   "middleware-cookies",
   "middleware-sessions",
   "middleware-compression",
+  "viz-middleware/default"
 ]
 
 middleware-auth = ["viz-middleware/auth"]
 middleware-cors = ["viz-middleware/cors"]
 middleware-cookies = ["viz-middleware/cookies"]
+
 middleware-sessions = ["viz-middleware/sessions"]
+middleware-sessions-memory = ["viz-middleware/sessions-memory"]
+middleware-sessions-redis = ["viz-middleware/sessions-redis"]
 
 middleware-jwt = ["viz-middleware/jwt"]
 middleware-jwt-param = ["viz-middleware/jwt-param"]

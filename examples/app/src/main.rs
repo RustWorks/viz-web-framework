@@ -118,18 +118,24 @@ async fn create_user(user: Json<User>) -> Result<String> {
     json::to_string_pretty(&*user).map_err(Error::new)
 }
 
-async fn login(session: State<middleware::sessions::Session>) -> Result<String> {
+async fn login(
+    session: State<middleware::sessions::Session<middleware::sessions::RedisStorage>>,
+) -> Result<String> {
     session.set::<String>("name", String::from("viz"));
     session.save().await?;
     Ok("Session Logined".to_string())
 }
 
-async fn renew(mut session: State<middleware::sessions::Session>) -> Result<String> {
+async fn renew(
+    mut session: State<middleware::sessions::Session<middleware::sessions::RedisStorage>>,
+) -> Result<String> {
     session.renew().await?;
     Ok("Session Renewed".to_string())
 }
 
-async fn logout(session: State<middleware::sessions::Session>) -> Result<String> {
+async fn logout(
+    session: State<middleware::sessions::Session<middleware::sessions::RedisStorage>>,
+) -> Result<String> {
     session.destroy().await?;
     Ok("Session Logouted".to_string())
 }
@@ -360,9 +366,9 @@ async fn main() -> Result<()> {
             .with(middleware::sessions::Sessions::new(middleware::sessions::Config {
                 cookie: middleware::sessions::CookieOptions::new(),
                 // storage: Arc::new(middleware::session::MemoryStorage::default()),
-                storage: Arc::new(middleware::sessions::RedisStorage::new(
+                storage: middleware::sessions::RedisStorage::new(
                     middleware::sessions::RedisClient::open("redis://127.0.0.1")?,
-                )),
+                ),
                 generate: Box::new(generate),
                 verify: Box::new(verify),
             }))
@@ -371,20 +377,20 @@ async fn main() -> Result<()> {
             .with(my_mid)
             .at(
                 "/",
-                    all(hello_world),
+                    any(hello_world),
             )
             .at("/users", post(create_user))
             .at("/login", post(login))
             .at("/renew", post(renew))
             .at("/logout", get(logout))
-            .at("/404", all(server_error))
+            .at("/404", any(server_error))
             .at("/ticks", get(ticks))
             .at("/echo", get(echo))
             .at("/chat", get(|| async { Response::html(INDEX_HTML) }))
             .at("/chat/", with(chat))
             .at("/public/*", with(Serve::new(ServeConfig::new(config.dir.join("public")))))
             .at("/panic", get(panic_fn))
-            .at("/*", all(not_found)),
+            .at("/*", any(not_found)),
     );
 
     cfg_if::cfg_if! {

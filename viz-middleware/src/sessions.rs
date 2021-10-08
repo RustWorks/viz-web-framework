@@ -13,14 +13,17 @@ pub use sessions::*;
 
 /// Session Middleware
 #[derive(Debug)]
-pub struct Sessions {
+pub struct Sessions<S: Storage> {
     /// Session's `Config`
-    config: Arc<Config>,
+    config: Arc<Config<S>>,
 }
 
-impl Sessions {
+impl<S> Sessions<S>
+where
+    S: Storage,
+{
     /// Create a new session middleware
-    pub fn new(config: Config) -> Self {
+    pub fn new(config: Config<S>) -> Self {
         Self { config: Arc::new(config) }
     }
 
@@ -41,7 +44,7 @@ impl Sessions {
 
         let res = cx.next().await?;
 
-        let session = cx.session();
+        let session = cx.session::<S>();
 
         tracing::trace!(" {:?}", session);
 
@@ -72,7 +75,10 @@ impl Sessions {
     }
 }
 
-impl<'a> Middleware<'a, Context> for Sessions {
+impl<'a, S> Middleware<'a, Context> for Sessions<S>
+where
+    S: Storage,
+{
     type Output = Result<Response>;
 
     #[must_use]
@@ -87,11 +93,16 @@ impl<'a> Middleware<'a, Context> for Sessions {
 /// Session Ext for Context
 pub trait ContextExt {
     /// Gets a session
-    fn session(&self) -> &Session;
+    fn session<S>(&self) -> &Session<S>
+    where
+        S: Storage;
 }
 
 impl ContextExt for Context {
-    fn session(&self) -> &Session {
-        self.extensions().get::<State<Session>>().unwrap()
+    fn session<S>(&self) -> &Session<S>
+    where
+        S: Storage,
+    {
+        self.extensions().get::<State<Session<S>>>().unwrap()
     }
 }

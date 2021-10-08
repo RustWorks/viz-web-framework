@@ -3,8 +3,8 @@ use viz_core::http;
 /// Method
 #[derive(Clone, Eq, PartialEq, Hash)]
 pub enum Method {
-    /// All Verbs
-    All,
+    /// Any Verbs
+    Any,
     /// Single Verb
     Verb(http::Method),
 }
@@ -16,7 +16,7 @@ impl Method {
     /// To str
     pub fn as_str(&self) -> &str {
         match self {
-            Method::All => Self::STAR,
+            Method::Any => Self::STAR,
             Method::Verb(method) => method.as_str(),
         }
     }
