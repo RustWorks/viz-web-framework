@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.2] - 2021-10-10
+
+### Changed
+
+* viz features
+
 ## [0.1.0-alpha.13] - 2021-09-20
 
 ### Features
@@ -43,7 +49,11 @@ Internal Middleware
 * cors
 * compression
 
-[Unreleased]: https://github.com/viz-rs/path-tree/compare/v0.1.0-alpha.13...HEAD
+[Unreleased]: https://github.com/viz-rs/viz/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/viz-rs/viz/releases/tag/v0.1.2
+[0.1.1]: https://github.com/viz-rs/viz/releases/tag/v0.1.1
+[0.1.0]: https://github.com/viz-rs/viz/releases/tag/v0.1.0
+[0.1.0-alpha.14]: https://github.com/viz-rs/viz/releases/tag/v0.1.0-alpha.14
 [0.1.0-alpha.13]: https://github.com/viz-rs/viz/releases/tag/v0.1.0-alpha.13
 [0.1.0-alpha.7]: https://github.com/viz-rs/viz/releases/tag/v0.1.0-alpha.7
 [0.1.0-alpha.4]: https://github.com/viz-rs/viz/releases/tag/v0.1.0-alpha.4
