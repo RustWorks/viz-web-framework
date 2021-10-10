@@ -7,4 +7,4 @@ publish = false
 [dependencies]
 viz = { path = "../../viz", features = ["middleware", "middleware-recover"] }
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
-tracing-subscriber = "0.2.25"
+tracing-subscriber = "0.2"
