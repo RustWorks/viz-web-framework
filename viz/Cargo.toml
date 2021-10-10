@@ -1,6 +1,6 @@
 [package]
 name = "viz"
-version = "0.1.1"
+version = "0.1.2"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Fast, flexible, minimalist web framework for Rust"
 homepage = "https://viz.rs"
@@ -70,10 +70,10 @@ middleware-compression-brotli = ["viz-middleware/compression-brotli"]
 middleware-compression-deflate = ["viz-middleware/compression-deflate"]
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.1.1" }
-viz-router = { path = "../viz-router", version = "0.1.1" }
-viz-utils = { path = "../viz-utils", version = "0.1.1" }
-viz-middleware = { path = "../viz-middleware", version = "0.1.1", default-features = false, optional = true }
+viz-core = { path = "../viz-core", version = "0.1.2" }
+viz-router = { path = "../viz-router", version = "0.1.2" }
+viz-utils = { path = "../viz-utils", version = "0.1.2" }
+viz-middleware = { path = "../viz-middleware", version = "0.1.2", default-features = false, optional = true }
 
 hyper = { version = "0.14", features = ["server"] }
 

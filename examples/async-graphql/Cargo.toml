@@ -5,10 +5,10 @@ edition = "2018"
 publish = false
 
 [dependencies]
-viz = "0.1.1"
+viz = "0.1.2"
 async-graphql-viz = { version = "0.1.4" }
 
-async-graphql = "2.10.0"
+async-graphql = "2.10"
 
 slab = "0.4"
 tokio = { version = "1", features = ["rt-multi-thread", "macros"] }
