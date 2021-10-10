@@ -305,7 +305,7 @@ async fn panic_fn() -> Result<Response> {
 }
 
 fn generate() -> String {
-    nano_id::base64(32)
+    nano_id::base64::<32>()
 }
 
 fn verify(sid: &str) -> bool {
