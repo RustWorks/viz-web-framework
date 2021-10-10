@@ -32,13 +32,23 @@ middleware = []
 
 middleware-full = [
   "middleware",
+  "middleware-logger",
+  "middleware-recover",
+  "middleware-timeout",
+  "middleware-request-nanoid",
   "middleware-auth",
   "middleware-cors",
   "middleware-cookies",
   "middleware-sessions",
   "middleware-compression",
-  "viz-middleware/default"
 ]
+
+middleware-logger = ["viz-middleware/logger"]
+middleware-recover = ["viz-middleware/recover"]
+middleware-timeout = ["viz-middleware/timeout"]
+
+middleware-request-nanoid = ["viz-middleware/request-nanoid"]
+middleware-request-uuid = ["viz-middleware/request-uuid"]
 
 middleware-auth = ["viz-middleware/auth"]
 middleware-cors = ["viz-middleware/cors"]

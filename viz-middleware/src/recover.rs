@@ -12,7 +12,7 @@ impl Recover {
         match internal::CatchUnwind::new(cx.next()).await {
             Ok(res) => res,
             Err(err) => {
-                tracing::error!(" {:>7?}", err);
+                tracing::error!(" {:?}", err);
                 Ok(http::StatusCode::INTERNAL_SERVER_ERROR.into())
             }
         }
