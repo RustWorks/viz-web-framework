@@ -35,7 +35,7 @@ mod tpl_minijinja {
     pub async fn hello(State(jinja): State<Environment<'_>>) -> Result<impl Into<Response>> {
         let tpl = jinja.get_template("hello.txt").map_err(|e| anyhow!(e.to_string()))?;
         tpl.render(&Context { name: "minijinja".into() })
-            .map(Response::html)
+            .map(Response::text)
             .map_err(|e| anyhow!(e.to_string()))
     }
 }
@@ -56,7 +56,7 @@ mod tpl_ramhorns {
 
     pub async fn hello() -> Result<impl Into<Response>> {
         let tpl = RAMHORNS.get("hello.txt").ok_or_else(|| anyhow!("missing template"))?;
-        Ok(Response::html(tpl.render(&Context { name: "ramhorns".into() })))
+        Ok(Response::text(tpl.render(&Context { name: "ramhorns".into() })))
     }
 }
 
