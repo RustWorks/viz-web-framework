@@ -177,15 +177,15 @@ impl From<&'_ [u8]> for Response {
     }
 }
 
-impl From<http::Body> for Response {
-    fn from(body: http::Body) -> Self {
-        Self { raw: http::Response::new(body) }
-    }
-}
-
 impl From<()> for Response {
     fn from(_: ()) -> Self {
         Self { raw: http::Response::new(http::Body::empty()) }
+    }
+}
+
+impl From<http::Body> for Response {
+    fn from(body: http::Body) -> Self {
+        Self { raw: http::Response::new(body) }
     }
 }
 
@@ -193,7 +193,6 @@ impl From<http::StatusCode> for Response {
     fn from(s: http::StatusCode) -> Self {
         let mut res = Response::new();
         *res.status_mut() = s;
-        // *res.body_mut() = s.to_string().into();
         res
     }
 }
@@ -202,9 +201,9 @@ impl<T> From<(http::StatusCode, T)> for Response
 where
     T: Into<Response>,
 {
-    fn from(t: (http::StatusCode, T)) -> Self {
-        let mut res = t.1.into();
-        *res.status_mut() = t.0;
+    fn from((s, b): (http::StatusCode, T)) -> Self {
+        let mut res = b.into();
+        *res.status_mut() = s;
         res
     }
 }
