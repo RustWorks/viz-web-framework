@@ -6,7 +6,7 @@ publish = false
 
 [dependencies]
 viz = "0.1.2"
-async-graphql-viz = { version = "0.1.4" }
+async-graphql-viz = { version = "0.1.5" }
 
 async-graphql = "2.10"
 
