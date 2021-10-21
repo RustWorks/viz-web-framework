@@ -12,8 +12,10 @@ use hyper::service::Service;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 use tokio_rustls::{
     rustls::{
-        AllowAnyAnonymousOrAuthenticatedClient, AllowAnyAuthenticatedClient, NoClientAuth,
-        RootCertStore, ServerConfig,
+        server::{
+            AllowAnyAnonymousOrAuthenticatedClient, AllowAnyAuthenticatedClient, NoClientAuth,
+        },
+        Certificate, PrivateKey, RootCertStore, ServerConfig,
     },
     TlsAcceptor,
 };
@@ -97,20 +99,22 @@ impl Config {
 
     /// builds the Tls ServerConfig
     pub fn build(self) -> Result<ServerConfig> {
-        let cert = tokio_rustls::rustls::internal::pemfile::certs(&mut self.cert.as_slice())
+        let certs = rustls_pemfile::certs(&mut self.cert.as_slice())
+            .map(|mut certs| certs.drain(..).map(Certificate).collect())
             .map_err(|_| anyhow!("failed to parse tls certificates"))?;
-        let key = {
-            let mut pkcs8 = tokio_rustls::rustls::internal::pemfile::pkcs8_private_keys(
-                &mut self.key.as_slice(),
-            )
-            .map_err(|_| anyhow!("failed to parse tls private keys"))?;
+
+        let keys = {
+            let mut pkcs8: Vec<PrivateKey> =
+                rustls_pemfile::pkcs8_private_keys(&mut self.key.as_slice())
+                    .map(|mut keys| keys.drain(..).map(PrivateKey).collect())
+                    .map_err(|_| anyhow!("failed to parse tls private keys"))?;
             if !pkcs8.is_empty() {
                 pkcs8.remove(0)
             } else {
-                let mut rsa = tokio_rustls::rustls::internal::pemfile::rsa_private_keys(
-                    &mut self.key.as_slice(),
-                )
-                .map_err(|_| anyhow!("failed to parse tls private keys"))?;
+                let mut rsa: Vec<PrivateKey> =
+                    rustls_pemfile::rsa_private_keys(&mut self.key.as_slice())
+                        .map(|mut keys| keys.drain(..).map(PrivateKey).collect())
+                        .map_err(|_| anyhow!("failed to parse tls private keys"))?;
 
                 if !rsa.is_empty() {
                     rsa.remove(0)
@@ -120,32 +124,27 @@ impl Config {
             }
         };
 
-        fn read_trust_anchor(mut trust_anchor: &[u8]) -> Result<RootCertStore> {
+        fn read_trust_anchor(trust_anchor: &Certificate) -> Result<RootCertStore> {
             let mut store = RootCertStore::empty();
-            if let Ok((0, _)) | Err(()) = store.add_pem_file(&mut trust_anchor) {
-                Err(anyhow!("failed to parse tls trust anchor"))
-            } else {
-                Ok(store)
-            }
+            store.add(trust_anchor)?;
+            Ok(store)
         }
 
         let client_auth = match self.client_auth {
             ClientAuth::Off => NoClientAuth::new(),
-            ClientAuth::Optional(trust_anchor) => {
-                AllowAnyAnonymousOrAuthenticatedClient::new(read_trust_anchor(&trust_anchor)?)
-            }
+            ClientAuth::Optional(trust_anchor) => AllowAnyAnonymousOrAuthenticatedClient::new(
+                read_trust_anchor(&Certificate(trust_anchor))?,
+            ),
             ClientAuth::Required(trust_anchor) => {
-                AllowAnyAuthenticatedClient::new(read_trust_anchor(&trust_anchor)?)
+                AllowAnyAuthenticatedClient::new(read_trust_anchor(&Certificate(trust_anchor))?)
             }
         };
 
-        let mut config = ServerConfig::new(client_auth);
-        config
-            .set_single_cert_with_ocsp_and_sct(cert, key, self.ocsp_resp, Vec::new())
-            .map_err(|err| anyhow!(err.to_string()))?;
-        config.set_protocols(&["h2".into(), "http/1.1".into()]);
-
-        Ok(config)
+        ServerConfig::builder()
+            .with_safe_defaults()
+            .with_client_cert_verifier(client_auth)
+            .with_single_cert_with_ocsp_and_sct(certs, keys, self.ocsp_resp, Vec::new())
+            .map_err(Into::into)
     }
 }
 
