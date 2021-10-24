@@ -1,6 +1,4 @@
-cargo-features = ["resolver"]
 [workspace]
-resolver = "2"
 members = [
   "viz",
   "viz-core",

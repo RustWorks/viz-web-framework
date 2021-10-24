@@ -3,8 +3,8 @@ name = "viz-router"
 version = "0.1.2"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz Router"
-license = "Apache-2.0/MIT"
-edition = "2018"
+license = "MIT OR Apache-2.0"
+edition = "2021"
 
 [dependencies]
 viz-core = { path = "../viz-core", version = "0.1.2" }

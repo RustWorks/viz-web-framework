@@ -3,8 +3,8 @@ name = "viz-utils"
 version = "0.1.2"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz utils"
-license = "Apache-2.0/MIT"
-edition = "2018"
+license = "MIT OR Apache-2.0"
+edition = "2021"
 
 [features]
 default = ["error", "serde", "futures", "tracing"]
