@@ -39,11 +39,11 @@
 
 * **Safety** `#![forbid(unsafe_code)]`
 
-* Robust `routing`
+* Robust `Routing`
 
 * Simple `Handler` & `Middleware`
 
-* Flexible `extractors`
+* Flexible `Extractors`
 
 ## License
 
