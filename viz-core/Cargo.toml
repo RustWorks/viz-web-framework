@@ -1,0 +1,60 @@
+[package]
+name = "viz-core"
+version = "0.2.0-alpha"
+authors = ["Fangdun Tsai <cfddream@gmail.com>"]
+description = "Viz core components"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+categories = ["asynchronous", "network-programming", "web-programming"]
+
+[features]
+default = [
+  "data",
+  "limits",
+  "json",
+  "form",
+  "query",
+  "multipart",
+  "cookie",
+  "session",
+]
+
+data = []
+limits = []
+
+json = ["serde", "serde_json"]
+form = ["serde", "serde_urlencoded"]
+query = ["serde", "serde_urlencoded"]
+multipart = ["form-data"]
+
+cookie = ["libcookie"]
+cookie-private = ["libcookie/private"]
+cookie-signed = ["libcookie/signed"]
+
+session = ["cookie", "json", "sessions-core", "time"]
+
+[dependencies]
+thiserror = "1.0.31"
+async-trait = "0.1.56"
+dyn-clone = "1.0.6"
+http = "0.2.7"
+headers = "0.3.7"
+http-body = { git = "https://github.com/hyperium/http-body", branch = "master" }
+http-body-util = { git = "https://github.com/hyperium/http-body", branch = "master" }
+hyper = { version = "1.0.0-dev.0", git = "https://github.com/hyperium/hyper.git", branch = "master" }
+mime = "0.3.16"
+bytes = "1.1.0"
+time = { version = "0.3", optional = true }
+serde = { version = "1.0", features = ["derive"], optional = true }
+serde_json = { version = "1.0", optional = true }
+serde_urlencoded = { version = "0.7", optional = true }
+form-data = { version = "0.4.0", optional = true }
+sessions-core = { version = "0.3.4", optional = true }
+futures-util = "0.3.21"
+libcookie = { package = "cookie", version = "0.16.0", features = [
+  "percent-encode",
+], optional = true }
+
+[dev-dependencies]
+tokio = { version = "1.19", features = ["rt-multi-thread", "macros"] }
+trybuild = "1.0.63"
