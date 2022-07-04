@@ -1,0 +1,63 @@
+[package]
+name = "viz"
+version = "0.2.0-alpha"
+authors = ["Fangdun Tsai <cfddream@gmail.com>"]
+description = "Fast, flexible, minimalist web framework for Rust"
+homepage = "https://viz.rs"
+documentation = "https://docs.rs/viz"
+repository = "https://github.com/viz-rs/viz"
+keywords = ["viz", "http", "web", "framework", "async"]
+categories = [
+  "asynchronous",
+  "network-programming",
+  "web-programming::http-server",
+]
+license = "MIT OR Apache-2.0"
+readme = "README.md"
+edition = "2021"
+
+[features]
+default = [
+  "http1",
+  "data",
+  "query",
+  "form",
+  "json",
+  "multipart",
+  "cookie",
+  "macros",
+  "session",
+]
+
+http1 = ["hyper/http1"]
+http2 = ["hyper/http2"]
+
+data = ["viz-core/data"]
+query = ["viz-core/query"]
+form = ["viz-core/form"]
+json = ["viz-core/json"]
+multipart = ["viz-core/form-data"]
+
+cookie = ["viz-core/cookie"]
+cookie-private = ["viz-core/cookie-private"]
+cookie-signed = ["viz-core/cookie-signed"]
+
+session = ["cookie", "viz-core/session"]
+
+macros = ["viz-macros"]
+
+unix-socket = []
+
+[dependencies]
+viz-core = { path = "../viz-core" }
+viz-router = { path = "../viz-router" }
+viz-macros = { path = "../viz-macros", optional = true }
+hyper = { version = "1.0.0-dev.0", features = [
+  "tcp",
+  "server",
+], git = "https://github.com/hyperium/hyper.git", branch = "master" }
+tokio = { version = "1.19", features = ["net"] }
+
+[package.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]

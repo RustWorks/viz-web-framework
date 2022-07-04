@@ -1,0 +1,2 @@
+[workspace]
+members = ["viz", "viz-core", "viz-router", "viz-macros", "viz-helmet"]

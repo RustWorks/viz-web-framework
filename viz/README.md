@@ -1,10 +1,6 @@
 <h1 align="center">Víz</h1>
 
 <div align="center">
-  <p><strong>We are redesigning it. Coming soon!</strong></p>
-</div>
-
-<div align="center">
   <p><strong>Fast, flexible, minimalist web framework for Rust</strong></p>
 </div>
 
@@ -39,13 +35,13 @@
 
 * **Safety** `#![forbid(unsafe_code)]`
 
-* Lightweight
+* Robust `routing`
 
-* Robust `Routing`
+* Simplicity `Handler` & `Middleware`
 
-* Simple `Handler` & `Middleware`
+* Flexible `extractors`
 
-* Flexible `Extractors`
+* Based on [hyper](https://hyper.rs/)
 
 ## License
 

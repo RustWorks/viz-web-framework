@@ -1,0 +1,21 @@
+[package]
+name = "viz-macros"
+version = "0.1.0"
+authors = ["Fangdun Tsai <cfddream@gmail.com>"]
+description = "Viz proc macros"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0"
+quote = "1.0"
+syn = { version = "1.0", features = ["full", "parsing"] }
+
+[dev-dependencies]
+viz = { path = "../viz" }
+
+anyhow = "1.0"
+tokio = { version = "1.19", features = ["rt", "macros"] }

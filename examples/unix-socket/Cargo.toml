@@ -1,0 +1,14 @@
+[package]
+name = "unix-socket"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+viz = { path = "../../viz", features = ["unix-socket"] }
+
+tokio = { version = "1.0", default-features = false, features = [
+  "rt-multi-thread",
+  "macros",
+] }
+tokio-stream = { version = "0.1", features = ["net"] }
