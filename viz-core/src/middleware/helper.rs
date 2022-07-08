@@ -25,16 +25,8 @@ impl CookieOptions {
     pub const MAX_AGE: u64 = 3600 * 24;
 
     /// Creates new `CookieOptions`
-    pub fn new() -> Self {
-        Self {
-            domain: None,
-            secure: true,
-            http_only: true,
-            path: "/".into(),
-            name: "viz.sid".into(),
-            same_site: Some(SameSite::Lax),
-            max_age: Some(Duration::from_secs(Self::MAX_AGE)),
-        }
+    pub fn new(name: &'static str) -> Self {
+        Self::default().name(name)
     }
 
     /// Creates new `CookieOptions` with `name`
@@ -103,6 +95,14 @@ impl CookieOptions {
 
 impl Default for CookieOptions {
     fn default() -> Self {
-        Self::new()
+        Self {
+            domain: None,
+            secure: true,
+            http_only: true,
+            path: "/".into(),
+            name: "viz.sid".into(),
+            same_site: Some(SameSite::Lax),
+            max_age: Some(Duration::from_secs(Self::MAX_AGE)),
+        }
     }
 }

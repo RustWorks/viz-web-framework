@@ -3,7 +3,7 @@ use std::sync::{Arc, Mutex};
 pub use libcookie::{Cookie, CookieJar, SameSite};
 
 use crate::{
-    async_trait, Body, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
+    async_trait, Body, Error, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
     ThisError,
 };
 
@@ -167,6 +167,12 @@ pub enum CookiesError {
     /// Failed to parse cookies
     #[error("failed to parse cookies")]
     Parse,
+}
+
+impl From<CookiesError> for Error {
+    fn from(e: CookiesError) -> Self {
+        Error::Responder(e.into_response())
+    }
 }
 
 impl IntoResponse for CookiesError {

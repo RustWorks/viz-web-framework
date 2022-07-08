@@ -1,15 +1,19 @@
 #![deny(warnings)]
 
 use std::net::SocketAddr;
+
+use sessions::MemoryStorage;
+
 use viz::{
     get,
     middleware::{
         cookie,
-        session::{self, CookieOptions, Store},
+        helper::CookieOptions,
+        limits,
+        session::{self, Store},
     },
     Body, Request, RequestExt, Result, Router, Server, ServiceMaker,
 };
-use sessions::MemoryStorage;
 
 async fn index(req: Request<Body>) -> Result<&'static str> {
     req.session().set(
@@ -21,16 +25,16 @@ async fn index(req: Request<Body>) -> Result<&'static str> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
     println!("listening on {}", addr);
 
     let app = Router::new()
-        .route("/", get(index))
+        .route("/", get(index).with(limits::Config::new()))
         .with(session::Config::new(
             Store::new(MemoryStorage::new(), nano_id::base64::<32>, |sid: &str| {
                 sid.len() == 32
             }),
-            CookieOptions::new(),
+            CookieOptions::default(),
         ))
         .with(cookie::Config::new());
 

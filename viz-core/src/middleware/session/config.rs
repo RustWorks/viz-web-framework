@@ -6,40 +6,32 @@ use std::{
 use crate::{
     async_trait,
     handler::Transform,
-    types::{Cookie, Cookies, CookiesError, Session},
+    middleware::helper::CookieOptions,
+    types::{Cookie, Cookies, Session},
     Body, Error, Handler, IntoResponse, Request, RequestExt, Response, Result, StatusCode,
 };
 
-use super::{CookieOptions, Storage, Store, PURGED, RENEWED, UNCHANGED};
+use super::{Error as SessionError, Storage, Store, PURGED, RENEWED, UNCHANGED};
 
-pub struct Config<S, G, V> {
-    inner: Arc<Store<S, G, V>>,
-    cookie: Arc<CookieOptions>,
-}
+pub struct Config<S, G, V>(Arc<(Store<S, G, V>, CookieOptions)>);
 
 impl<S, G, V> Clone for Config<S, G, V> {
     fn clone(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
-            cookie: self.cookie.clone(),
-        }
+        Self(self.0.clone())
     }
 }
 
 impl<S, G, V> Config<S, G, V> {
-    pub fn new(inner: Store<S, G, V>, cookie: CookieOptions) -> Self {
-        Self {
-            inner: Arc::new(inner),
-            cookie: Arc::new(cookie),
-        }
+    pub fn new(store: Store<S, G, V>, cookie: CookieOptions) -> Self {
+        Self(Arc::new((store, cookie)))
     }
 
     pub fn store(&self) -> &Store<S, G, V> {
-        &self.inner
+        &self.0 .0
     }
 
     pub fn cookie(&self) -> &CookieOptions {
-        &self.cookie
+        &self.0 .1
     }
 
     pub fn ttl(&self) -> Option<Duration> {
@@ -50,11 +42,11 @@ impl<S, G, V> Config<S, G, V> {
 #[cfg(not(any(feature = "cookie-signed", feature = "cookie-private")))]
 impl<S, G, V> Config<S, G, V> {
     pub fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.get(self.cookie.name)
+        cookies.get(self.cookie().name)
     }
 
     pub fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
-        cookies.remove(self.cookie.name)
+        cookies.remove(self.cookie().name)
     }
 
     pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
@@ -65,11 +57,11 @@ impl<S, G, V> Config<S, G, V> {
 #[cfg(all(feature = "cookie-signed", not(feature = "cookie-private")))]
 impl<S, G, V> Config<S, G, V> {
     pub fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.signed_get(self.cookie.name)
+        cookies.signed_get(self.cookie().name)
     }
 
     pub fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
-        cookies.signed_remove(self.cookie.name)
+        cookies.signed_remove(self.cookie().name)
     }
 
     pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
@@ -80,11 +72,11 @@ impl<S, G, V> Config<S, G, V> {
 #[cfg(all(feature = "cookie-private", not(feature = "cookie-signed")))]
 impl<S, G, V> Config<S, G, V> {
     pub fn get_cookie<'a>(&self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.private_get(self.cookie.name)
+        cookies.private_get(self.cookie().name)
     }
 
     pub fn remove_cookie<'a>(&self, cookies: &'a Cookies) {
-        cookies.private_remove(self.cookie.name)
+        cookies.private_remove(self.cookie().name)
     }
 
     pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
@@ -147,14 +139,17 @@ where
     type Output = Result<Response<Body>>;
 
     async fn call(&self, mut req: Request<Body>) -> Self::Output {
-        let cookies = req.cookies().map_err(responder_cookie_error)?;
+        let cookies = req.cookies().map_err(Into::<Error>::into)?;
         let cookie = self.config.get_cookie(&cookies);
 
         let mut session_id = cookie.map(get_cookie_value);
         let data = match &session_id {
-            Some(sid) if (self.config.store().verify)(sid) => {
-                self.config.store().get(sid).await.map_err(report_error)?
-            }
+            Some(sid) if (self.config.store().verify)(sid) => self
+                .config
+                .store()
+                .get(sid)
+                .await
+                .map_err(Into::<Error>::into)?,
             _ => None,
         };
         if data.is_none() && session_id.is_some() {
@@ -177,7 +172,7 @@ where
                     .store()
                     .remove(sid)
                     .await
-                    .map_err(report_error)?;
+                    .map_err(Into::<Error>::into)?;
                 self.config.remove_cookie(&cookies);
             }
 
@@ -190,7 +185,7 @@ where
                     .store()
                     .remove(sid)
                     .await
-                    .map_err(report_error)?;
+                    .map_err(Into::<Error>::into)?;
             }
         }
 
@@ -211,7 +206,7 @@ where
                 &self.config.ttl().unwrap_or_else(max_age),
             )
             .await
-            .map_err(report_error)?;
+            .map_err(Into::<Error>::into)?;
 
         resp
     }
@@ -225,13 +220,11 @@ fn get_cookie_value(c: Cookie<'_>) -> String {
     c.value().to_string()
 }
 
-fn responder_cookie_error(e: CookiesError) -> Error {
-    Error::Responder(e.into_response())
-}
-
-fn report_error<E: std::error::Error + Send + Sync + 'static>(e: E) -> Error {
-    Error::Report(
-        Box::new(e),
-        StatusCode::INTERNAL_SERVER_ERROR.into_response(),
-    )
+impl From<SessionError> for Error {
+    fn from(e: SessionError) -> Self {
+        Error::Report(
+            Box::new(e),
+            StatusCode::INTERNAL_SERVER_ERROR.into_response(),
+        )
+    }
 }
