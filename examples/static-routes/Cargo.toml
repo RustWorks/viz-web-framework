@@ -7,6 +7,6 @@ publish = false
 [dependencies]
 viz = { path = "../../viz" }
 
+hyper = { version = "1.0.0-dev.0", git = "https://github.com/hyperium/hyper.git", branch = "master" }
 tokio = { version = "1.0", default-features = false, features = ["rt-multi-thread", "macros"] }
 once_cell = "1.12"
-hyper = "0.14"

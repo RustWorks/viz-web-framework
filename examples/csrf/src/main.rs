@@ -1,7 +1,6 @@
 #![deny(warnings)]
 
-use std::net::SocketAddr;
-use std::time::Duration;
+use std::{net::SocketAddr, time::Duration};
 
 use viz::{
     get,
