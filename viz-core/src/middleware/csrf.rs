@@ -7,7 +7,8 @@ use crate::{
     headers::HeaderName,
     middleware::helper::CookieOptions,
     types::{Cookie, Cookies},
-    Body, Handler, IntoResponse, Method, Request, RequestExt, Response, Result, StatusCode,
+    Body, Error, FromRequest, Handler, IntoResponse, Method, Request, RequestExt, Response, Result,
+    StatusCode,
 };
 
 struct Inner<S, G, V> {
@@ -25,7 +26,20 @@ pub enum Store {
     Session,
 }
 
+#[derive(Clone)]
 pub struct CsrfToken(pub String);
+
+#[async_trait]
+impl FromRequest for CsrfToken {
+    type Error = Error;
+
+    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+        req.extensions()
+            .get()
+            .cloned()
+            .ok_or_else(|| (StatusCode::FORBIDDEN, "Missing csrf token").into_error())
+    }
+}
 
 pub struct Config<S, G, V>(Arc<Inner<S, G, V>>);
 
@@ -47,7 +61,7 @@ impl<S, G, V> Config<S, G, V> {
         verify: V,
     ) -> Self {
         Self(Arc::new(Inner {
-            store: Store::Cookie,
+            store,
             ignored_methods,
             cookie_options,
             secret,
@@ -71,7 +85,7 @@ impl<S, G, V> Config<S, G, V> {
                 None => Ok(None),
                 Some(raw_token) => match base64::decode_config(raw_token, base64::URL_SAFE) {
                     Ok(masked_token) => Ok(Some(unmask::<32>(masked_token))),
-                    Err(e) => {
+                    Err(_e) => {
                         Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid csrf token").into_error())
                     }
                 },
@@ -200,7 +214,7 @@ where
 {
     type Output = Result<Response<Body>>;
 
-    async fn call(&self, req: Request<Body>) -> Self::Output {
+    async fn call(&self, mut req: Request<Body>) -> Self::Output {
         let mut secret = self.config.get(&req)?;
         let config = self.config.as_ref();
 
@@ -219,6 +233,8 @@ where
         let otp = (config.secret)()?;
         let secret = (config.secret)()?;
         let token = (config.generate)(&secret, otp);
+        req.extensions_mut()
+            .insert(CsrfToken(String::from_utf8_lossy(&token).to_string()));
         self.config.set(&req, token, secret)?;
 
         self.h.call(req).await.map(IntoResponse::into_response)
