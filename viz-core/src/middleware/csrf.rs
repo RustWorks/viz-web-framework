@@ -27,7 +27,7 @@ pub enum Store {
     Session,
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone)]
 pub struct CsrfToken(pub String);
 
 #[async_trait]
@@ -84,25 +84,25 @@ impl<S, G, V> Config<S, G, V> {
                 .map(|c| c.value().to_string())
             {
                 None => Ok(None),
-                Some(raw_token) => match base64::decode_config(raw_token, base64::URL_SAFE) {
-                    Ok(masked_token) => Ok(Some(unmask::<32>(masked_token))),
-                    Err(_e) => {
-                        Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid csrf token").into_error())
+                Some(raw_token) => {
+                    match base64::decode_config(raw_token, base64::URL_SAFE_NO_PAD) {
+                        Ok(masked_token) => Ok(Some(unmask::<32>(masked_token))),
+                        Err(_e) => {
+                            Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid csrf token")
+                                .into_error())
+                        }
                     }
-                },
+                }
             },
             Store::Session => req.session().get(inner.cookie_options.name),
         }
     }
 
-    pub fn set<'a>(&self, req: &'a Request<Body>, token: Vec<u8>, secret: Vec<u8>) -> Result<()> {
+    pub fn set<'a>(&self, req: &'a Request<Body>, token: String, secret: Vec<u8>) -> Result<()> {
         let inner = self.as_ref();
         match inner.store {
             Store::Cookie => {
-                self.set_cookie(
-                    &req.cookies()?,
-                    &base64::encode_config(token, base64::URL_SAFE),
-                );
+                self.set_cookie(&req.cookies()?, &token);
                 Ok(())
             }
             Store::Session => req.session().set(inner.cookie_options.name, secret),
@@ -233,9 +233,8 @@ where
 
         let otp = (config.secret)()?;
         let secret = (config.secret)()?;
-        let token = (config.generate)(&secret, otp);
-        req.extensions_mut()
-            .insert(CsrfToken(String::from_utf8_lossy(&token).to_string()));
+        let token = base64::encode_config((config.generate)(&secret, otp), base64::URL_SAFE_NO_PAD);
+        req.extensions_mut().insert(CsrfToken(token.to_string()));
         self.config.set(&req, token, secret)?;
 
         self.h
@@ -265,7 +264,7 @@ pub fn generate(secret: &Vec<u8>, otp: Vec<u8>) -> Vec<u8> {
 
 /// Verifys Token with a secret
 pub fn verify(secret: Vec<u8>, raw_token: String) -> bool {
-    if let Ok(token) = base64::decode_config(raw_token, base64::URL_SAFE) {
+    if let Ok(token) = base64::decode_config(raw_token, base64::URL_SAFE_NO_PAD) {
         if token.len() == 64 {
             return secret == unmask::<32>(token);
         }

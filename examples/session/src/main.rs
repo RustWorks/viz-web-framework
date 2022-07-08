@@ -1,7 +1,6 @@
 #![deny(warnings)]
 
 use std::net::SocketAddr;
-use std::time::Duration;
 
 use sessions::MemoryStorage;
 
@@ -10,12 +9,9 @@ use viz::{
     middleware::{
         cookie,
         helper::CookieOptions,
-        limits,
         session::{self, Store},
-        csrf
     },
     Body, Request, RequestExt, Result, Router, Server, ServiceMaker,
-    Method,
 };
 
 async fn index(req: Request<Body>) -> Result<&'static str> {
@@ -32,15 +28,7 @@ async fn main() -> Result<()> {
     println!("listening on {}", addr);
 
     let app = Router::new()
-        .route("/", get(index).with(limits::Config::new()))
-        .with(csrf::Config::new(
-            csrf::Store::Cookie,
-            [Method::GET, Method::HEAD, Method::OPTIONS, Method::TRACE].into(),
-            CookieOptions::new("_csrf").max_age(Duration::from_secs(3600 * 24)),
-            csrf::secret,
-            csrf::generate,
-            csrf::verify,
-        ))
+        .route("/", get(index))
         .with(session::Config::new(
             Store::new(MemoryStorage::new(), nano_id::base64::<32>, |sid: &str| {
                 sid.len() == 32

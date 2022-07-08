@@ -43,6 +43,7 @@ cookie-private = ["viz-core/cookie-private"]
 cookie-signed = ["viz-core/cookie-signed"]
 
 session = ["cookie", "viz-core/session"]
+csrf = ["cookie", "viz-core/csrf"]
 
 macros = ["viz-macros"]
 
