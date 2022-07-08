@@ -4,7 +4,8 @@ use std::sync::Arc;
 use crate::{
     async_trait,
     handler::Transform,
-    headers::HeaderName,
+    header,
+    headers::{HeaderName, HeaderValue},
     middleware::helper::CookieOptions,
     types::{Cookie, Cookies},
     Body, Error, FromRequest, Handler, IntoResponse, Method, Request, RequestExt, Response, Result,
@@ -237,7 +238,15 @@ where
             .insert(CsrfToken(String::from_utf8_lossy(&token).to_string()));
         self.config.set(&req, token, secret)?;
 
-        self.h.call(req).await.map(IntoResponse::into_response)
+        self.h
+            .call(req)
+            .await
+            .map(IntoResponse::into_response)
+            .map(|mut res| {
+                res.headers_mut()
+                    .insert(header::VARY, HeaderValue::from_static("Cookie"));
+                res
+            })
     }
 }
 

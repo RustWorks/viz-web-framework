@@ -28,7 +28,7 @@ async fn index(req: Request<Body>) -> Result<&'static str> {
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let addr = SocketAddr::from(([127, 0, 0, 1], 3001));
+    let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     println!("listening on {}", addr);
 
     let app = Router::new()
