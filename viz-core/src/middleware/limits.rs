@@ -1,3 +1,5 @@
+//! Limits Middleware
+
 use std::sync::Arc;
 
 use crate::{

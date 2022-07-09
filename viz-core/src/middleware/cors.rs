@@ -1,3 +1,5 @@
+//! CORS Middleware
+
 use std::{collections::HashSet, sync::Arc};
 
 use crate::{

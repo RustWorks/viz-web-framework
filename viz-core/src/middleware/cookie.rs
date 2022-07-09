@@ -1,3 +1,5 @@
+//! Cookie Middleware
+
 use crate::{
     async_trait,
     handler::Transform,

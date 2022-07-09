@@ -1,3 +1,5 @@
+//! CSRF Middleware
+
 use std::collections::HashSet;
 use std::sync::Arc;
 

@@ -63,7 +63,7 @@ pub trait ResponseExt {
     where
         T: AsRef<str>;
 
-    /// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/303
+    /// <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/303>
     fn see_other<T>(url: T) -> Response<Body>
     where
         T: AsRef<str>,
@@ -71,7 +71,7 @@ pub trait ResponseExt {
         Self::redirect_with_status(url, StatusCode::SEE_OTHER)
     }
 
-    /// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/307
+    /// <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/307>
     fn temporary<T>(url: T) -> Response<Body>
     where
         T: AsRef<str>,
@@ -79,7 +79,7 @@ pub trait ResponseExt {
         Self::redirect_with_status(url, StatusCode::TEMPORARY_REDIRECT)
     }
 
-    /// https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/308
+    /// <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/308>
     fn permanent<T>(url: T) -> Response<Body>
     where
         T: AsRef<str>,
