@@ -46,8 +46,7 @@ impl Default for Config {
     }
 }
 
-impl Clone for Config
-{
+impl Clone for Config {
     fn clone(&self) -> Self {
         Self {
             max_age: self.max_age,
@@ -61,8 +60,7 @@ impl Clone for Config
     }
 }
 
-impl<H> Transform<H> for Config
-{
+impl<H> Transform<H> for Config {
     type Output = CorsMiddleware<H>;
 
     fn transform(&self, h: H) -> Self::Output {
@@ -113,7 +111,7 @@ where
         let is_options = req.method() == Method::OPTIONS;
         let mut headers = HeaderMap::new();
 
-        if is_options {
+        let mut res = if is_options {
             // Preflight request
             if req
                 .header(ACCESS_CONTROL_REQUEST_METHOD)
@@ -156,12 +154,20 @@ where
             } else {
                 headers.typed_insert(self.acah.clone());
             }
+
+            // 204 - no content
+            StatusCode::NO_CONTENT.into_response()
         } else {
             // Simple Request
             if self.config.expose_headers.len() > 0 {
                 headers.typed_insert(self.aceh.clone());
             }
-        }
+
+            self.h
+                .call(req)
+                .await
+                .map_or_else(IntoResponse::into_response, IntoResponse::into_response)
+        };
 
         // https://github.com/rs/cors/issues/10
         headers.insert(VARY, ORIGIN.into());
@@ -173,19 +179,6 @@ where
                 HeaderValue::from_static("true"),
             );
         }
-
-        let mut res = if is_options {
-            // Preflight request
-            let mut res = Response::new(Body::empty());
-            // 204 - no content
-            *res.status_mut() = StatusCode::NO_CONTENT;
-            res
-        } else {
-            self.h
-                .call(req)
-                .await
-                .map_or_else(IntoResponse::into_response, IntoResponse::into_response)
-        };
 
         res.headers_mut().extend(headers);
 
