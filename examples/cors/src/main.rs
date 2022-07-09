@@ -2,9 +2,7 @@
 
 use std::net::SocketAddr;
 
-use viz::{
-    get, middleware::cors, Body, Request, Result, Router, Server, ServiceMaker,
-};
+use viz::{get, middleware::cors, Body, Request, Result, Router, Server, ServiceMaker};
 
 async fn index(_req: Request<Body>) -> Result<&'static str> {
     Ok("Hello, World!")

@@ -78,21 +78,23 @@ impl<S, G, V> Config<S, G, V> {
     pub fn get<'a>(&self, req: &'a Request<Body>) -> Result<Option<Vec<u8>>> {
         let inner = self.as_ref();
         match inner.store {
-            Store::Cookie => match self
-                .get_cookie(&req.cookies()?)
-                .map(|c| c.value().to_string())
-            {
-                None => Ok(None),
-                Some(raw_token) => {
-                    match base64::decode_config(raw_token, base64::URL_SAFE_NO_PAD) {
-                        Ok(masked_token) => Ok(Some(unmask::<32>(masked_token))),
-                        Err(_e) => {
-                            Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid csrf token")
-                                .into_error())
+            Store::Cookie => {
+                match self
+                    .get_cookie(&req.cookies()?)
+                    .map(|c| c.value().to_string())
+                {
+                    None => Ok(None),
+                    Some(raw_token) => {
+                        match base64::decode_config(raw_token, base64::URL_SAFE_NO_PAD) {
+                            Ok(masked_token) if is_64(&masked_token) => {
+                                Ok(Some(unmask::<32>(masked_token)))
+                            }
+                            _ => Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid csrf token")
+                                .into_error()),
                         }
                     }
                 }
-            },
+            }
             Store::Session => req.session().get(inner.cookie_options.name),
         }
     }
@@ -264,9 +266,7 @@ pub fn generate(secret: &Vec<u8>, otp: Vec<u8>) -> Vec<u8> {
 /// Verifys Token with a secret
 pub fn verify(secret: Vec<u8>, raw_token: String) -> bool {
     if let Ok(token) = base64::decode_config(raw_token, base64::URL_SAFE_NO_PAD) {
-        if token.len() == 64 {
-            return secret == unmask::<32>(token);
-        }
+        return is_64(&token) && secret == unmask::<32>(token);
     }
     false
 }
@@ -293,6 +293,10 @@ fn unmask<const N: usize>(mut token: Vec<u8>) -> Vec<u8> {
         .enumerate()
         .for_each(|(i, t)| *t ^= token[i]);
     secret
+}
+
+fn is_64(buf: &Vec<u8>) -> bool {
+    buf.len() == 64
 }
 
 #[cfg(test)]
