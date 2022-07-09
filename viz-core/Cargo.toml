@@ -17,7 +17,6 @@ default = [
   "multipart",
   "cookie",
   "session",
-  "csrf",
 ]
 
 data = []
@@ -35,6 +34,7 @@ cookie-signed = ["libcookie/signed"]
 session = ["cookie", "json", "sessions-core", "time"]
 
 csrf = ["cookie"]
+cors = []
 
 [dependencies]
 thiserror = "1.0.31"

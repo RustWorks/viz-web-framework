@@ -1,6 +1,8 @@
 use crate::{
-    async_trait, handler::Transform, header, headers, types, Body, Handler, IntoResponse, Request,
-    Response, Result,
+    async_trait,
+    handler::Transform,
+    header::{HeaderValue, COOKIE, SET_COOKIE},
+    types, Body, Handler, IntoResponse, Request, Response, Result,
 };
 
 pub struct Config {
@@ -57,9 +59,9 @@ where
     async fn call(&self, mut req: Request<Body>) -> Self::Output {
         let jar = req
             .headers()
-            .get_all(header::COOKIE)
+            .get_all(COOKIE)
             .iter()
-            .filter_map(|c| header::HeaderValue::to_str(c).ok())
+            .filter_map(|c| HeaderValue::to_str(c).ok())
             .fold(types::CookieJar::new(), add_cookie);
 
         let cookies = types::Cookies::new(jar);
@@ -79,10 +81,10 @@ where
                         c.delta()
                             .into_iter()
                             .filter_map(|cookie| {
-                                headers::HeaderValue::from_str(&cookie.encoded().to_string()).ok()
+                                HeaderValue::from_str(&cookie.encoded().to_string()).ok()
                             })
                             .fold(res.headers_mut(), |headers, cookie| {
-                                headers.append(header::SET_COOKIE, cookie);
+                                headers.append(SET_COOKIE, cookie);
                                 headers
                             });
                     }

@@ -4,8 +4,7 @@ use std::sync::Arc;
 use crate::{
     async_trait,
     handler::Transform,
-    header,
-    headers::{HeaderName, HeaderValue},
+    header::{HeaderName, HeaderValue, VARY},
     middleware::helper::CookieOptions,
     types::{Cookie, Cookies},
     Body, Error, FromRequest, Handler, IntoResponse, Method, Request, RequestExt, Response, Result,
@@ -243,7 +242,7 @@ where
             .map(IntoResponse::into_response)
             .map(|mut res| {
                 res.headers_mut()
-                    .insert(header::VARY, HeaderValue::from_static("Cookie"));
+                    .insert(VARY, HeaderValue::from_static("Cookie"));
                 res
             })
     }

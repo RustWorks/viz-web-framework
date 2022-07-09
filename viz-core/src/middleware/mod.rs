@@ -1,5 +1,7 @@
 #[cfg(feature = "cookie")]
 pub mod cookie;
+#[cfg(feature = "cors")]
+pub mod cors;
 #[cfg(feature = "csrf")]
 pub mod csrf;
 #[cfg(feature = "limits")]
