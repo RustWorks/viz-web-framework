@@ -110,10 +110,8 @@ where
             return Err(StatusCode::FORBIDDEN.into_error());
         }
 
-        let is_options = req.method() == Method::OPTIONS;
         let mut headers = HeaderMap::new();
-
-        let mut res = if is_options {
+        let mut res = if req.method() == Method::OPTIONS {
             // Preflight request
             if req
                 .header(ACCESS_CONTROL_REQUEST_METHOD)
@@ -125,7 +123,7 @@ where
             {
                 headers.typed_insert(self.acam.clone());
             } else {
-                return Err((StatusCode::FORBIDDEN, "'Invalid Preflight Request").into_error());
+                return Err((StatusCode::FORBIDDEN, "Invalid Preflight Request").into_error());
             }
 
             let (allow_headers, request_headers) = req
@@ -145,7 +143,7 @@ where
                 .unwrap_or((true, None));
 
             if !allow_headers {
-                return Err((StatusCode::FORBIDDEN, "'Invalid Preflight Request").into_error());
+                return Err((StatusCode::FORBIDDEN, "Invalid Preflight Request").into_error());
             }
 
             if self.config.allow_headers.is_empty() {
