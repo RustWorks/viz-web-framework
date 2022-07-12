@@ -1,3 +1,5 @@
+//! https://github.com/vercel/serve-handler MIT
+
 use std::fmt::{Display, Formatter, Result};
 use std::fs::read_dir;
 use std::path::PathBuf;
@@ -13,6 +15,7 @@ pub(crate) struct Directory {
 impl Directory {
     pub(crate) async fn render(
         base: &str,
+        prev: bool,
         root: &std::path::Path,
         unlisted: &Option<Vec<&'static str>>,
     ) -> Option<Directory> {
@@ -47,9 +50,25 @@ impl Directory {
 
         files.sort_by_key(|f| f.1.clone());
 
+        let curr = PathBuf::from_str(base).ok()?;
+
+        if prev {
+            let parent = curr.parent()?;
+            files.insert(
+                0,
+                (
+                    parent.join("").to_str()?.strip_prefix('/')?.to_string(),
+                    parent.file_name().and_then(|n| n.to_str())?.to_string(),
+                    false,
+                    None,
+                    "..".to_string(),
+                ),
+            );
+        }
+
         let mut paths = Vec::new();
 
-        for a in PathBuf::from_str(base).ok()?.ancestors() {
+        for a in curr.ancestors() {
             if let (Some(u), Some(n)) =
                 (a.join("").to_str(), a.file_name().and_then(|n| n.to_str()))
             {

@@ -1,6 +1,4 @@
 //! Static file serving and directory listing
-//!
-//! https://github.com/vercel/serve-handler MIT
 
 use std::{
     borrow::Cow,
@@ -97,6 +95,7 @@ impl Handler<Request<Body>> for ServeFilesHandler {
             Err(ServeError::MethodNotAllowed)?;
         }
 
+        let mut prev = false;
         let mut path = self.path.clone();
 
         if let Some(param) = req.params::<String>().ok() {
@@ -104,6 +103,7 @@ impl Handler<Request<Body>> for ServeFilesHandler {
                 .decode_utf8()
                 .map_err(|_| ServeError::InvalidPath)?;
             sanitize_path(&mut path, &p)?;
+            prev = true;
         }
 
         if !path.exists() {
@@ -120,7 +120,7 @@ impl Handler<Request<Body>> for ServeFilesHandler {
         }
 
         if self.listing {
-            return Directory::render(req.path(), &path, &self.unlisted)
+            return Directory::render(req.path(), prev, &path, &self.unlisted)
                 .await
                 .ok_or_else(|| StatusCode::INTERNAL_SERVER_ERROR.into_error())
                 .map(|d| Response::html(d.to_string()));

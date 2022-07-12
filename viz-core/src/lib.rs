@@ -3,8 +3,8 @@
 pub use async_trait::async_trait;
 pub use bytes::{Bytes, BytesMut};
 pub use headers;
-pub use hyper::Body;
 pub use http::{header, Method, StatusCode};
+pub use hyper::Body;
 pub use std::future::Future;
 pub use thiserror::Error as ThisError;
 
