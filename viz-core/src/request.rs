@@ -1,6 +1,6 @@
 use std::mem::replace;
 
-use http_body_util::{LengthLimitError, Limited};
+use http_body::{LengthLimitError, Limited};
 
 use crate::{
     async_trait, header,
@@ -26,6 +26,9 @@ use std::sync::Arc;
 
 #[cfg(feature = "session")]
 use crate::types::Session;
+
+#[cfg(feature = "params")]
+use crate::types::{Params, ParamsError, PathDeserializer};
 
 #[async_trait]
 pub trait RequestExt {
@@ -106,6 +109,19 @@ pub trait RequestExt {
     #[cfg(feature = "session")]
     /// Gets session
     fn session(&self) -> &Session;
+
+    #[cfg(feature = "params")]
+    /// Gets all parameters.
+    fn params<T>(&self) -> Result<T, ParamsError>
+    where
+        T: serde::de::DeserializeOwned;
+
+    #[cfg(feature = "params")]
+    /// Gets single parameter by name.
+    fn param<T>(&self, name: &str) -> Result<T, ParamsError>
+    where
+        T: std::str::FromStr,
+        T::Err: std::fmt::Display;
 }
 
 #[async_trait]
@@ -271,5 +287,32 @@ impl RequestExt for Request<Body> {
     #[cfg(feature = "session")]
     fn session(&self) -> &Session {
         self.extensions().get().expect("should get a session")
+    }
+
+    #[cfg(feature = "params")]
+    /// Gets all parameters.
+    fn params<T>(&self) -> Result<T, ParamsError>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        match self.extensions().get::<Params>() {
+            None => Err(ParamsError::Empty),
+            Some(params) => {
+                T::deserialize(PathDeserializer::new(&params)).map_err(ParamsError::Parse)
+            }
+        }
+    }
+
+    #[cfg(feature = "params")]
+    /// Gets single parameter by name.
+    fn param<T>(&self, name: &str) -> Result<T, ParamsError>
+    where
+        T: std::str::FromStr,
+        T::Err: std::fmt::Display,
+    {
+        self.extensions()
+            .get::<Params>()
+            .ok_or(ParamsError::Empty)?
+            .find(name)
     }
 }

@@ -1,22 +1,26 @@
 use crate::{header, Body, Error, Response, Result, StatusCode};
 
 pub trait IntoResponse: Sized {
-    fn into_response(self) -> Response<Body>;
+    fn into_response(self) -> Response;
 
     fn into_error(self) -> Error {
         Error::Responder(self.into_response())
     }
 }
 
-impl IntoResponse for Response<Body> {
-    fn into_response(self) -> Response<Body> {
+impl IntoResponse for Response {
+    fn into_response(self) -> Response {
         self
     }
 }
 
 impl IntoResponse for Error {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         match self {
+            Error::Normal(error) => Response::builder()
+                .status(StatusCode::INTERNAL_SERVER_ERROR)
+                .body(error.to_string().into())
+                .unwrap(),
             Error::Responder(resp) => resp,
             Error::Report(_, resp) => resp,
         }
@@ -24,7 +28,7 @@ impl IntoResponse for Error {
 }
 
 impl IntoResponse for std::io::Error {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         Response::builder()
             .status(StatusCode::INTERNAL_SERVER_ERROR)
             .body(self.to_string().into())
@@ -33,13 +37,13 @@ impl IntoResponse for std::io::Error {
 }
 
 impl IntoResponse for std::convert::Infallible {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         Response::new(Body::empty())
     }
 }
 
 impl IntoResponse for String {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         Response::builder()
             .header(
                 header::CONTENT_TYPE,
@@ -51,7 +55,7 @@ impl IntoResponse for String {
 }
 
 impl IntoResponse for &'static str {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         Response::builder()
             .header(
                 header::CONTENT_TYPE,
@@ -63,7 +67,7 @@ impl IntoResponse for &'static str {
 }
 
 impl IntoResponse for &'static [u8] {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         Response::builder()
             .header(
                 header::CONTENT_TYPE,
@@ -75,7 +79,7 @@ impl IntoResponse for &'static [u8] {
 }
 
 impl IntoResponse for Vec<u8> {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         Response::builder()
             .header(
                 header::CONTENT_TYPE,
@@ -87,7 +91,7 @@ impl IntoResponse for Vec<u8> {
 }
 
 impl IntoResponse for StatusCode {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         Response::builder()
             .status(self)
             .body(Body::empty())
@@ -99,7 +103,7 @@ impl<T> IntoResponse for Option<T>
 where
     T: IntoResponse,
 {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         match self {
             Some(r) => r.into_response(),
             None => StatusCode::NOT_FOUND.into_response(),
@@ -112,7 +116,7 @@ where
     T: IntoResponse,
     E: IntoResponse,
 {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         match self {
             Ok(r) => r.into_response(),
             Err(e) => e.into_response(),
@@ -121,7 +125,7 @@ where
 }
 
 impl IntoResponse for () {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         Response::new(Body::empty())
     }
 }
@@ -130,7 +134,7 @@ impl<T> IntoResponse for (StatusCode, T)
 where
     T: IntoResponse,
 {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         let mut res = self.1.into_response();
         *res.status_mut() = self.0;
         res

@@ -27,6 +27,27 @@ impl From<Router> for ServiceMaker {
     }
 }
 
+// hyper-v0.14
+#[cfg(any(feature = "http1", feature = "http2"))]
+impl hyper::service::Service<&hyper::server::conn::AddrStream> for ServiceMaker {
+    type Response = Stream;
+    type Error = Infallible;
+    type Future = Ready<Result<Self::Response, Self::Error>>;
+
+    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Poll::Ready(Ok(()))
+    }
+
+    fn call(&mut self, socket: &hyper::server::conn::AddrStream) -> Self::Future {
+        ready(Ok(Stream::new(
+            self.tree.clone(),
+            Some(socket.remote_addr()),
+        )))
+    }
+}
+
+// hyper-v1.0
+/*
 #[cfg(any(feature = "http1", feature = "http2"))]
 impl hyper::service::Service<&tokio::net::TcpStream> for ServiceMaker {
     type Response = Stream;
@@ -44,6 +65,7 @@ impl hyper::service::Service<&tokio::net::TcpStream> for ServiceMaker {
         ready(Ok(Stream::new(self.tree.clone(), socket.peer_addr().ok())))
     }
 }
+*/
 
 #[cfg(all(unix, feature = "unix-socket"))]
 impl hyper::service::Service<&tokio::net::UnixStream> for ServiceMaker {

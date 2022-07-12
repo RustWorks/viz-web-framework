@@ -46,6 +46,8 @@ session = ["cookie", "viz-core/session"]
 csrf = ["cookie", "viz-core/csrf"]
 cors = ["viz-core/cors"]
 
+handlers = ["viz-core/handlers"]
+
 macros = ["viz-macros"]
 
 unix-socket = []
@@ -54,10 +56,7 @@ unix-socket = []
 viz-core = { path = "../viz-core" }
 viz-router = { path = "../viz-router" }
 viz-macros = { path = "../viz-macros", optional = true }
-hyper = { version = "1.0.0-dev.0", features = [
-  "tcp",
-  "server",
-], git = "https://github.com/hyperium/hyper.git", branch = "master" }
+hyper = { version = "0.14", features = ["tcp", "server", "stream"] }
 tokio = { version = "1.19", features = ["net"] }
 
 [package.metadata.docs.rs]

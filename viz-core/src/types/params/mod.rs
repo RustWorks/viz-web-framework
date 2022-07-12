@@ -7,8 +7,10 @@ use std::{
 };
 
 use serde::de::DeserializeOwned;
-use viz_core::{
-    async_trait, Body, FromRequest, IntoResponse, Request, Response, StatusCode, ThisError,
+
+use crate::{
+    async_trait, Body, Error, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
+    ThisError,
 };
 
 pub(crate) use de::PathDeserializer;
@@ -90,39 +92,8 @@ impl IntoResponse for ParamsError {
     }
 }
 
-pub trait ParamsRequestExt {
-    /// Gets all parameters.
-    fn params<T>(&self) -> Result<T, ParamsError>
-    where
-        T: DeserializeOwned;
-
-    /// Gets single parameter by name.
-    fn param<T>(&self, name: &str) -> Result<T, ParamsError>
-    where
-        T: FromStr,
-        T::Err: Display;
-}
-
-impl ParamsRequestExt for Request<Body> {
-    fn params<T>(&self) -> Result<T, ParamsError>
-    where
-        T: DeserializeOwned,
-    {
-        match self.extensions().get::<Params>() {
-            None => Err(ParamsError::Empty),
-            Some(params) => {
-                T::deserialize(PathDeserializer::new(&params)).map_err(ParamsError::Parse)
-            }
-        }
-    }
-    fn param<T>(&self, name: &str) -> Result<T, ParamsError>
-    where
-        T: FromStr,
-        T::Err: Display,
-    {
-        self.extensions()
-            .get::<Params>()
-            .ok_or(ParamsError::Empty)?
-            .find(name)
+impl From<ParamsError> for Error {
+    fn from(e: ParamsError) -> Self {
+        e.into_error()
     }
 }

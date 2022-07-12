@@ -8,6 +8,8 @@ mod json;
 mod limits;
 #[cfg(feature = "multipart")]
 mod multipart;
+#[cfg(feature = "params")]
+mod params;
 #[cfg(feature = "query")]
 mod query;
 #[cfg(feature = "session")]
@@ -25,6 +27,10 @@ pub use json::Json;
 pub use limits::Limits;
 #[cfg(feature = "multipart")]
 pub use multipart::{Multipart, MultipartError, MultipartLimits};
+#[cfg(feature = "params")]
+pub(crate) use params::PathDeserializer;
+#[cfg(feature = "params")]
+pub use params::{Params, ParamsError};
 #[cfg(feature = "query")]
 pub use query::Query;
 #[cfg(feature = "session")]

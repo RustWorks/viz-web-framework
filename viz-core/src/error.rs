@@ -1,13 +1,15 @@
 use std::error::Error as StdError;
 
-use crate::{Body, IntoResponse, Response, ThisError};
+use crate::{IntoResponse, Response, StatusCode, ThisError};
 
 #[derive(ThisError, Debug)]
 pub enum Error {
+    #[error(transparent)]
+    Normal(Box<dyn StdError + Send + Sync>),
     #[error("response")]
-    Responder(Response<Body>),
+    Responder(Response),
     #[error("report")]
-    Report(Box<dyn StdError + Send + Sync>, Response<Body>),
+    Report(Box<dyn StdError + Send + Sync>, Response),
 }
 
 impl Error {
@@ -66,5 +68,11 @@ where
 {
     fn from((e, t): (E, T)) -> Self {
         Error::Report(Box::new(e), t.into_response())
+    }
+}
+
+impl From<http::Error> for Error {
+    fn from(e: http::Error) -> Self {
+        (e, StatusCode::BAD_REQUEST).into()
     }
 }

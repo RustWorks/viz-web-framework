@@ -2,7 +2,7 @@ use crate::{header, types::PayloadError, Body, Response, Result, StatusCode};
 
 pub trait ResponseExt {
     /// Response body with `Content-Type`
-    fn with<T>(t: T, c: &'static str) -> Response<Body>
+    fn with<T>(t: T, c: &'static str) -> Response
     where
         T: Into<Body>,
     {
@@ -13,7 +13,7 @@ pub trait ResponseExt {
     }
 
     /// Response TEXT
-    fn text<T>(t: T) -> Response<Body>
+    fn text<T>(t: T) -> Response
     where
         T: Into<Body>,
     {
@@ -21,7 +21,7 @@ pub trait ResponseExt {
     }
 
     /// Response HTML
-    fn html<T>(t: T) -> Response<Body>
+    fn html<T>(t: T) -> Response
     where
         T: Into<Body>,
     {
@@ -30,7 +30,7 @@ pub trait ResponseExt {
 
     #[cfg(feature = "json")]
     /// Response JSON
-    fn json<T>(t: T) -> Result<Response<Body>, PayloadError>
+    fn json<T>(t: T) -> Result<Response, PayloadError>
     where
         T: serde::Serialize,
     {
@@ -52,19 +52,19 @@ pub trait ResponseExt {
     /// The response redirects to the specified URL.
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/redirect>
-    fn redirect<T>(url: T) -> Response<Body>
+    fn redirect<T>(url: T) -> Response
     where
         T: AsRef<str>;
 
     /// The response redirects to the specified URL and the status code.
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/redirect>
-    fn redirect_with_status<T>(uri: T, status: StatusCode) -> Response<Body>
+    fn redirect_with_status<T>(uri: T, status: StatusCode) -> Response
     where
         T: AsRef<str>;
 
     /// <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/303>
-    fn see_other<T>(url: T) -> Response<Body>
+    fn see_other<T>(url: T) -> Response
     where
         T: AsRef<str>,
     {
@@ -72,7 +72,7 @@ pub trait ResponseExt {
     }
 
     /// <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/307>
-    fn temporary<T>(url: T) -> Response<Body>
+    fn temporary<T>(url: T) -> Response
     where
         T: AsRef<str>,
     {
@@ -80,7 +80,7 @@ pub trait ResponseExt {
     }
 
     /// <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/308>
-    fn permanent<T>(url: T) -> Response<Body>
+    fn permanent<T>(url: T) -> Response
     where
         T: AsRef<str>,
     {
@@ -88,7 +88,7 @@ pub trait ResponseExt {
     }
 }
 
-impl ResponseExt for Response<Body> {
+impl ResponseExt for Response {
     fn ok(&self) -> bool {
         self.status().is_success()
     }
@@ -102,7 +102,7 @@ impl ResponseExt for Response<Body> {
         res
     }
 
-    fn redirect<T>(url: T) -> Response<Body>
+    fn redirect<T>(url: T) -> Response
     where
         T: AsRef<str>,
     {
@@ -116,7 +116,7 @@ impl ResponseExt for Response<Body> {
         }
     }
 
-    fn redirect_with_status<T>(url: T, status: StatusCode) -> Response<Body>
+    fn redirect_with_status<T>(url: T, status: StatusCode) -> Response
     where
         T: AsRef<str>,
     {

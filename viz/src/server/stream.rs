@@ -10,7 +10,7 @@ use std::{
 use hyper::service::Service;
 
 use crate::{
-    Body, Handler, IntoResponse, Method, Params, Request, RequestExt, Response, StatusCode, Tree,
+    types::Params, Handler, IntoResponse, Method, Request, RequestExt, Response, StatusCode, Tree,
 };
 
 pub struct Stream {
@@ -24,8 +24,8 @@ impl Stream {
     }
 }
 
-impl Service<Request<Body>> for Stream {
-    type Response = Response<Body>;
+impl Service<Request> for Stream {
+    type Response = Response;
     type Error = Infallible;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
 
@@ -35,17 +35,17 @@ impl Service<Request<Body>> for Stream {
     }
 
     #[inline]
-    fn call(&mut self, req: Request<Body>) -> Self::Future {
+    fn call(&mut self, req: Request) -> Self::Future {
         Box::pin(serve(req, self.tree.clone(), self.addr))
     }
 }
 
 /// Serves a request and returns a response.
 pub async fn serve(
-    mut req: Request<Body>,
+    mut req: Request,
     tree: Arc<Tree>,
     mut addr: Option<SocketAddr>,
-) -> Result<Response<Body>, Infallible> {
+) -> Result<Response, Infallible> {
     let method = req.method().to_owned();
     let path = req.path().to_owned();
 

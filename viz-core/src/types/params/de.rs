@@ -486,7 +486,7 @@ mod tests {
     use serde::Deserialize;
 
     use super::*;
-    use crate::Params;
+    use crate::types::Params;
 
     #[derive(Deserialize)]
     struct MyStruct {
