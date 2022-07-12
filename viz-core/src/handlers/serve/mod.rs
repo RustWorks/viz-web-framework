@@ -107,7 +107,7 @@ impl Handler<Request<Body>> for ServeFilesHandler {
         }
 
         if !path.exists() {
-            return Err(StatusCode::NOT_FOUND.into_error())?;
+            Err(StatusCode::NOT_FOUND.into_error())?;
         }
 
         if path.is_file() {
