@@ -17,7 +17,7 @@ pub(crate) struct Directory {
 }
 
 impl Directory {
-    pub(crate) fn render(
+    pub(crate) fn new(
         base: &str,
         prev: bool,
         root: &std::path::Path,
