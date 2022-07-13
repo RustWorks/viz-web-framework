@@ -17,8 +17,7 @@ use crate::{
         AcceptRanges, ContentLength, ContentRange, ContentType, ETag, HeaderMap, HeaderMapExt,
         IfMatch, IfModifiedSince, IfNoneMatch, IfUnmodifiedSince, LastModified, Range,
     },
-    Body, Handler, IntoResponse, Method, Request, RequestExt, Response, ResponseExt, Result,
-    StatusCode,
+    Body, Handler, IntoResponse, Method, Request, RequestExt, Response, Result, StatusCode,
 };
 
 mod error;
@@ -121,9 +120,8 @@ impl Handler<Request<Body>> for ServeFilesHandler {
 
         if self.listing {
             return Directory::render(req.path(), prev, &path, &self.unlisted)
-                .await
                 .ok_or_else(|| StatusCode::INTERNAL_SERVER_ERROR.into_error())
-                .map(|d| Response::html(d.to_string()));
+                .map(IntoResponse::into_response);
         }
 
         Ok(StatusCode::NOT_FOUND.into_response())
@@ -205,8 +203,8 @@ async fn serve(path: &Path, headers: &HeaderMap) -> Result<Response<Body>> {
 
         if start != 0 || end != max {
             if let Ok(range) = ContentRange::bytes(start..end, max) {
-                content_range.replace(range);
                 max = end - start;
+                content_range.replace(range);
                 file.seek(SeekFrom::Start(start)).map_err(ServeError::Io)?;
             }
         }

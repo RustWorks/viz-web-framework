@@ -1,9 +1,13 @@
 //! https://github.com/vercel/serve-handler MIT
 
-use std::fmt::{Display, Formatter, Result};
-use std::fs::read_dir;
-use std::path::PathBuf;
-use std::str::FromStr;
+use std::{
+    fmt::{Display, Formatter, Result},
+    fs::read_dir,
+    path::PathBuf,
+    str::FromStr,
+};
+
+use crate::{IntoResponse, Response, ResponseExt};
 
 #[derive(Debug)]
 pub(crate) struct Directory {
@@ -13,7 +17,7 @@ pub(crate) struct Directory {
 }
 
 impl Directory {
-    pub(crate) async fn render(
+    pub(crate) fn render(
         base: &str,
         prev: bool,
         root: &std::path::Path,
@@ -83,6 +87,12 @@ impl Directory {
             paths: Paths(paths),
             files: Files(files),
         })
+    }
+}
+
+impl IntoResponse for Directory {
+    fn into_response(self) -> Response {
+        Response::html(self.to_string())
     }
 }
 
