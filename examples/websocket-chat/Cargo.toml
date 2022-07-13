@@ -1,15 +1,15 @@
 [package]
-name = "session"
+name = "websocket-chat"
 version = "0.1.0"
 edition = "2021"
 publish = false
 
 [dependencies]
-viz = { path = "../../viz", features = ["session"] }
-sessions = { version = "0.3.4", features = ["memory"] }
+viz = { path = "../../viz", features = ["params", "websocket", "router-ext"] }
 
 tokio = { version = "1.0", default-features = false, features = [
+  "rt",
   "rt-multi-thread",
   "macros",
 ] }
-nano-id = "0.2"
+futures-util = "0.3.21"

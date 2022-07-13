@@ -14,6 +14,8 @@ mod params;
 mod query;
 #[cfg(feature = "session")]
 mod session;
+#[cfg(feature = "websocket")]
+mod websocket;
 
 #[cfg(any(feature = "cookie-signed", feature = "cookie-private"))]
 pub use cookie::CookieKey;
@@ -35,6 +37,8 @@ pub use params::{Params, ParamsError};
 pub use query::Query;
 #[cfg(feature = "session")]
 pub use session::Session;
+#[cfg(feature = "websocket")]
+pub use websocket::{Message, WebSocket, WebSocketConfig, WebSocketError, WebSocketStream};
 
 mod data;
 mod header;

@@ -23,6 +23,7 @@ default = [
   "query",
   "form",
   "json",
+  "params",
   "multipart",
   "cookie",
   "macros",
@@ -36,7 +37,9 @@ data = ["viz-core/data"]
 query = ["viz-core/query"]
 form = ["viz-core/form"]
 json = ["viz-core/json"]
+params = ["viz-core/params"]
 multipart = ["viz-core/form-data"]
+websocket = ["viz-core/websocket"]
 
 cookie = ["viz-core/cookie"]
 cookie-private = ["viz-core/cookie-private"]
@@ -52,12 +55,14 @@ macros = ["viz-macros"]
 
 unix-socket = []
 
+router-ext = ["viz-router/ext"]
+
 [dependencies]
 viz-core = { path = "../viz-core" }
 viz-router = { path = "../viz-router" }
 viz-macros = { path = "../viz-macros", optional = true }
 hyper = { version = "0.14", features = ["tcp", "server", "stream"] }
-tokio = { version = "1.19", features = ["net"] }
+tokio = { version = "1.20", features = ["net"] }
 
 [package.metadata.docs.rs]
 all-features = true

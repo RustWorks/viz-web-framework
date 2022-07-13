@@ -4,7 +4,10 @@ use std::{
     ops::{Deref, DerefMut},
 };
 
-use crate::{async_trait, types::PayloadError, Body, FromRequest, Request, RequestExt, Result};
+use crate::{
+    async_trait, handler::Transform, types::PayloadError, Body, FromRequest, Handler, IntoResponse,
+    Request, RequestExt, Response, Result,
+};
 
 /// Data Extractor
 pub struct Data<T: ?Sized>(pub T);
@@ -74,4 +77,32 @@ where
 
 fn error<T>() -> PayloadError {
     PayloadError::Data(type_name::<T>())
+}
+
+impl<H, T> Transform<H> for Data<T>
+where
+    T: Clone + Send + Sync + 'static,
+{
+    type Output = Data<(H, T)>;
+
+    fn transform(&self, h: H) -> Self::Output {
+        Data((h, self.0.clone()))
+    }
+}
+
+// TODO: Maybe should be a `before` handler
+#[async_trait]
+impl<H, O, T> Handler<Request> for Data<(H, T)>
+where
+    O: IntoResponse,
+    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    T: Clone + Send + Sync + 'static,
+{
+    type Output = Result<Response>;
+
+    async fn call(&self, mut req: Request) -> Self::Output {
+        let Data((h, t)) = self;
+        req.extensions_mut().insert(t.clone());
+        h.call(req).await.map(IntoResponse::into_response)
+    }
 }

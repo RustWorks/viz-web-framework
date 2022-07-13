@@ -25,7 +25,10 @@ async fn main() -> Result<()> {
             "/cargo.toml",
             get(ServeFileHandler::new(dir.join("Cargo.toml"))),
         )
-        .route("/examples/*", get(ServeFilesHandler::new(dir).listing(true)));
+        .route(
+            "/examples/*",
+            get(ServeFilesHandler::new(dir).listing(true)),
+        );
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {
         println!("{}", err);
