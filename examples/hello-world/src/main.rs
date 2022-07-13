@@ -14,7 +14,11 @@ async fn main() -> Result<()> {
 
     let app = Router::new().route("/", get(index));
 
-    if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {
+    if let Err(err) = Server::bind(&addr)
+        .tcp_nodelay(true)
+        .serve(ServiceMaker::from(app))
+        .await
+    {
         println!("{}", err);
     }
 
