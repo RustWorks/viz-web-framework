@@ -4,9 +4,10 @@ use futures_util::{SinkExt, StreamExt};
 use std::net::SocketAddr;
 use tokio::sync::broadcast::{channel, Sender};
 use viz::{
-    get_ext,
+    get, get_ext,
     types::{Data, Message, Params, WebSocket},
-    IntoResponse, Response, ResponseExt, Result, Router, Server, ServiceMaker,
+    HandlerExt, IntoResponse, Request, RequestExt, Response, ResponseExt, Result, Router, Server,
+    ServiceMaker,
 };
 
 async fn index() -> Result<Response> {
@@ -15,11 +16,10 @@ async fn index() -> Result<Response> {
     )))
 }
 
-async fn ws(
-    ws: WebSocket,
-    Params(name): Params<String>,
-    Data(sender): Data<Sender<String>>,
-) -> Result<impl IntoResponse> {
+async fn ws(mut req: Request) -> Result<impl IntoResponse> {
+    let (ws, Params(name), Data(sender)): (WebSocket, Params<String>, Data<Sender<String>>) =
+        req.extract().await?;
+
     let tx = sender.clone();
     let mut rx = sender.subscribe();
 
@@ -57,7 +57,7 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .route("/", get_ext(index))
-        .route("/ws/:name", get_ext(ws).with(Data::new(channel.0)));
+        .route("/ws/:name", get(ws.with(Data::new(channel.0))));
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {
         println!("{}", err);
