@@ -100,7 +100,7 @@ impl Display for Directory {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
         write!(
             f,
-            include_str!("directory.tpl"),
+            include_str!("list.tpl"),
             name = &self.name,
             paths = &self.paths,
             files = &self.files

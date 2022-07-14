@@ -20,11 +20,11 @@ use crate::{
     Body, Handler, IntoResponse, Method, Request, RequestExt, Response, Result, StatusCode,
 };
 
+mod directory;
 mod error;
-mod template;
 
+use directory::Directory;
 pub use error::ServeError;
-use template::Directory;
 
 #[derive(Clone)]
 pub struct ServeFileHandler {
