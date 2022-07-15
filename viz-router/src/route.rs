@@ -278,6 +278,15 @@ repeat!(
     trace TRACE
 );
 
+/// Appends a route, with handler by any HTTP verbs.
+pub fn any<H, O>(handler: H) -> Route
+where
+    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    O: IntoResponse + Send + Sync + 'static,
+{
+    Route::new().any(handler)
+}
+
 #[cfg(feature = "ext")]
 /// Appends a route, with a HTTP verb and multiple parameters of handler.
 pub fn on_ext<H, O, I>(method: Method, handler: H) -> Route
@@ -303,6 +312,17 @@ repeat!(
     patch_ext PATCH
     trace_ext TRACE
 );
+
+/// Appends a route, with multiple parameters of handler by any HTTP verbs.
+pub fn any_ext<H, O, I>(handler: H) -> Route
+where
+    I: FromRequest + Send + Sync + 'static,
+    I::Error: IntoResponse + Send + Sync,
+    H: FnExt<I, Output = Result<O>>,
+    O: IntoResponse + Send + Sync + 'static,
+{
+    Route::new().any_ext(handler)
+}
 
 #[cfg(test)]
 mod tests {
