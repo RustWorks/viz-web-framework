@@ -18,7 +18,7 @@ use viz_core::{
         IfMatch, IfModifiedSince, IfNoneMatch, IfUnmodifiedSince, LastModified, Range,
     },
     types::Params,
-    Body, Handler, IntoResponse, Method, Request, RequestExt, Response, Result, StatusCode,
+    Handler, IntoResponse, Method, Request, RequestExt, Response, ResponseExt, Result, StatusCode,
 };
 
 mod directory;
@@ -45,10 +45,10 @@ impl File {
 }
 
 #[async_trait]
-impl Handler<Request<Body>> for File {
-    type Output = Result<Response<Body>>;
+impl Handler<Request> for File {
+    type Output = Result<Response>;
 
-    async fn call(&self, req: Request<Body>) -> Self::Output {
+    async fn call(&self, req: Request) -> Self::Output {
         serve(&self.path, req.headers()).await
     }
 }
@@ -87,10 +87,10 @@ impl Files {
 }
 
 #[async_trait]
-impl Handler<Request<Body>> for Files {
-    type Output = Result<Response<Body>>;
+impl Handler<Request> for Files {
+    type Output = Result<Response>;
 
-    async fn call(&self, req: Request<Body>) -> Self::Output {
+    async fn call(&self, req: Request) -> Self::Output {
         if req.method() != Method::GET {
             Err(Error::MethodNotAllowed)?;
         }
@@ -158,7 +158,7 @@ fn extract_etag(mtime: &SystemTime, size: u64) -> Option<ETag> {
     .ok()
 }
 
-async fn serve(path: &Path, headers: &HeaderMap) -> Result<Response<Body>> {
+async fn serve(path: &Path, headers: &HeaderMap) -> Result<Response> {
     let mut file = std::fs::File::open(path).map_err(Error::Io)?;
     let metadata = file
         .metadata()
@@ -215,38 +215,33 @@ async fn serve(path: &Path, headers: &HeaderMap) -> Result<Response<Body>> {
         }
     }
 
-    let body = if content_range.is_some() {
+    let mut res = if content_range.is_some() {
         // max = end - start
-        Body::wrap_stream(ReaderStream::new(tokio::fs::File::from_std(file).take(max)))
+        Response::stream(ReaderStream::new(tokio::fs::File::from_std(file).take(max)))
     } else {
-        Body::wrap_stream(ReaderStream::new(tokio::fs::File::from_std(file)))
+        Response::stream(ReaderStream::new(tokio::fs::File::from_std(file)))
     };
 
-    Response::builder()
-        .body(body)
-        .map(|mut res| {
-            let headers = res.headers_mut();
+    let headers = res.headers_mut();
 
-            headers.typed_insert(AcceptRanges::bytes());
-            headers.typed_insert(ContentLength(max));
-            headers.typed_insert(ContentType::from(
-                mime_guess::from_path(path).first_or_octet_stream(),
-            ));
+    headers.typed_insert(AcceptRanges::bytes());
+    headers.typed_insert(ContentLength(max));
+    headers.typed_insert(ContentType::from(
+        mime_guess::from_path(path).first_or_octet_stream(),
+    ));
 
-            if let Some(etag) = etag {
-                headers.typed_insert(etag);
-            }
+    if let Some(etag) = etag {
+        headers.typed_insert(etag);
+    }
 
-            if let Some(last_modified) = last_modified {
-                headers.typed_insert(last_modified);
-            }
+    if let Some(last_modified) = last_modified {
+        headers.typed_insert(last_modified);
+    }
 
-            if let Some(content_range) = content_range {
-                headers.typed_insert(content_range);
-                *res.status_mut() = StatusCode::PARTIAL_CONTENT;
-            };
+    if let Some(content_range) = content_range {
+        headers.typed_insert(content_range);
+        *res.status_mut() = StatusCode::PARTIAL_CONTENT;
+    };
 
-            res
-        })
-        .map_err(Into::into)
+    Ok(res)
 }

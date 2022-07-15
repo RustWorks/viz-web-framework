@@ -39,6 +39,16 @@ pub trait ResponseExt {
             .map_err(PayloadError::Json)
     }
 
+    /// Response Stream
+    fn stream<S, O, E>(s: S) -> Response
+    where
+        S: futures_util::Stream<Item = Result<O, E>> + Send + 'static,
+        O: Into<bytes::Bytes> + 'static,
+        E: std::error::Error + Send + Sync + 'static,
+    {
+        Response::new(Body::wrap_stream(s))
+    }
+
     // TODO: Download transfers the file from path as an attachment.
     // fn download() -> Response<Body>
 
