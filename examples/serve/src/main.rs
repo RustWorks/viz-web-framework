@@ -21,7 +21,7 @@ async fn main() -> Result<()> {
     let app = Router::new()
         .route("/", get(index))
         .route("/cargo.toml", get(serve::File::new(dir.join("Cargo.toml"))))
-        .route("/examples/*", get(serve::Files::new(dir).listing(true)))
+        .route("/examples/*", get(serve::Files::new(dir).listing()))
         .route("/*", any(|_| async { Ok(Response::text("Welcome!")) }));
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {

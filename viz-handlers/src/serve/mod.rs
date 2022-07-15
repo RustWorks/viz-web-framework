@@ -75,8 +75,8 @@ impl Files {
         }
     }
 
-    pub fn listing(mut self, listing: bool) -> Self {
-        self.listing = listing;
+    pub fn listing(mut self) -> Self {
+        self.listing = true;
         self
     }
 
