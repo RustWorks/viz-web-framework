@@ -17,6 +17,7 @@ use viz_core::{
         AcceptRanges, ContentLength, ContentRange, ContentType, ETag, HeaderMap, HeaderMapExt,
         IfMatch, IfModifiedSince, IfNoneMatch, IfUnmodifiedSince, LastModified, Range,
     },
+    types::Params,
     Body, Handler, IntoResponse, Method, Request, RequestExt, Response, Result, StatusCode,
 };
 
@@ -97,8 +98,12 @@ impl Handler<Request<Body>> for Files {
         let mut prev = false;
         let mut path = self.path.clone();
 
-        if let Some(param) = req.params::<String>().ok() {
-            let p = percent_encoding::percent_decode_str(param.as_str())
+        if let Some(param) = req
+            .extensions()
+            .get::<Params>()
+            .and_then(|params| params.first().map(|(_, v)| v))
+        {
+            let p = percent_encoding::percent_decode_str(param)
                 .decode_utf8()
                 .map_err(|_| Error::InvalidPath)?;
             sanitize_path(&mut path, &p)?;
