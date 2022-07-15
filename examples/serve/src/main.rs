@@ -4,7 +4,7 @@ use std::env;
 use std::net::SocketAddr;
 use viz::{
     get,
-    handlers::serve::{ServeFileHandler, ServeFilesHandler},
+    handlers::serve,
     Body, Request, Result, Router, Server, ServiceMaker,
 };
 
@@ -23,11 +23,11 @@ async fn main() -> Result<()> {
         .route("/", get(index))
         .route(
             "/cargo.toml",
-            get(ServeFileHandler::new(dir.join("Cargo.toml"))),
+            get(serve::File::new(dir.join("Cargo.toml"))),
         )
         .route(
             "/examples/*",
-            get(ServeFilesHandler::new(dir).listing(true)),
+            get(serve::Files::new(dir).listing(true)),
         );
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {

@@ -26,7 +26,6 @@ default = [
   "params",
   "multipart",
   "cookie",
-  "macros",
   "session",
 ]
 
@@ -49,18 +48,18 @@ session = ["cookie", "viz-core/session"]
 csrf = ["cookie", "viz-core/csrf"]
 cors = ["viz-core/cors"]
 
-handlers = ["viz-core/handlers"]
-
-macros = ["viz-macros"]
-
 unix-socket = []
 
 router-ext = ["viz-router/ext"]
+
+macros = ["viz-macros"]
+handlers = ["viz-handlers"]
 
 [dependencies]
 viz-core = { path = "../viz-core" }
 viz-router = { path = "../viz-router" }
 viz-macros = { path = "../viz-macros", optional = true }
+viz-handlers = { path = "../viz-handlers", optional = true }
 hyper = { version = "0.14", features = ["tcp", "server", "stream"] }
 tokio = { version = "1.20", features = ["net"] }
 

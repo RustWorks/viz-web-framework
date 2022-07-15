@@ -7,7 +7,7 @@ use std::{
     str::FromStr,
 };
 
-use crate::{IntoResponse, Response, ResponseExt};
+use viz_core::{IntoResponse, Response, ResponseExt};
 
 #[derive(Debug)]
 pub(crate) struct Directory {

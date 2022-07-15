@@ -8,10 +8,10 @@ use std::{
     str::FromStr,
     time::SystemTime,
 };
-use tokio::{fs::File, io::AsyncReadExt};
+use tokio::io::AsyncReadExt;
 use tokio_util::io::ReaderStream;
 
-use crate::{
+use viz_core::{
     async_trait,
     headers::{
         AcceptRanges, ContentLength, ContentRange, ContentType, ETag, HeaderMap, HeaderMapExt,
@@ -24,14 +24,14 @@ mod directory;
 mod error;
 
 use directory::Directory;
-pub use error::ServeError;
+pub use error::Error;
 
 #[derive(Clone)]
-pub struct ServeFileHandler {
+pub struct File {
     path: PathBuf,
 }
 
-impl ServeFileHandler {
+impl File {
     pub fn new(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
 
@@ -44,7 +44,7 @@ impl ServeFileHandler {
 }
 
 #[async_trait]
-impl Handler<Request<Body>> for ServeFileHandler {
+impl Handler<Request<Body>> for File {
     type Output = Result<Response<Body>>;
 
     async fn call(&self, req: Request<Body>) -> Self::Output {
@@ -53,13 +53,13 @@ impl Handler<Request<Body>> for ServeFileHandler {
 }
 
 #[derive(Clone)]
-pub struct ServeFilesHandler {
+pub struct Files {
     path: PathBuf,
     listing: bool,
     unlisted: Option<Vec<&'static str>>,
 }
 
-impl ServeFilesHandler {
+impl Files {
     pub fn new(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
 
@@ -86,12 +86,12 @@ impl ServeFilesHandler {
 }
 
 #[async_trait]
-impl Handler<Request<Body>> for ServeFilesHandler {
+impl Handler<Request<Body>> for Files {
     type Output = Result<Response<Body>>;
 
     async fn call(&self, req: Request<Body>) -> Self::Output {
         if req.method() != Method::GET {
-            Err(ServeError::MethodNotAllowed)?;
+            Err(Error::MethodNotAllowed)?;
         }
 
         let mut prev = false;
@@ -100,7 +100,7 @@ impl Handler<Request<Body>> for ServeFilesHandler {
         if let Some(param) = req.params::<String>().ok() {
             let p = percent_encoding::percent_decode_str(param.as_str())
                 .decode_utf8()
-                .map_err(|_| ServeError::InvalidPath)?;
+                .map_err(|_| Error::InvalidPath)?;
             sanitize_path(&mut path, &p)?;
             prev = true;
         }
@@ -154,7 +154,7 @@ fn extract_etag(mtime: &SystemTime, size: u64) -> Option<ETag> {
 }
 
 async fn serve(path: &Path, headers: &HeaderMap) -> Result<Response<Body>> {
-    let mut file = std::fs::File::open(path).map_err(ServeError::Io)?;
+    let mut file = std::fs::File::open(path).map_err(Error::Io)?;
     let metadata = file
         .metadata()
         .map_err(|_| StatusCode::NOT_FOUND.into_error())?;
@@ -170,7 +170,7 @@ async fn serve(path: &Path, headers: &HeaderMap) -> Result<Response<Body>> {
         if matches!((headers.typed_get::<IfMatch>(), &etag), (Some(if_match), Some(etag)) if !if_match.precondition_passes(etag))
             || matches!(headers.typed_get::<IfUnmodifiedSince>(), Some(if_unmodified_since) if !if_unmodified_since.precondition_passes(modified))
         {
-            Err(ServeError::PreconditionFailed)?;
+            Err(Error::PreconditionFailed)?;
         }
 
         if matches!((headers.typed_get::<IfNoneMatch>(), &etag), (Some(if_no_match), Some(etag)) if !if_no_match.precondition_passes(etag))
@@ -198,23 +198,23 @@ async fn serve(path: &Path, headers: &HeaderMap) -> Result<Response<Body>> {
         };
 
         if end < start || end > max {
-            Err(ServeError::RangeUnsatisfied(max))?;
+            Err(Error::RangeUnsatisfied(max))?;
         }
 
         if start != 0 || end != max {
             if let Ok(range) = ContentRange::bytes(start..end, max) {
                 max = end - start;
                 content_range.replace(range);
-                file.seek(SeekFrom::Start(start)).map_err(ServeError::Io)?;
+                file.seek(SeekFrom::Start(start)).map_err(Error::Io)?;
             }
         }
     }
 
     let body = if content_range.is_some() {
         // max = end - start
-        Body::wrap_stream(ReaderStream::new(File::from_std(file).take(max)))
+        Body::wrap_stream(ReaderStream::new(tokio::fs::File::from_std(file).take(max)))
     } else {
-        Body::wrap_stream(ReaderStream::new(File::from_std(file)))
+        Body::wrap_stream(ReaderStream::new(tokio::fs::File::from_std(file)))
     };
 
     Response::builder()

@@ -19,7 +19,6 @@ default = [
   "websocket",
   "cookie",
   "session",
-  "handlers",
 ]
 
 data = []
@@ -40,16 +39,6 @@ session = ["cookie", "json", "sessions-core", "time"]
 
 csrf = ["cookie"]
 cors = []
-
-handlers = ["serve"]
-serve = [
-  "mime_guess",
-  "percent-encoding",
-  "tokio-stream",
-  "tokio-util/io",
-  "tokio/fs",
-  "tokio/io-util",
-]
 
 [dependencies]
 thiserror = "1.0.31"
@@ -73,11 +62,7 @@ libcookie = { package = "cookie", version = "0.16.0", features = [
 ], optional = true }
 getrandom = "0.2.7"
 base64 = "0.13.0"
-mime_guess = { version = "2.0", optional = true }
-percent-encoding = { version = "2.1.0", optional = true }
 tokio = { version = "1.20", optional = true }
-tokio-stream = { version = "0.1.9", optional = true }
-tokio-util = { version = "0.7.3", optional = true }
 tokio-tungstenite = { version = "0.17.2", optional = true }
 # TODO: EmbedHandler
 rust-embed = { version = "6.4", optional = true }

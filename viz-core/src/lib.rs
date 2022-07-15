@@ -17,10 +17,10 @@ pub(crate) mod macros;
 
 pub mod handler;
 #[doc(no_inline)]
-pub use crate::handler::{BoxHandler, FnExt, Handler, HandlerExt, Next, Responder, ResponderExt};
+pub use crate::handler::{
+    BoxHandler, FnExt, Handler, HandlerExt, Next, Responder, ResponderExt, Transform,
+};
 
-#[cfg(feature = "handlers")]
-pub mod handlers;
 pub mod middleware;
 pub mod types;
 

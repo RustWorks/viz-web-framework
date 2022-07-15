@@ -1,0 +1,28 @@
+[package]
+name = "viz-handlers"
+version = "0.1.0"
+authors = ["Fangdun Tsai <cfddream@gmail.com>"]
+description = "Viz handlers"
+license = "MIT OR Apache-2.0"
+edition = "2021"
+
+[features]
+default = ["serve"]
+
+serve = [
+  "mime_guess",
+  "percent-encoding",
+  "tokio-stream",
+  "tokio-util/io",
+  "tokio/fs",
+  "tokio/io-util",
+]
+
+[dependencies]
+viz-core = { path = "../viz-core" }
+
+percent-encoding = { version = "2.1.0", optional = true }
+mime_guess = { version = "2.0", optional = true }
+tokio = { version = "1.20", optional = true }
+tokio-stream = { version = "0.1.9", optional = true }
+tokio-util = { version = "0.7.3", optional = true }
