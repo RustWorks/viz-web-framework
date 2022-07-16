@@ -39,6 +39,7 @@ json = ["viz-core/json"]
 params = ["viz-core/params"]
 multipart = ["viz-core/form-data"]
 websocket = ["viz-core/websocket"]
+sse = ["viz-core/sse"]
 
 cookie = ["viz-core/cookie"]
 cookie-private = ["viz-core/cookie-private"]

@@ -13,7 +13,7 @@ ext = []
 
 [dependencies]
 viz-core = { path = "../viz-core" }
-path-tree = "0.3"
+path-tree = "0.4"
 serde = "1.0"
 thiserror = "1.0"
 

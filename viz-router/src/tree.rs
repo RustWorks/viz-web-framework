@@ -38,7 +38,10 @@ impl From<Router> for Tree {
     fn from(router: Router) -> Self {
         let mut tree = Tree::default();
         if let Some(routes) = router.routes {
-            for (path, Route { methods }) in routes {
+            for (mut path, Route { methods }) in routes {
+                if !path.starts_with('/') {
+                    path.insert(0, '/');
+                }
                 for (method, handler) in methods {
                     match tree.as_mut().iter_mut().find_map(|(m, t)| {
                         if *m == method {
