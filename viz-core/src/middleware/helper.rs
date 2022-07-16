@@ -83,10 +83,10 @@ impl CookieOptions {
             cookie.set_domain(domain);
         }
         if let Some(max_age) = self.max_age {
-            cookie.set_max_age(Some(libcookie::time::Duration::new(
-                max_age.as_secs() as i64,
-                max_age.subsec_nanos() as i32,
-            )));
+            cookie.set_max_age(
+                libcookie::time::Duration::try_from(max_age)
+                    .expect("cant convert std Duration into time::Duration"),
+            );
         }
 
         cookie
