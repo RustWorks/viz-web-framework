@@ -1,6 +1,10 @@
+//! Request Multipart Extractor
+
 use form_data::FormData;
 
-use crate::{async_trait, Body, FromRequest, IntoResponse, Request, RequestExt, StatusCode};
+use crate::{
+    async_trait, Body, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
+};
 
 use super::{Payload, PayloadError};
 
@@ -29,13 +33,13 @@ impl FromRequest for Multipart {
     type Error = PayloadError;
 
     #[inline]
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         req.multipart().await
     }
 }
 
 impl IntoResponse for MultipartError {
-    fn into_response(self) -> http::Response<Body> {
+    fn into_response(self) -> Response {
         (
             match self {
                 MultipartError::InvalidHeader

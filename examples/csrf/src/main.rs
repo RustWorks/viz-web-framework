@@ -9,14 +9,14 @@ use viz::{
         csrf::{self, CsrfToken},
         helper::CookieOptions,
     },
-    Body, Method, Request, RequestExt, Result, Router, Server, ServiceMaker,
+    Method, Request, RequestExt, Result, Router, Server, ServiceMaker,
 };
 
-async fn index(mut req: Request<Body>) -> Result<String> {
+async fn index(mut req: Request) -> Result<String> {
     Ok(req.extract::<CsrfToken>().await?.0)
 }
 
-async fn create(_req: Request<Body>) -> Result<&'static str> {
+async fn create(_req: Request) -> Result<&'static str> {
     Ok("CSRF Protection!")
 }
 

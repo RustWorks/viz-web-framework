@@ -1,3 +1,5 @@
+//! Shared Data Handler and Extractor
+
 use std::{
     any::type_name,
     fmt,
@@ -5,7 +7,7 @@ use std::{
 };
 
 use crate::{
-    async_trait, handler::Transform, types::PayloadError, Body, FromRequest, Handler, IntoResponse,
+    async_trait, handler::Transform, types::PayloadError, FromRequest, Handler, IntoResponse,
     Request, RequestExt, Response, Result,
 };
 
@@ -70,7 +72,7 @@ where
 {
     type Error = PayloadError;
 
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         req.data().map(Self).ok_or_else(error::<T>)
     }
 }
@@ -95,7 +97,7 @@ where
 impl<H, O, T> Handler<Request> for Data<(H, T)>
 where
     O: IntoResponse,
-    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>> + Clone,
     T: Clone + Send + Sync + 'static,
 {
     type Output = Result<Response>;

@@ -1,4 +1,4 @@
-use crate::{async_trait, Body, Handler, IntoResponse, Response, Result};
+use crate::{async_trait, Handler, IntoResponse, Response, Result};
 
 #[derive(Clone)]
 pub struct After<H, F> {
@@ -19,7 +19,7 @@ where
     I: Send + 'static,
     O: IntoResponse + Send,
     H: Handler<I, Output = Result<O>> + Clone,
-    F: Handler<Result<Response<Body>>, Output = Result<Response<Body>>> + Clone,
+    F: Handler<Result<Response>, Output = Result<Response>> + Clone,
 {
     type Output = F::Output;
 

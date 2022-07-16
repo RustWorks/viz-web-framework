@@ -1,3 +1,5 @@
+//! WebSocket
+
 use std::{borrow::Cow, future::Future};
 
 use hyper::upgrade::{OnUpgrade, Upgraded};

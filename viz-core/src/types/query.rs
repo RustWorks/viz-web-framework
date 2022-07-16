@@ -1,3 +1,5 @@
+//! Request Query Extractor
+
 use std::{
     fmt,
     ops::{Deref, DerefMut},
@@ -5,7 +7,7 @@ use std::{
 
 use serde::de::DeserializeOwned;
 
-use crate::{async_trait, types::PayloadError, Body, FromRequest, Request, RequestExt, Result};
+use crate::{async_trait, types::PayloadError, FromRequest, Request, RequestExt, Result};
 
 /// Query Extractor
 pub struct Query<T = ()>(pub T);
@@ -68,7 +70,7 @@ where
 {
     type Error = PayloadError;
 
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         req.query().map(Self)
     }
 }

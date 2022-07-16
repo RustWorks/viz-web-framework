@@ -1,8 +1,10 @@
+//! Request Limits Extractor
+
 use std::{convert::Infallible, sync::Arc};
 
-use super::{Form, Json, Payload};
-
 use crate::{async_trait, Body, FromRequest, Request, RequestExt};
+
+use super::{Form, Json, Payload};
 
 #[derive(Debug, Clone)]
 pub struct Limits {

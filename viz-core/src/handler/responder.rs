@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{async_trait, Body, Handler, IntoResponse, Response, Result};
+use crate::{async_trait, Handler, IntoResponse, Response, Result};
 
 pub struct Responder<H, O>(pub(crate) H, PhantomData<O>);
 
@@ -26,7 +26,7 @@ where
     H: Handler<I, Output = Result<O>> + Clone,
     O: IntoResponse + Send + Sync + 'static,
 {
-    type Output = Result<Response<Body>>;
+    type Output = Result<Response>;
 
     async fn call(&self, args: I) -> Self::Output {
         self.0.call(args).await.map(IntoResponse::into_response)

@@ -36,7 +36,7 @@ cookie = ["libcookie"]
 cookie-private = ["libcookie/private"]
 cookie-signed = ["libcookie/signed"]
 
-session = ["cookie", "json", "sessions-core", "time"]
+session = ["cookie", "json", "sessions-core"]
 
 csrf = ["cookie"]
 cors = []
@@ -51,7 +51,6 @@ http-body = "0.4"
 hyper = { version = "0.14", features = ["stream"] }
 mime = "0.3.16"
 bytes = "1.1"
-time = { version = "0.3", optional = true }
 serde = { version = "1.0", features = ["derive"], optional = true }
 serde_json = { version = "1.0", optional = true }
 serde_urlencoded = { version = "0.7", optional = true }

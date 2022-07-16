@@ -1,7 +1,6 @@
-use crate::{async_trait, Body, Handler, Request, Response, Result};
+use crate::{async_trait, Handler, Request, Response, Result};
 
-pub type BoxHandler<I = Request<Body>, O = Result<Response<Body>>> =
-    Box<dyn Handler<I, Output = O>>;
+pub type BoxHandler<I = Request, O = Result<Response>> = Box<dyn Handler<I, Output = O>>;
 
 impl Clone for BoxHandler {
     fn clone(&self) -> Self {
@@ -10,10 +9,10 @@ impl Clone for BoxHandler {
 }
 
 #[async_trait]
-impl Handler<Request<Body>> for BoxHandler {
-    type Output = Result<Response<Body>>;
+impl Handler<Request> for BoxHandler {
+    type Output = Result<Response>;
 
-    async fn call(&self, req: Request<Body>) -> Self::Output {
+    async fn call(&self, req: Request) -> Self::Output {
         self.as_ref().call(req).await
     }
 }

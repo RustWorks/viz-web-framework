@@ -1,16 +1,14 @@
 //! CSRF Middleware
 
-use std::collections::HashSet;
-use std::sync::Arc;
+use std::{collections::HashSet, sync::Arc};
 
 use crate::{
     async_trait,
-    handler::Transform,
     header::{HeaderName, HeaderValue, VARY},
     middleware::helper::CookieOptions,
     types::{Cookie, Cookies},
-    Body, Error, FromRequest, Handler, IntoResponse, Method, Request, RequestExt, Response, Result,
-    StatusCode,
+    Error, FromRequest, Handler, IntoResponse, Method, Request, RequestExt, Response, Result,
+    StatusCode, Transform,
 };
 
 struct Inner<S, G, V> {
@@ -35,7 +33,7 @@ pub struct CsrfToken(pub String);
 impl FromRequest for CsrfToken {
     type Error = Error;
 
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         req.extensions()
             .get()
             .cloned()
@@ -77,7 +75,7 @@ impl<S, G, V> Config<S, G, V> {
         &self.0.cookie_options
     }
 
-    pub fn get<'a>(&self, req: &'a Request<Body>) -> Result<Option<Vec<u8>>> {
+    pub fn get<'a>(&self, req: &'a Request) -> Result<Option<Vec<u8>>> {
         let inner = self.as_ref();
         match inner.store {
             Store::Cookie => {
@@ -101,7 +99,7 @@ impl<S, G, V> Config<S, G, V> {
         }
     }
 
-    pub fn set<'a>(&self, req: &'a Request<Body>, token: String, secret: Vec<u8>) -> Result<()> {
+    pub fn set<'a>(&self, req: &'a Request, token: String, secret: Vec<u8>) -> Result<()> {
         let inner = self.as_ref();
         match inner.store {
             Store::Cookie => {
@@ -208,17 +206,17 @@ where
 }
 
 #[async_trait]
-impl<H, O, S, G, V> Handler<Request<Body>> for CsrfMiddleware<H, S, G, V>
+impl<H, O, S, G, V> Handler<Request> for CsrfMiddleware<H, S, G, V>
 where
     O: IntoResponse,
-    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>> + Clone,
     S: Fn() -> Result<Vec<u8>> + Send + Sync + 'static,
     G: Fn(&Vec<u8>, Vec<u8>) -> Vec<u8> + Send + Sync + 'static,
     V: Fn(Vec<u8>, String) -> bool + Send + Sync + 'static,
 {
-    type Output = Result<Response<Body>>;
+    type Output = Result<Response>;
 
-    async fn call(&self, mut req: Request<Body>) -> Self::Output {
+    async fn call(&self, mut req: Request) -> Self::Output {
         let mut secret = self.config.get(&req)?;
         let config = self.config.as_ref();
 

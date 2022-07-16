@@ -1,3 +1,5 @@
+//! Request JSON Body Extractor
+
 use std::{
     fmt,
     ops::{Deref, DerefMut},

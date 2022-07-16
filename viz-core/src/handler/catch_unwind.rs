@@ -2,7 +2,7 @@ use std::{any::Any, panic::AssertUnwindSafe};
 
 use futures_util::FutureExt;
 
-use crate::{async_trait, Body, Handler, IntoResponse, Response, Result};
+use crate::{async_trait, Handler, IntoResponse, Response, Result};
 
 #[derive(Clone)]
 pub struct CatchUnwind<H, F> {
@@ -26,7 +26,7 @@ where
     O: IntoResponse + Send + Sync + 'static,
     R: IntoResponse + Send + Sync + 'static,
 {
-    type Output = Result<Response<Body>>;
+    type Output = Result<Response>;
 
     async fn call(&self, i: I) -> Self::Output {
         match AssertUnwindSafe(self.h.call(i)).catch_unwind().await {

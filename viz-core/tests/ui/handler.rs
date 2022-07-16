@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
         R: IntoResponse + Send + Sync + 'static,
         E: std::error::Error + Send + Sync + 'static,
     {
-        type Output = Result<Response<Body>>;
+        type Output = Result<Response>;
 
         async fn call(&self, i: I) -> Self::Output {
             dbg!("catch error --------------------------");
@@ -78,7 +78,7 @@ async fn main() -> Result<()> {
     impl FromRequest for MyU8 {
         type Error = std::convert::Infallible;
 
-        async fn extract(_req: &mut Request<Body>) -> Result<Self, Self::Error> {
+        async fn extract(_req: &mut Request) -> Result<Self, Self::Error> {
             Ok(MyU8(u8::MAX))
         }
     }
@@ -89,7 +89,7 @@ async fn main() -> Result<()> {
     impl FromRequest for MyString {
         type Error = std::convert::Infallible;
 
-        async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+        async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
             Ok(MyString(req.uri().path().to_string()))
         }
     }
@@ -122,7 +122,7 @@ async fn main() -> Result<()> {
         }
 
         impl IntoResponse for CustomError {
-            fn into_response(self) -> Response<Body> {
+            fn into_response(self) -> Response {
                 Response::builder()
                     .status(http::StatusCode::NOT_FOUND)
                     .body(self.to_string().into())
@@ -145,7 +145,7 @@ async fn main() -> Result<()> {
         }
 
         impl IntoResponse for CustomError2 {
-            fn into_response(self) -> Response<Body> {
+            fn into_response(self) -> Response {
                 dbg!(610);
                 Response::builder()
                     .status(http::StatusCode::NOT_FOUND)
@@ -154,17 +154,17 @@ async fn main() -> Result<()> {
             }
         }
 
-        async fn before(req: Request<Body>) -> Result<Request<Body>> {
+        async fn before(req: Request) -> Result<Request> {
             dbg!("before");
             Ok(req)
         }
 
-        async fn after(res: Result<Response<Body>>) -> Result<Response<Body>> {
+        async fn after(res: Result<Response>) -> Result<Response> {
             dbg!("after");
             res
         }
 
-        async fn a(req: Request<Body>) -> Result<Response<Body>> {
+        async fn a(req: Request) -> Result<Response> {
             // Err(CustomError::NotFound.into())
 
             Err(CustomError2::NotFound)?;
@@ -173,13 +173,13 @@ async fn main() -> Result<()> {
 
             // Err(CustomError2::NotFound.into())
         }
-        async fn b(req: Request<Body>) -> Result<Response<Body>> {
+        async fn b(req: Request) -> Result<Response> {
             // Err("hello error".into())
 
             Err(MyString("hello error".to_string()))?;
             Ok(().into_response())
         }
-        async fn c(req: Request<Body>) -> Result<Response<Body>> {
+        async fn c(req: Request) -> Result<Response> {
             // Ok(Response::new("hello".into()))
             // Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "file read failed").into())
 
@@ -195,16 +195,16 @@ async fn main() -> Result<()> {
             )
                 .into())
         }
-        async fn d(req: Request<Body>) -> Result<&'static str> {
+        async fn d(req: Request) -> Result<&'static str> {
             Ok("hello")
         }
-        async fn e(req: Request<Body>) -> Result<impl IntoResponse> {
+        async fn e(req: Request) -> Result<impl IntoResponse> {
             Ok("hello")
         }
-        async fn f(req: Request<Body>) -> Result<impl IntoResponse> {
+        async fn f(req: Request) -> Result<impl IntoResponse> {
             Ok("world")
         }
-        async fn g(req: Request<Body>) -> Result<Vec<u8>> {
+        async fn g(req: Request) -> Result<Vec<u8>> {
             Ok(vec![144, 233])
         }
         // async fn h() -> Vec<u8> {
@@ -224,11 +224,11 @@ async fn main() -> Result<()> {
             dbg!(c.0);
             Ok(vec![0, a.0, b.0])
         }
-        async fn l(a: MyU8, b: MyU8, c: MyString) -> Result<Response<Body>> {
+        async fn l(a: MyU8, b: MyU8, c: MyString) -> Result<Response> {
             dbg!(c.0);
             Ok(vec![0, a.0, b.0].into_response())
         }
-        async fn m(a: MyU8, b: MyU8, c: MyString) -> Result<Response<Body>> {
+        async fn m(a: MyU8, b: MyU8, c: MyString) -> Result<Response> {
             dbg!(c.0);
             // Err(CustomError::NotFound)?;
             // Ok(().into_response())
@@ -298,7 +298,7 @@ async fn main() -> Result<()> {
             }
         }
 
-        async fn map(res: Response<Body>) -> Response<Body> {
+        async fn map(res: Response) -> Response {
             dbg!("map ok <--------");
             res
         }
@@ -308,12 +308,12 @@ async fn main() -> Result<()> {
             err
         }
 
-        async fn and_then(res: Response<Body>) -> Result<Response<Body>> {
+        async fn and_then(res: Response) -> Result<Response> {
             dbg!("and_then <--------");
             Ok(res)
         }
 
-        async fn or_else(err: Error) -> Result<Response<Body>> {
+        async fn or_else(err: Error) -> Result<Response> {
             dbg!("or_else <--------");
             Err(err)
         }

@@ -111,12 +111,12 @@ fn generate_handler(_args: AttributeArgs, input: TokenStream) -> Result<TokenStr
         #vis struct #name;
 
         #[viz::async_trait]
-        impl viz::Handler<viz::Request<viz::Body>> for #name
+        impl viz::Handler<viz::Request> for #name
         {
-            type Output = viz::Result<viz::Response<viz::Body>>;
+            type Output = viz::Result<viz::Response>;
 
             #[allow(unused, unused_mut)]
-            async fn call(&self, mut req: viz::Request<viz::Body>) -> Self::Output {
+            async fn call(&self, mut req: viz::Request) -> Self::Output {
                 #ast
                 let res = #name(#(#extractors),*)#asyncness;
                 #out.map(viz::IntoResponse::into_response)

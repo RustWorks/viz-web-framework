@@ -17,7 +17,7 @@ macro_rules! tuple_impls {
             type Error = Error;
 
             #[allow(unused, unused_mut)]
-            async fn extract(req: &mut Request<Body>) -> Result<($($T,)*), Self::Error> {
+            async fn extract(req: &mut Request) -> Result<($($T,)*), Self::Error> {
                 Ok(($($T::extract(req).await.map_err(IntoResponse::into_error)?,)*))
             }
         }
@@ -31,10 +31,10 @@ macro_rules! tuple_impls {
             Fut: Future<Output = Result<Out>> + Send,
             Out: IntoResponse + Send + Sync + 'static,
         {
-            type Output =  Result<Response<Body>>;
+            type Output =  Result<Response>;
 
             #[allow(unused, unused_mut)]
-            async fn call(&self, mut req: Request<Body>) -> Self::Output {
+            async fn call(&self, mut req: Request) -> Self::Output {
                 (self)($($T::extract(&mut req).await.map_err(IntoResponse::into_error)?,)*).await.map(IntoResponse::into_response)
             }
         }

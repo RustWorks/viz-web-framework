@@ -84,7 +84,7 @@ impl CookieOptions {
         }
         if let Some(max_age) = self.max_age {
             cookie.set_max_age(
-                TryInto::<time::Duration>::try_into(max_age)
+                libcookie::time::Duration::try_from(max_age)
                     .expect("cant convert std Duration into time::Duration"),
             );
         }

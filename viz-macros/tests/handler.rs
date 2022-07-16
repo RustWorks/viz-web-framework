@@ -1,6 +1,4 @@
-use viz::{
-    async_trait, Body, Error, FromRequest, Handler, IntoResponse, Request, Result, StatusCode,
-};
+use viz::{async_trait, Error, FromRequest, Handler, IntoResponse, Request, Result, StatusCode};
 use viz_macros::handler;
 
 #[derive(Debug)]
@@ -10,7 +8,7 @@ struct Foo;
 impl FromRequest for Foo {
     type Error = Error;
 
-    async fn extract(_: &mut Request<Body>) -> Result<Self> {
+    async fn extract(_: &mut Request) -> Result<Self> {
         Ok(Foo)
     }
 }
@@ -22,7 +20,7 @@ struct Bar;
 impl FromRequest for Bar {
     type Error = Error;
 
-    async fn extract(_: &mut Request<Body>) -> Result<Self> {
+    async fn extract(_: &mut Request) -> Result<Self> {
         Ok(Bar)
     }
 }

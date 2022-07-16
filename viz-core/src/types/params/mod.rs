@@ -1,3 +1,5 @@
+//! Request Params Extractor
+
 mod de;
 
 use std::{
@@ -9,7 +11,7 @@ use std::{
 use serde::de::DeserializeOwned;
 
 use crate::{
-    async_trait, Body, Error, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
+    async_trait, Error, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
     ThisError,
 };
 
@@ -71,7 +73,7 @@ where
 {
     type Error = ParamsError;
 
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         req.params().map(Params)
     }
 }
@@ -87,7 +89,7 @@ pub enum ParamsError {
 }
 
 impl IntoResponse for ParamsError {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
     }
 }

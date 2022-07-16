@@ -1,4 +1,6 @@
-use crate::{Body, Error, IntoResponse, Response, Result, StatusCode, ThisError};
+//! Request Payload Trait
+
+use crate::{Error, IntoResponse, Response, Result, StatusCode, ThisError};
 
 #[derive(ThisError, Debug)]
 pub enum PayloadError {
@@ -48,7 +50,7 @@ pub enum PayloadError {
 }
 
 impl IntoResponse for PayloadError {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         (
             match self {
                 PayloadError::Read

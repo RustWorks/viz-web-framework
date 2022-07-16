@@ -1,3 +1,5 @@
+//! Request Session Extractor
+
 use std::{
     convert::Infallible,
     fmt,
@@ -7,11 +9,12 @@ use std::{
     },
 };
 
-use crate::{async_trait, Body, Error, FromRequest, IntoResponse, Request, RequestExt, StatusCode};
 use serde::{de::DeserializeOwned, Serialize};
 use serde_json::{from_value, to_value, Value};
 
 use sessions_core::{Data, State, CHANGED, PURGED, RENEWED, UNCHANGED};
+
+use crate::{async_trait, Error, FromRequest, IntoResponse, Request, RequestExt, StatusCode};
 
 /// Session
 #[derive(Clone)]
@@ -155,7 +158,7 @@ impl fmt::Debug for Session {
 impl FromRequest for Session {
     type Error = Infallible;
 
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         Ok(req.session().clone())
     }
 }

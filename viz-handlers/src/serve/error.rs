@@ -1,4 +1,4 @@
-use viz_core::{Body, IntoResponse, Response, StatusCode, ThisError};
+use viz_core::{IntoResponse, Response, StatusCode, ThisError};
 
 /// Static file serving Error
 #[derive(ThisError, Debug)]
@@ -25,7 +25,7 @@ pub enum Error {
 }
 
 impl IntoResponse for Error {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         (
             match self {
                 Error::MethodNotAllowed => StatusCode::METHOD_NOT_ALLOWED,

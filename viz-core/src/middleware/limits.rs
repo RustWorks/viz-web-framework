@@ -2,9 +2,7 @@
 
 use std::sync::Arc;
 
-use crate::{
-    async_trait, handler::Transform, types, Body, Handler, IntoResponse, Request, Response, Result,
-};
+use crate::{async_trait, types, Handler, IntoResponse, Request, Response, Result, Transform};
 
 #[derive(Debug, Clone)]
 pub struct Config {
@@ -58,14 +56,14 @@ pub struct LimitsMiddleware<H> {
 }
 
 #[async_trait]
-impl<H, O> Handler<Request<Body>> for LimitsMiddleware<H>
+impl<H, O> Handler<Request> for LimitsMiddleware<H>
 where
     O: IntoResponse,
-    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>> + Clone,
 {
-    type Output = Result<Response<Body>>;
+    type Output = Result<Response>;
 
-    async fn call(&self, mut req: Request<Body>) -> Self::Output {
+    async fn call(&self, mut req: Request) -> Self::Output {
         req.extensions_mut().insert(self.config.limits.clone());
         req.extensions_mut().insert(self.config.multipart.clone());
 

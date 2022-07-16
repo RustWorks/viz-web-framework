@@ -2,9 +2,8 @@
 
 use crate::{
     async_trait,
-    handler::Transform,
     header::{HeaderValue, COOKIE, SET_COOKIE},
-    types, Body, Handler, IntoResponse, Request, Response, Result,
+    types, Handler, IntoResponse, Request, Response, Result, Transform,
 };
 
 pub struct Config {
@@ -51,14 +50,14 @@ pub struct CookieMiddleware<H> {
 }
 
 #[async_trait]
-impl<H, O> Handler<Request<Body>> for CookieMiddleware<H>
+impl<H, O> Handler<Request> for CookieMiddleware<H>
 where
     O: IntoResponse,
-    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>> + Clone,
 {
-    type Output = Result<Response<Body>>;
+    type Output = Result<Response>;
 
-    async fn call(&self, mut req: Request<Body>) -> Self::Output {
+    async fn call(&self, mut req: Request) -> Self::Output {
         let jar = req
             .headers()
             .get_all(COOKIE)

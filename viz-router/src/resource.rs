@@ -1,6 +1,7 @@
+//! Resource
+
 use viz_core::{
-    handler::Transform, Body, BoxHandler, Handler, HandlerExt, IntoResponse, Method, Request,
-    Response, Result,
+    BoxHandler, Handler, HandlerExt, IntoResponse, Method, Request, Response, Result, Transform,
 };
 
 use crate::Route;
@@ -42,7 +43,7 @@ impl Resource {
     pub fn on<S, H, O>(mut self, path: S, method: Method, handler: H) -> Self
     where
         S: AsRef<str>,
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         let path = path.as_ref().to_owned();
@@ -64,7 +65,7 @@ impl Resource {
 
     pub fn index<H, O>(self, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         self.on("", Method::GET, handler)
@@ -72,7 +73,7 @@ impl Resource {
 
     pub fn new<H, O>(self, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         self.on("new", Method::GET, handler)
@@ -80,7 +81,7 @@ impl Resource {
 
     pub fn create<H, O>(self, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         self.on("", Method::POST, handler)
@@ -88,7 +89,7 @@ impl Resource {
 
     pub fn show<H, O>(self, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         let path = format!(":{}_id", self.name);
@@ -97,7 +98,7 @@ impl Resource {
 
     pub fn edit<H, O>(self, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         let path = format!(":{}_id/edit", self.name);
@@ -106,7 +107,7 @@ impl Resource {
 
     pub fn update<H, O>(self, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         let path = format!(":{}_id", self.name);
@@ -115,7 +116,7 @@ impl Resource {
 
     pub fn update_with_patch<H, O>(self, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         let path = format!(":{}_id", self.name);
@@ -124,7 +125,7 @@ impl Resource {
 
     pub fn destroy<H, O>(self, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         let path = format!(":{}_id", self.name);
@@ -134,7 +135,7 @@ impl Resource {
     pub fn with<T>(self, t: T) -> Self
     where
         T: Transform<BoxHandler>,
-        T::Output: Handler<Request<Body>, Output = Result<Response<Body>>>,
+        T::Output: Handler<Request, Output = Result<Response>>,
     {
         Self {
             name: self.name,
@@ -201,10 +202,10 @@ impl FromIterator<(String, Route)> for Resource {
 
 #[cfg(test)]
 mod tests {
-    use crate::{get, Resource, Route};
+    use crate::{get, Resource};
     use viz_core::{
-        async_trait, handler::Transform, Body, Handler, HandlerExt, IntoResponse, Method, Next,
-        Request, Response, Result,
+        async_trait, Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
+        Transform,
     };
 
     #[tokio::test]
@@ -230,89 +231,84 @@ mod tests {
         struct LoggerHandler<H>(H);
 
         #[async_trait]
-        impl<H> Handler<Request<Body>> for LoggerHandler<H>
+        impl<H> Handler<Request> for LoggerHandler<H>
         where
-            H: Handler<Request<Body>> + Clone,
+            H: Handler<Request> + Clone,
         {
             type Output = H::Output;
 
-            async fn call(&self, req: Request<Body>) -> Self::Output {
-                dbg!("before logger");
+            async fn call(&self, req: Request) -> Self::Output {
                 let res = self.0.call(req).await;
-                dbg!("after logger");
                 res
             }
         }
 
-        async fn before(req: Request<Body>) -> Result<Request<Body>> {
-            dbg!("before req");
+        async fn before(req: Request) -> Result<Request> {
             Ok(req)
         }
 
-        async fn after(res: Result<Response<Body>>) -> Result<Response<Body>> {
-            dbg!("after res");
+        async fn after(res: Result<Response>) -> Result<Response> {
             res
         }
 
-        async fn around<H, O>((req, handler): Next<Request<Body>, H>) -> Result<Response<Body>>
+        async fn around<H, O>((req, handler): Next<Request, H>) -> Result<Response>
         where
-            H: Handler<Request<Body>, Output = Result<O>> + Clone,
+            H: Handler<Request, Output = Result<O>> + Clone,
             O: IntoResponse + Send + Sync + 'static,
         {
-            dbg!("around before");
             let res = handler.call(req).await.map(IntoResponse::into_response);
-            dbg!("around after");
             res
         }
 
-        async fn index(req: Request<Body>) -> Result<impl IntoResponse> {
+        async fn index(_: Request) -> Result<impl IntoResponse> {
             Ok("index")
         }
 
-        async fn any(req: Request<Body>) -> Result<&'static str> {
+        async fn any(_: Request) -> Result<&'static str> {
             Ok("any")
         }
 
-        async fn index_posts(req: Request<Body>) -> Result<Vec<u8>> {
+        async fn index_posts(_: Request) -> Result<Vec<u8>> {
             Ok(b"index posts".to_vec())
         }
 
-        async fn create_post(req: Request<Body>) -> Result<impl IntoResponse> {
+        async fn create_post(_: Request) -> Result<impl IntoResponse> {
             Ok("create post")
         }
 
-        async fn new_post(req: Request<Body>) -> Result<Response<Body>> {
+        async fn new_post(_: Request) -> Result<Response> {
             Ok(Response::new("new post".into()))
         }
 
-        async fn show_post(req: Request<Body>) -> Result<Response<Body>> {
-            dbg!("responed");
+        async fn show_post(_: Request) -> Result<Response> {
             Ok(Response::new("show post".into()))
         }
 
-        async fn edit_post(req: Request<Body>) -> Result<Response<Body>> {
+        async fn edit_post(_: Request) -> Result<Response> {
             Ok(Response::new("edit post".into()))
         }
 
-        async fn delete_post(req: Request<Body>) -> Result<Response<Body>> {
+        async fn delete_post(_: Request) -> Result<Response> {
             Ok(Response::new("delete post".into()))
         }
 
-        async fn update_post(req: Request<Body>) -> Result<Response<Body>> {
+        async fn update_post(_: Request) -> Result<Response> {
             Ok(Response::new("update post".into()))
         }
 
-        async fn any_posts(req: Request<Body>) -> Result<Response<Body>> {
+        async fn any_posts(_: Request) -> Result<Response> {
             Ok(Response::new("any posts".into()))
         }
 
-        async fn search_posts(req: Request<Body>) -> Result<Response<Body>> {
+        async fn search_posts(_: Request) -> Result<Response> {
             Ok(Response::new("search posts".into()))
         }
 
         let resource = Resource::default()
             .index(index)
             .update_with_patch(any_posts);
+
+        assert_eq!(2, resource.into_iter().count());
 
         let resource = Resource::default()
             .named("post")
@@ -324,6 +320,7 @@ mod tests {
             .edit(edit_post.around(around))
             .update(update_post)
             .destroy(delete_post)
+            .update_with_patch(any)
             .with(Logger::new())
             .map_handler(|handler| {
                 handler
@@ -337,9 +334,14 @@ mod tests {
             .collect::<Resource>()
             .named("post");
 
-        dbg!(std::mem::size_of_val(&resource));
-
-        dbg!(&resource);
+        assert_eq!(5, resource.clone().into_iter().count());
+        assert_eq!(
+            9,
+            resource
+                .clone()
+                .into_iter()
+                .fold(0, |sum, (_, r)| sum + r.into_iter().count())
+        );
 
         let (_, h) = resource
             .routes
@@ -348,8 +350,9 @@ mod tests {
             .nth(0)
             .and_then(|(_, r)| r.methods.iter().filter(|(m, _)| m == Method::GET).nth(0))
             .unwrap();
+
         let res = h.call(Request::default()).await?;
-        dbg!(res);
+        assert_eq!(hyper::body::to_bytes(res.into_body()).await?, "show post");
 
         Ok(())
     }

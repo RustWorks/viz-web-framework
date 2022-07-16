@@ -1,3 +1,5 @@
+//! Request Form Body Extractor
+
 use std::{
     fmt,
     ops::{Deref, DerefMut},
@@ -5,7 +7,7 @@ use std::{
 
 use serde::de::DeserializeOwned;
 
-use crate::{async_trait, Body, FromRequest, Request, RequestExt, Result};
+use crate::{async_trait, FromRequest, Request, RequestExt, Result};
 
 use super::{Payload, PayloadError};
 
@@ -86,7 +88,7 @@ where
     type Error = PayloadError;
 
     #[inline]
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         req.form().await.map(Self)
     }
 }

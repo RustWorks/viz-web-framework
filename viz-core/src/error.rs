@@ -1,3 +1,5 @@
+//! Error
+
 use std::error::Error as StdError;
 
 use crate::{IntoResponse, Response, StatusCode, ThisError};

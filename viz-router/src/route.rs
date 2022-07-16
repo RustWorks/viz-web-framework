@@ -1,9 +1,10 @@
+//! Route
+
 use core::fmt;
 
 use viz_core::{
-    handler::{Next, Transform},
-    Body, BoxHandler, FnExt, FromRequest, Handler, HandlerExt, IntoResponse, Method, Request,
-    Responder, ResponderExt, Response, Result,
+    BoxHandler, FnExt, FromRequest, Handler, HandlerExt, IntoResponse, Method, Next, Request,
+    Responder, ResponderExt, Response, Result, Transform,
 };
 
 macro_rules! repeat {
@@ -19,7 +20,7 @@ macro_rules! export_internal_verb {
         #[doc = concat!(" Appends a route, handle HTTP verb `", stringify!($verb), "`.")]
         pub fn $name<H, O>(self, handler: H) -> Self
         where
-            H: Handler<Request<Body>, Output = Result<O>> + Clone,
+            H: Handler<Request, Output = Result<O>> + Clone,
             O: IntoResponse + Send + Sync + 'static,
         {
             self.on(Method::$verb, handler)
@@ -48,7 +49,7 @@ macro_rules! export_verb {
         #[doc = concat!(" Appends a route, handle HTTP verb `", stringify!($verb), "`.")]
         pub fn $name<H, O>(handler: H) -> Route
         where
-            H: Handler<Request<Body>, Output = Result<O>> + Clone,
+            H: Handler<Request, Output = Result<O>> + Clone,
             O: IntoResponse + Send + Sync + 'static,
         {
             Route::new().$name(handler)
@@ -116,7 +117,7 @@ impl Route {
     /// Appends a route, with a HTTP verb and handler.
     pub fn on<H, O>(self, method: Method, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         self.push(method, Responder::new(handler).boxed())
@@ -125,7 +126,7 @@ impl Route {
     /// Appends a route, with a HTTP verb and handler.
     pub fn any<H, O>(self, handler: H) -> Self
     where
-        H: Handler<Request<Body>, Output = Result<O>> + Clone,
+        H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
         [
@@ -159,7 +160,7 @@ impl Route {
     pub fn with<T>(self, t: T) -> Self
     where
         T: Transform<BoxHandler>,
-        T::Output: Handler<Request<Body>, Output = Result<Response<Body>>>,
+        T::Output: Handler<Request, Output = Result<Response>>,
     {
         self.into_iter()
             .map(|(method, handler)| (method, t.transform(handler).boxed()))
@@ -168,7 +169,7 @@ impl Route {
 
     pub fn with_handler<F>(self, f: F) -> Self
     where
-        F: Handler<Next<Request<Body>, BoxHandler>, Output = Result<Response<Body>>> + Clone,
+        F: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
     {
         self.into_iter()
             .map(|(method, handler)| (method, handler.around(f.clone()).boxed()))
@@ -259,7 +260,7 @@ impl FromIterator<(Method, BoxHandler)> for Route {
 /// Appends a route, with a HTTP verb and handler.
 pub fn on<H, O>(method: Method, handler: H) -> Route
 where
-    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>> + Clone,
     O: IntoResponse + Send + Sync + 'static,
 {
     Route::new().on(method, handler)
@@ -281,7 +282,7 @@ repeat!(
 /// Appends a route, with handler by any HTTP verbs.
 pub fn any<H, O>(handler: H) -> Route
 where
-    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>> + Clone,
     O: IntoResponse + Send + Sync + 'static,
 {
     Route::new().any(handler)
@@ -325,19 +326,20 @@ where
 }
 
 #[cfg(test)]
+#[allow(dead_code)]
 mod tests {
     use super::Route;
     use std::sync::Arc;
     use viz_core::{
         async_trait,
         handler::Transform,
-        types::{self, Data, Query},
-        Body, Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
+        types::{Data, Query},
+        Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
     };
 
     #[tokio::test]
     async fn route() -> anyhow::Result<()> {
-        async fn handler(_: Request<Body>) -> Result<impl IntoResponse> {
+        async fn handler(_: Request) -> Result<impl IntoResponse> {
             Ok(())
         }
 
@@ -361,59 +363,49 @@ mod tests {
         struct LoggerHandler<H>(H);
 
         #[async_trait]
-        impl<H> Handler<Request<Body>> for LoggerHandler<H>
+        impl<H> Handler<Request> for LoggerHandler<H>
         where
-            H: Handler<Request<Body>> + Clone,
+            H: Handler<Request> + Clone,
         {
             type Output = H::Output;
 
-            async fn call(&self, req: Request<Body>) -> Self::Output {
-                dbg!("before logger");
+            async fn call(&self, req: Request) -> Self::Output {
                 let res = self.0.call(req).await;
-                dbg!("after logger");
                 res
             }
         }
 
-        async fn before(req: Request<Body>) -> Result<Request<Body>> {
-            dbg!("before req");
+        async fn before(req: Request) -> Result<Request> {
             Ok(req)
         }
 
-        async fn after(res: Result<Response<Body>>) -> Result<Response<Body>> {
-            dbg!("after res");
+        async fn after(res: Result<Response>) -> Result<Response> {
             res
         }
 
-        async fn around<H, O>((req, handler): Next<Request<Body>, H>) -> Result<Response<Body>>
+        async fn around<H, O>((req, handler): Next<Request, H>) -> Result<Response>
         where
-            H: Handler<Request<Body>, Output = Result<O>> + Clone,
+            H: Handler<Request, Output = Result<O>> + Clone,
             O: IntoResponse + Send + Sync + 'static,
         {
-            dbg!("around before");
             let res = handler.call(req).await.map(IntoResponse::into_response);
-            dbg!("around after");
             res
         }
 
-        async fn around_1<H, O>((req, handler): Next<Request<Body>, H>) -> Result<Response<Body>>
+        async fn around_1<H, O>((req, handler): Next<Request, H>) -> Result<Response>
         where
-            H: Handler<Request<Body>, Output = Result<O>> + Clone,
+            H: Handler<Request, Output = Result<O>> + Clone,
             O: IntoResponse + Send + Sync + 'static,
         {
-            dbg!("around before --- 1");
             let res = handler.call(req).await.map(IntoResponse::into_response);
-            dbg!("around after  --- 1");
             res
         }
 
-        async fn around_2<H>((req, handler): Next<Request<Body>, H>) -> Result<Response<Body>>
+        async fn around_2<H>((req, handler): Next<Request, H>) -> Result<Response>
         where
-            H: Handler<Request<Body>, Output = Result<Response<Body>>> + Clone,
+            H: Handler<Request, Output = Result<Response>> + Clone,
         {
-            dbg!("around before ---> 2");
             let res = handler.call(req).await;
-            dbg!("around after  <--- 2");
             res
         }
 
@@ -431,9 +423,7 @@ mod tests {
             type Output = H::Output;
 
             async fn call(&self, (i, h): Next<I, H>) -> Self::Output {
-                dbg!(format!("around before --- {}", &self.name));
                 let res = h.call(i).await;
-                dbg!(format!("around after  --- {}", &self.name));
                 res
             }
         }
@@ -444,17 +434,15 @@ mod tests {
         }
 
         #[async_trait]
-        impl<H, O> Handler<Next<Request<Body>, H>> for Around3
+        impl<H, O> Handler<Next<Request, H>> for Around3
         where
-            H: Handler<Request<Body>, Output = Result<O>> + Clone,
+            H: Handler<Request, Output = Result<O>> + Clone,
             O: IntoResponse,
         {
-            type Output = Result<Response<Body>>;
+            type Output = Result<Response>;
 
-            async fn call(&self, (i, h): Next<Request<Body>, H>) -> Self::Output {
-                dbg!(format!("around before --- {}", &self.name));
+            async fn call(&self, (i, h): Next<Request, H>) -> Self::Output {
                 let res = h.call(i).await.map(IntoResponse::into_response);
-                dbg!(format!("around after  --- {}", &self.name));
                 res
             }
         }
@@ -465,22 +453,19 @@ mod tests {
         }
 
         #[async_trait]
-        impl<H> Handler<Next<Request<Body>, H>> for Around4
+        impl<H> Handler<Next<Request, H>> for Around4
         where
-            H: Handler<Request<Body>, Output = Result<Response<Body>>> + Clone,
+            H: Handler<Request, Output = Result<Response>> + Clone,
         {
-            type Output = Result<Response<Body>>;
+            type Output = Result<Response>;
 
-            async fn call(&self, (i, h): Next<Request<Body>, H>) -> Self::Output {
-                dbg!(format!("around before ---> {}", &self.name));
+            async fn call(&self, (i, h): Next<Request, H>) -> Self::Output {
                 let res = h.call(i).await;
-                dbg!(format!("around after  <--- {}", &self.name));
                 res
             }
         }
 
-        async fn ext(q: Query<usize>, d: Data<Arc<String>>) -> Result<impl IntoResponse> {
-            dbg!(377);
+        async fn ext(_: Query<usize>, _: Data<Arc<String>>) -> Result<impl IntoResponse> {
             Ok(vec![233])
         }
 
@@ -529,8 +514,6 @@ mod tests {
             // .filter(|(method, _)| method != Method::GET)
             .collect::<Route>();
 
-        dbg!(std::mem::size_of_val(&route));
-
         let (_, h) = route
             .methods
             .iter()
@@ -542,8 +525,7 @@ mod tests {
             Ok(r) => r,
             Err(e) => e.into_response(),
         };
-
-        dbg!(res);
+        assert_eq!(hyper::body::to_bytes(res.into_body()).await?, "");
 
         Ok(())
     }

@@ -1,6 +1,6 @@
 use std::marker::PhantomData;
 
-use crate::{async_trait, Body, Handler, IntoResponse, Response, Result};
+use crate::{async_trait, Handler, IntoResponse, Response, Result};
 
 pub struct CatchError<H, F, R, E> {
     h: H,
@@ -46,7 +46,7 @@ where
     R: IntoResponse + Send + Sync + 'static,
     E: std::error::Error + Send + Sync + 'static,
 {
-    type Output = Result<Response<Body>>;
+    type Output = Result<Response>;
 
     async fn call(&self, i: I) -> Self::Output {
         match self.h.call(i).await {

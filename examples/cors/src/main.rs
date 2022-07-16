@@ -2,13 +2,13 @@
 
 use std::net::SocketAddr;
 
-use viz::{get, middleware::cors, Body, Request, Result, Router, Server, ServiceMaker};
+use viz::{get, middleware::cors, Request, Result, Router, Server, ServiceMaker};
 
-async fn index(_req: Request<Body>) -> Result<&'static str> {
+async fn index(_req: Request) -> Result<&'static str> {
     Ok("Hello, World!")
 }
 
-async fn options(_req: Request<Body>) -> Result<&'static str> {
+async fn options(_req: Request) -> Result<&'static str> {
     Ok("No Content!")
 }
 

@@ -148,6 +148,6 @@
       <ul id="files">
 				{files}
       </ul>
-	</main>
+		</main>
   </body>
 </html>

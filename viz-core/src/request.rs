@@ -17,12 +17,8 @@ use crate::types::Json;
 #[cfg(feature = "multipart")]
 use crate::types::{Multipart, MultipartLimits};
 
-#[cfg(any(feature = "cookie-signed", feature = "cookie-private"))]
-use crate::types::CookieKey;
 #[cfg(feature = "cookie")]
 use crate::types::{Cookie, Cookies, CookiesError};
-#[cfg(any(feature = "cookie-signed", feature = "cookie-private"))]
-use std::sync::Arc;
 
 #[cfg(feature = "session")]
 use crate::types::Session;

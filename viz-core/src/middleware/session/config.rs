@@ -5,10 +5,9 @@ use std::{
 
 use crate::{
     async_trait,
-    handler::Transform,
     middleware::helper::CookieOptions,
     types::{Cookie, Cookies, Session},
-    Body, Error, Handler, IntoResponse, Request, RequestExt, Response, Result, StatusCode,
+    Error, Handler, IntoResponse, Request, RequestExt, Response, Result, StatusCode, Transform,
 };
 
 use super::{Error as SessionError, Storage, Store, PURGED, RENEWED, UNCHANGED};
@@ -128,17 +127,17 @@ where
 }
 
 #[async_trait]
-impl<H, O, S, G, V> Handler<Request<Body>> for SessionMiddleware<H, S, G, V>
+impl<H, O, S, G, V> Handler<Request> for SessionMiddleware<H, S, G, V>
 where
     O: IntoResponse,
-    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>> + Clone,
     S: Storage + 'static,
     G: Fn() -> String + Send + Sync + 'static,
     V: Fn(&str) -> bool + Send + Sync + 'static,
 {
-    type Output = Result<Response<Body>>;
+    type Output = Result<Response>;
 
-    async fn call(&self, mut req: Request<Body>) -> Self::Output {
+    async fn call(&self, mut req: Request) -> Self::Output {
         let cookies = req.cookies().map_err(Into::<Error>::into)?;
         let cookie = self.config.get_cookie(&cookies);
 

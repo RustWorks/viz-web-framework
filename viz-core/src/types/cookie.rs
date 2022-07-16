@@ -1,11 +1,13 @@
+//! Cookies Extractor
+
 use std::sync::{Arc, Mutex};
 
-pub use libcookie::{Cookie, CookieJar, SameSite};
-
 use crate::{
-    async_trait, Body, Error, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
+    async_trait, Error, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
     ThisError,
 };
+
+pub use libcookie::{Cookie, CookieJar, SameSite};
 
 #[cfg(any(feature = "cookie-signed", feature = "cookie-private"))]
 pub type CookieKey = libcookie::Key;
@@ -176,7 +178,7 @@ impl From<CookiesError> for Error {
 }
 
 impl IntoResponse for CookiesError {
-    fn into_response(self) -> Response<Body> {
+    fn into_response(self) -> Response {
         (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
     }
 }
@@ -185,7 +187,7 @@ impl IntoResponse for CookiesError {
 impl<'a> FromRequest for Cookies {
     type Error = CookiesError;
 
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         req.cookies()
     }
 }

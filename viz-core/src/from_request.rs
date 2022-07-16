@@ -1,12 +1,14 @@
+//! Request Extract Trait
+
 use std::convert::Infallible;
 
-use crate::{async_trait, Body, IntoResponse, Request};
+use crate::{async_trait, IntoResponse, Request};
 
 #[async_trait]
 pub trait FromRequest: Sized {
     type Error: IntoResponse;
 
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error>;
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error>;
 }
 
 #[async_trait]
@@ -17,7 +19,7 @@ where
     type Error = Infallible;
 
     #[inline]
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         Ok(T::extract(req).await.ok())
     }
 }
@@ -30,7 +32,7 @@ where
     type Error = Infallible;
 
     #[inline]
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         Ok(T::extract(req).await)
     }
 }

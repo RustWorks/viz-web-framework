@@ -1,7 +1,7 @@
 <h1 align="center">Víz</h1>
 
 <div align="center">
-  <p><strong>Fast, flexible, minimalist web framework for Rust</strong></p>
+  <p><strong>Fast, robust, flexible, lightweight web framework for Rust</strong></p>
 </div>
 
 <div align="center">
@@ -35,25 +35,21 @@
 
 * **Safety** `#![forbid(unsafe_code)]`
 
-* Robust `routing`
+* Lightweight
 
-* Simplicity `Handler` & `Middleware`
+* Robust `Routing`
 
-* Flexible `extractors`
+* Flexible + Simple `Handler` & `Middleware`
 
-* Based on [hyper](https://hyper.rs/)
+* Easy use `Extractors`
 
 ## License
 
-<sup>
-Licensed under either of <a href="LICENSE-APACHE">Apache License, Version
-2.0</a> or <a href="LICENSE-MIT">MIT license</a> at your option.
-</sup>
+Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
+[MIT license](LICENSE-MIT) at your option.
 
-<br>
+### Contribution
 
-<sub>
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in this crate by you, as defined in the Apache-2.0 license, shall
+Unless you explicitly state otherwise, any contribution intentionally submitted 
+for inclusion in the work by you, as defined in the Apache-2.0 license, shall 
 be dual licensed as above, without any additional terms or conditions.
-</sub>

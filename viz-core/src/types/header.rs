@@ -1,3 +1,5 @@
+//! Request Header Extractor
+
 use std::{
     fmt,
     ops::{Deref, DerefMut},
@@ -6,7 +8,7 @@ use std::{
 use crate::{
     async_trait, header,
     headers::{self, HeaderMapExt},
-    Body, FromRequest, IntoResponse, Request, Result, StatusCode, ThisError,
+    FromRequest, IntoResponse, Request, Response, Result, StatusCode, ThisError,
 };
 
 /// Header Extractor
@@ -74,7 +76,7 @@ pub enum HeaderError {
 }
 
 impl IntoResponse for HeaderError {
-    fn into_response(self) -> http::Response<Body> {
+    fn into_response(self) -> Response {
         (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
     }
 }
@@ -86,7 +88,7 @@ where
 {
     type Error = HeaderError;
 
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         req.headers()
             .typed_try_get::<T>()
             .map_err(|_| HeaderError::InvalidName(T::name()))

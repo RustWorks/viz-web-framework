@@ -4,7 +4,6 @@ use std::{collections::HashSet, sync::Arc};
 
 use crate::{
     async_trait,
-    handler::Transform,
     header::{
         HeaderMap, HeaderName, HeaderValue, ACCESS_CONTROL_ALLOW_CREDENTIALS,
         ACCESS_CONTROL_ALLOW_HEADERS, ACCESS_CONTROL_ALLOW_ORIGIN, ACCESS_CONTROL_REQUEST_HEADERS,
@@ -14,7 +13,7 @@ use crate::{
         AccessControlAllowHeaders, AccessControlAllowMethods, AccessControlExposeHeaders,
         HeaderMapExt,
     },
-    Body, Handler, IntoResponse, Method, Request, RequestExt, Response, Result, StatusCode,
+    Handler, IntoResponse, Method, Request, RequestExt, Response, Result, StatusCode, Transform,
 };
 
 pub struct Config {
@@ -86,14 +85,14 @@ pub struct CorsMiddleware<H> {
 }
 
 #[async_trait]
-impl<H, O> Handler<Request<Body>> for CorsMiddleware<H>
+impl<H, O> Handler<Request> for CorsMiddleware<H>
 where
     O: IntoResponse,
-    H: Handler<Request<Body>, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>> + Clone,
 {
-    type Output = Result<Response<Body>>;
+    type Output = Result<Response>;
 
-    async fn call(&self, req: Request<Body>) -> Self::Output {
+    async fn call(&self, req: Request) -> Self::Output {
         let origin = match req.header(ORIGIN).filter(is_not_empty) {
             Some(origin) => origin,
             None => return self.h.call(req).await.map(IntoResponse::into_response),

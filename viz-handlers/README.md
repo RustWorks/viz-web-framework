@@ -1,7 +1,7 @@
-<h1 align="center">Víz Router</h1>
+<h1 align="center">Víz Handlers</h1>
 
 <div align="center">
-  <p><strong>Robust Routing for Viz</strong></p>
+  <p><strong>Stand-alone handlers for Viz</strong></p>
 </div>
 
 <div align="center">
@@ -10,37 +10,24 @@
     <img src="https://img.shields.io/badge/-safety!-success?style=flat-square"
       alt="Safety!" /></a>
   <!-- Docs.rs docs -->
-  <a href="https://docs.rs/viz-router">
+  <a href="https://docs.rs/viz-handlers">
     <img src="https://img.shields.io/badge/docs-latest-blue.svg?style=flat-square"
       alt="Docs.rs docs" /></a>
   <!-- Crates version -->
-  <a href="https://crates.io/crates/viz-router">
-    <img src="https://img.shields.io/crates/v/viz-router.svg?style=flat-square"
+  <a href="https://crates.io/crates/viz-handlers">
+    <img src="https://img.shields.io/crates/v/viz-handlers.svg?style=flat-square"
     alt="Crates.io version" /></a>
   <!-- Downloads -->
-  <a href="https://crates.io/crates/viz-router">
-    <img src="https://img.shields.io/crates/d/viz-router.svg?style=flat-square"
+  <a href="https://crates.io/crates/viz-handlers">
+    <img src="https://img.shields.io/crates/d/viz-handlers.svg?style=flat-square"
       alt="Download" /></a>
 </div>
 
-## Example
+## Crate Features
 
-```rust
-use viz_core::{IntoResponse, Response, Result, Request};
-use viz_router::{get, get_ext, Router};
-
-async fn index() -> Result<impl IntoResponse> {
-  Ok(())
-}
-
-async fn ws(_: Request) -> Result<Response> {
-  Ok(())
-}
-
-let app = Router::new()
-    .route("/", get_ext(index))
-    .route("/ws/:name", get(ws));
-```
+Feature              | Description
+-------------------- | ------------
+[serve](./src/serve) | Static file serving and directory listing
 
 ## License
 

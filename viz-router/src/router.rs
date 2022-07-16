@@ -1,6 +1,6 @@
-use viz_core::{
-    handler::Transform, Body, BoxHandler, Handler, HandlerExt, Next, Request, Response, Result,
-};
+//! Router
+
+use viz_core::{BoxHandler, Handler, HandlerExt, Next, Request, Response, Result, Transform};
 
 use crate::{Resource, Route};
 
@@ -87,7 +87,7 @@ impl Router {
     pub fn with<T>(self, t: T) -> Self
     where
         T: Transform<BoxHandler>,
-        T::Output: Handler<Request<Body>, Output = Result<Response<Body>>>,
+        T::Output: Handler<Request, Output = Result<Response>>,
     {
         Self {
             routes: self.routes.map(|routes| {
@@ -109,7 +109,7 @@ impl Router {
 
     pub fn with_handler<F>(self, f: F) -> Self
     where
-        F: Handler<Next<Request<Body>, BoxHandler>, Output = Result<Response<Body>>> + Clone,
+        F: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
     {
         Self {
             routes: self.routes.map(|routes| {
@@ -156,10 +156,10 @@ impl Router {
 
 #[cfg(test)]
 mod tests {
-    use crate::{get, Resource, Route, Router, Tree};
+    use crate::{any, get, Resource, Route, Router, Tree};
     use viz_core::{
-        async_trait, handler::Transform, Body, Handler, HandlerExt, IntoResponse, Method, Next,
-        Request, Response, Result, StatusCode,
+        async_trait, types::Params, Body, Error, Handler, HandlerExt, IntoResponse, Method,
+        Request, RequestExt, Response, Result, StatusCode, Transform,
     };
 
     #[derive(Clone)]
@@ -183,62 +183,88 @@ mod tests {
     struct LoggerHandler<H>(H);
 
     #[async_trait]
-    impl<H> Handler<Request<Body>> for LoggerHandler<H>
+    impl<H> Handler<Request> for LoggerHandler<H>
     where
-        H: Handler<Request<Body>> + Clone,
+        H: Handler<Request> + Clone,
     {
         type Output = H::Output;
 
-        async fn call(&self, req: Request<Body>) -> Self::Output {
-            dbg!("before logger");
-            let res = self.0.call(req).await;
-            dbg!("after logger");
-            res
+        async fn call(&self, req: Request) -> Self::Output {
+            self.0.call(req).await
         }
     }
 
     #[tokio::test]
     async fn router() -> anyhow::Result<()> {
-        async fn index(req: Request<Body>) -> Result<Response<Body>> {
+        async fn index(_: Request) -> Result<Response> {
             Ok(Response::new("index".into()))
         }
 
-        async fn any(req: Request<Body>) -> Result<Response<Body>> {
+        async fn all(_: Request) -> Result<Response> {
             Ok(Response::new("any".into()))
         }
 
-        async fn not_found(req: Request<Body>) -> Result<impl IntoResponse> {
+        async fn not_found(_: Request) -> Result<impl IntoResponse> {
             Ok(StatusCode::NOT_FOUND)
         }
 
-        async fn search(req: Request<Body>) -> Result<Response<Body>> {
+        async fn search(_: Request) -> Result<Response> {
             Ok(Response::new("search".into()))
         }
 
-        async fn show(req: Request<Body>) -> Result<Response<Body>> {
-            Ok(Response::new("show".into()))
+        async fn show(req: Request) -> Result<Response> {
+            let ids: Vec<String> = req.params()?;
+            let items = ids.into_iter().fold(String::new(), |mut s, id| {
+                s.push(' ');
+                s.push_str(&id);
+                s
+            });
+            Ok(Response::new(("show".to_string() + &items).into()))
         }
 
-        async fn create(req: Request<Body>) -> Result<Response<Body>> {
+        async fn create(_: Request) -> Result<Response> {
             Ok(Response::new("create".into()))
         }
 
-        async fn update(req: Request<Body>) -> Result<Response<Body>> {
-            Ok(Response::new("update".into()))
+        async fn update(req: Request) -> Result<Response> {
+            let ids: Vec<String> = req.params()?;
+            let items = ids.into_iter().fold(String::new(), |mut s, id| {
+                s.push(' ');
+                s.push_str(&id);
+                s
+            });
+            Ok(Response::new(("update".to_string() + &items).into()))
         }
 
-        async fn delete(req: Request<Body>) -> Result<Response<Body>> {
-            Ok(Response::new("delete".into()))
+        async fn delete(req: Request) -> Result<Response> {
+            let ids: Vec<String> = req.params()?;
+            let items = ids.into_iter().fold(String::new(), |mut s, id| {
+                s.push(' ');
+                s.push_str(&id);
+                s
+            });
+            Ok(Response::new(("delete".to_string() + &items).into()))
         }
 
         let users = Resource::default()
             .named("user")
             .index(index)
-            .create(create.before(|r: Request<Body>| async { Ok(r) }))
+            .create(create.before(|r: Request| async { Ok(r) }))
             .show(show)
             .update(update)
             .destroy(delete)
-            .with(Logger::new());
+            .map_handler(|h| {
+                h.and_then(|res: Response| async {
+                    let (parts, body) = res.into_parts();
+
+                    let mut buf = bytes::BytesMut::new();
+                    buf.extend(b"users: ");
+                    buf.extend(hyper::body::to_bytes(body).await.map_err(Error::normal)?);
+
+                    Ok(Response::from_parts(parts, Body::from(buf.freeze())))
+                })
+                .boxed()
+            });
 
         let posts = Router::new().route("search", get(search)).resource(
             "",
@@ -248,20 +274,148 @@ mod tests {
                 .show(show)
                 .update(update)
                 .destroy(delete)
-                .with(Logger::new()),
+                .map_handler(|h| {
+                    h.and_then(|res: Response| async {
+                        let (parts, body) = res.into_parts();
+
+                        let mut buf = bytes::BytesMut::new();
+                        buf.extend(b"posts: ");
+                        buf.extend(hyper::body::to_bytes(body).await.map_err(Error::normal)?);
+
+                        Ok(Response::from_parts(parts, Body::from(buf.freeze())))
+                    })
+                    .boxed()
+                }),
         );
 
         let router = Router::new()
             .route("", get(index))
             .resource("users", users.clone())
             .nest("posts", posts.resource(":post_id/users", users))
+            .route("search", any(all))
             .route("*", Route::new().any(not_found))
             .with(Logger::new());
 
-        dbg!(&router);
-
         let tree: Tree = router.into();
 
+        // GET /posts
+        let (req, method, path) = client(Method::GET, "/posts");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, _) = node.unwrap();
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            ""
+        );
+
+        // POST /posts
+        let (req, method, path) = client(Method::POST, "/posts");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, _) = node.unwrap();
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            "posts: create"
+        );
+
+        // GET /posts/foo
+        let (mut req, method, path) = client(Method::GET, "/posts/foo");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, params) = node.unwrap();
+        req.extensions_mut().insert(Into::<Params>::into(params));
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            "posts: show foo"
+        );
+
+        // PUT /posts/foo
+        let (mut req, method, path) = client(Method::PUT, "/posts/foo");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, params) = node.unwrap();
+        req.extensions_mut().insert(Into::<Params>::into(params));
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            "posts: update foo"
+        );
+
+        // DELETE /posts/foo
+        let (mut req, method, path) = client(Method::DELETE, "/posts/foo");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, params) = node.unwrap();
+        req.extensions_mut().insert(Into::<Params>::into(params));
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            "posts: delete foo"
+        );
+
+        // GET /posts/foo/users
+        let (req, method, path) = client(Method::GET, "/posts/foo/users");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, _) = node.unwrap();
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            "users: index"
+        );
+
+        // POST /posts/users
+        let (req, method, path) = client(Method::POST, "/posts/foo/users");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, _) = node.unwrap();
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            "users: create"
+        );
+
+        // GET /posts/foo/users/bar
+        let (mut req, method, path) = client(Method::GET, "/posts/foo/users/bar");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, params) = node.unwrap();
+        req.extensions_mut().insert(Into::<Params>::into(params));
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            "users: show foo bar"
+        );
+
+        // PUT /posts/foo/users/bar
+        let (mut req, method, path) = client(Method::PUT, "/posts/foo/users/bar");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, params) = node.unwrap();
+        req.extensions_mut().insert(Into::<Params>::into(params));
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            "users: update foo bar"
+        );
+
+        // DELETE /posts/foo/users/bar
+        let (mut req, method, path) = client(Method::DELETE, "/posts/foo/users/bar");
+        let node = tree.find(&method, &path);
+        assert!(node.is_some());
+        let (h, params) = node.unwrap();
+        req.extensions_mut().insert(Into::<Params>::into(params));
+        assert_eq!(
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
+            "users: delete foo bar"
+        );
+
         Ok(())
+    }
+
+    fn client(method: Method, path: &str) -> (Request, Method, String) {
+        (
+            Request::builder()
+                .method(method.to_owned())
+                .uri(path.to_owned())
+                .body(Body::empty())
+                .unwrap(),
+            method,
+            path.to_string(),
+        )
     }
 }
