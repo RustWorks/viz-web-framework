@@ -45,6 +45,7 @@ impl WebSocket {
         self
     }
 
+    #[must_use]
     pub fn on_upgrade_with_config<F, Fut>(
         mut self,
         callback: F,
@@ -70,7 +71,6 @@ impl WebSocket {
         self.into_response()
     }
 
-    #[must_use]
     pub fn on_upgrade<F, Fut>(self, callback: F) -> Response
     where
         F: FnOnce(WebSocketStream) -> Fut + Send + 'static,
