@@ -158,7 +158,7 @@ where
             StatusCode::NO_CONTENT.into_response()
         } else {
             // Simple Request
-            if self.config.expose_headers.len() > 0 {
+            if !self.config.expose_headers.is_empty() {
                 headers.typed_insert(self.aceh.clone());
             }
 
@@ -186,5 +186,5 @@ where
 }
 
 fn is_not_empty(h: &HeaderValue) -> bool {
-    h.len() > 0
+    !h.is_empty()
 }

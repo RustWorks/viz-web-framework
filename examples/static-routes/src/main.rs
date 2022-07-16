@@ -4,7 +4,7 @@ use hyper::service::{make_service_fn, service_fn};
 use once_cell::sync::Lazy;
 use std::{convert::Infallible, net::SocketAddr};
 use viz::{
-    get, Body, IntoResponse, Method, Params, Request, RequestExt, Response, Result, Router, Server,
+    get, Body, IntoResponse, Method, types::Params, Request, RequestExt, Response, Result, Router, Server,
     StatusCode, Tree,
 };
 

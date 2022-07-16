@@ -73,24 +73,9 @@ macro_rules! export_verb_ext {
     };
 }
 
-#[derive(Clone)]
+#[derive(Clone, Default)]
 pub struct Route {
     pub(crate) methods: Vec<(Method, BoxHandler)>,
-}
-
-impl fmt::Debug for Route {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("Route")
-            .field(
-                "methods",
-                &self
-                    .methods
-                    .iter()
-                    .map(|(m, _)| m)
-                    .collect::<Vec<&Method>>(),
-            )
-            .finish()
-    }
 }
 
 impl Route {
@@ -325,6 +310,21 @@ where
     Route::new().any_ext(handler)
 }
 
+impl fmt::Debug for Route {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_struct("Route")
+            .field(
+                "methods",
+                &self
+                    .methods
+                    .iter()
+                    .map(|(m, _)| m)
+                    .collect::<Vec<&Method>>(),
+            )
+            .finish()
+    }
+}
+
 #[cfg(test)]
 #[allow(dead_code)]
 mod tests {
@@ -355,7 +355,7 @@ mod tests {
             type Output = LoggerHandler<H>;
 
             fn transform(&self, h: H) -> Self::Output {
-                LoggerHandler(h.clone())
+                LoggerHandler(h)
             }
         }
 
@@ -517,8 +517,7 @@ mod tests {
         let (_, h) = route
             .methods
             .iter()
-            .filter(|(m, _)| m == Method::GET)
-            .nth(0)
+            .find(|(m, _)| m == Method::GET)
             .unwrap();
 
         let res = match h.call(Request::default()).await {

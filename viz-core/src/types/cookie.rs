@@ -184,7 +184,7 @@ impl IntoResponse for CookiesError {
 }
 
 #[async_trait]
-impl<'a> FromRequest for Cookies {
+impl FromRequest for Cookies {
     type Error = CookiesError;
 
     async fn extract(req: &mut Request) -> Result<Self, Self::Error> {

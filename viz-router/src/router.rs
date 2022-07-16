@@ -4,7 +4,7 @@ use viz_core::{BoxHandler, Handler, HandlerExt, Next, Request, Response, Result,
 
 use crate::{Resource, Route};
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub struct Router {
     pub(crate) routes: Option<Vec<(String, Route)>>,
 }
@@ -175,7 +175,7 @@ mod tests {
         type Output = LoggerHandler<H>;
 
         fn transform(&self, h: H) -> Self::Output {
-            LoggerHandler(h.clone())
+            LoggerHandler(h)
         }
     }
 

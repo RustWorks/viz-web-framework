@@ -225,7 +225,7 @@ impl RequestExt for Request<Body> {
 
         let boundary = m
             .get_param(mime::BOUNDARY)
-            .ok_or_else(|| PayloadError::MissingBoundary)?
+            .ok_or(PayloadError::MissingBoundary)?
             .as_str();
 
         let body = replace(self.body_mut(), Body::empty());
@@ -261,7 +261,7 @@ impl RequestExt for Request<Body> {
         self.extensions()
             .get::<Cookies>()
             .cloned()
-            .ok_or_else(|| CookiesError::Read)
+            .ok_or(CookiesError::Read)
     }
 
     #[cfg(feature = "cookie")]
@@ -294,7 +294,7 @@ impl RequestExt for Request<Body> {
         match self.extensions().get::<Params>() {
             None => Err(ParamsError::Empty),
             Some(params) => {
-                T::deserialize(PathDeserializer::new(&params)).map_err(ParamsError::Parse)
+                T::deserialize(PathDeserializer::new(params)).map_err(ParamsError::Parse)
             }
         }
     }

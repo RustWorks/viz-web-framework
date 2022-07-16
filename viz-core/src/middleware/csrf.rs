@@ -70,7 +70,7 @@ impl<S, G, V> Config<S, G, V> {
         }))
     }
 
-    pub fn get<'a>(&self, req: &'a Request) -> Result<Option<Vec<u8>>> {
+    pub fn get(&self, req: &Request) -> Result<Option<Vec<u8>>> {
         let inner = self.as_ref();
         match inner.store {
             Store::Cookie => {
@@ -94,7 +94,7 @@ impl<S, G, V> Config<S, G, V> {
         }
     }
 
-    pub fn set<'a>(&self, req: &'a Request, token: String, secret: Vec<u8>) -> Result<()> {
+    pub fn set(&self, req: &Request, token: String, secret: Vec<u8>) -> Result<()> {
         let inner = self.as_ref();
         match inner.store {
             Store::Cookie => {
@@ -152,7 +152,7 @@ where
     O: IntoResponse,
     H: Handler<Request, Output = Result<O>> + Clone,
     S: Fn() -> Result<Vec<u8>> + Send + Sync + 'static,
-    G: Fn(&Vec<u8>, Vec<u8>) -> Vec<u8> + Send + Sync + 'static,
+    G: Fn(&[u8], Vec<u8>) -> Vec<u8> + Send + Sync + 'static,
     V: Fn(Vec<u8>, String) -> bool + Send + Sync + 'static,
 {
     type Output = Result<Response>;
@@ -200,7 +200,7 @@ pub fn secret() -> Result<Vec<u8>> {
 }
 
 /// Generates Token
-pub fn generate(secret: &Vec<u8>, otp: Vec<u8>) -> Vec<u8> {
+pub fn generate(secret: &[u8], otp: Vec<u8>) -> Vec<u8> {
     mask(secret.to_vec(), otp)
 }
 

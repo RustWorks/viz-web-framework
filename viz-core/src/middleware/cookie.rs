@@ -11,15 +11,14 @@ pub struct Config {
     key: std::sync::Arc<types::CookieKey>,
 }
 
-#[cfg(not(any(feature = "cookie-signed", feature = "cookie-private")))]
+#[allow(clippy::new_without_default)]
 impl Config {
+    #[cfg(not(any(feature = "cookie-signed", feature = "cookie-private")))]
     pub fn new() -> Self {
         Self {}
     }
-}
 
-#[cfg(any(feature = "cookie-signed", feature = "cookie-private"))]
-impl Config {
+    #[cfg(any(feature = "cookie-signed", feature = "cookie-private"))]
     pub fn new(key: types::CookieKey) -> Self {
         Self {
             key: std::sync::Arc::new(key),
@@ -77,6 +76,7 @@ where
             .await
             .map(IntoResponse::into_response)
             .map(|mut res| {
+                #[allow(clippy::single_match)]
                 match cookies.jar().lock() {
                     Ok(c) => {
                         c.delta()

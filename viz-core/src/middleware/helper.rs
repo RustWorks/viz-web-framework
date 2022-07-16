@@ -99,8 +99,8 @@ impl Default for CookieOptions {
             domain: None,
             secure: true,
             http_only: true,
-            path: "/".into(),
-            name: "viz.sid".into(),
+            path: "/",
+            name: "viz.sid",
             same_site: Some(SameSite::Lax),
             max_age: Some(Duration::from_secs(Self::MAX_AGE)),
         }

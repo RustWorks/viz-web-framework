@@ -1,7 +1,6 @@
 //! Static file serving and directory listing
 
 use std::{
-    borrow::Cow,
     collections::Bound,
     io::{Seek, SeekFrom},
     path::{Path, PathBuf},
@@ -133,15 +132,15 @@ impl Handler<Request> for Files {
     }
 }
 
-fn sanitize_path<'a>(path: &'a mut PathBuf, p: &Cow<'a, str>) -> Result<()> {
+fn sanitize_path<'a>(path: &'a mut PathBuf, p: &'a str) -> Result<()> {
     for seg in p.split('/') {
         if seg.starts_with("..") {
             return Err(StatusCode::NOT_FOUND.into_error());
-        } else if seg.contains('\\') {
-            return Err(StatusCode::NOT_FOUND.into_error());
-        } else {
-            path.push(seg);
         }
+        if seg.contains('\\') {
+            return Err(StatusCode::NOT_FOUND.into_error());
+        }
+        path.push(seg);
     }
     Ok(())
 }

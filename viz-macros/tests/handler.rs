@@ -29,14 +29,12 @@ struct MyError(String);
 
 impl From<MyError> for Error {
     fn from(MyError(err): MyError) -> Self {
-        Error::Responder((StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_response())
+        Error::Responder((StatusCode::INTERNAL_SERVER_ERROR, err).into_response())
     }
 }
 
 #[handler]
-async fn a() -> impl IntoResponse {
-    ()
-}
+async fn a() -> impl IntoResponse {}
 
 #[handler]
 async fn b(_: Foo) -> Result<impl IntoResponse> {
@@ -49,9 +47,7 @@ async fn c(_: Foo, _: Bar) -> Result<impl IntoResponse> {
 }
 
 #[handler]
-async fn d() {
-    ()
-}
+async fn d() {}
 
 #[handler]
 async fn e() -> StatusCode {
@@ -82,9 +78,7 @@ async fn j(_: Foo) -> Result<StatusCode> {
 }
 
 #[handler]
-fn aa() -> impl IntoResponse {
-    ()
-}
+fn aa() -> impl IntoResponse {}
 
 #[handler]
 fn bb(_: Foo) -> Result<impl IntoResponse> {
@@ -97,9 +91,7 @@ fn cc(_: Foo, _: Bar) -> Result<impl IntoResponse> {
 }
 
 #[handler]
-fn dd() {
-    ()
-}
+fn dd() {}
 
 #[handler]
 fn ee() -> StatusCode {

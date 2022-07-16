@@ -223,7 +223,7 @@ mod tests {
             type Output = LoggerHandler<H>;
 
             fn transform(&self, h: H) -> Self::Output {
-                LoggerHandler(h.clone())
+                LoggerHandler(h)
             }
         }
 
@@ -346,9 +346,8 @@ mod tests {
         let (_, h) = resource
             .routes
             .iter()
-            .filter(|(p, _)| p == ":post_id")
-            .nth(0)
-            .and_then(|(_, r)| r.methods.iter().filter(|(m, _)| m == Method::GET).nth(0))
+            .find(|(p, _)| p == ":post_id")
+            .and_then(|(_, r)| r.methods.iter().find(|(m, _)| m == Method::GET))
             .unwrap();
 
         let res = h.call(Request::default()).await?;
