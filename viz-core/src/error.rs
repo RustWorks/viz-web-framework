@@ -13,6 +13,13 @@ pub enum Error {
 }
 
 impl Error {
+    pub fn normal<T>(t: T) -> Self
+    where
+        T: StdError + Send + Sync + 'static,
+    {
+        Self::Normal(Box::new(t))
+    }
+
     #[inline]
     pub fn is<T>(&self) -> bool
     where
