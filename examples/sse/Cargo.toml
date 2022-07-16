@@ -1,13 +1,17 @@
 [package]
-name = "hello-world"
+name = "sse"
 version = "0.1.0"
 edition = "2021"
 publish = false
 
 [dependencies]
-viz = { path = "../../viz" }
+viz = { path = "../../viz", features = ["sse"] }
 
 tokio = { version = "1.0", default-features = false, features = [
   "rt-multi-thread",
   "macros",
 ] }
+sysinfo = "0.24.6"
+tokio-stream = "0.1.9"
+futures-util = "0.3.21"
+mime = "0.3.16"

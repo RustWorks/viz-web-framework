@@ -1,4 +1,4 @@
-use crate::{Body, IntoResponse, Response, Result, StatusCode, ThisError};
+use crate::{Body, Error, IntoResponse, Response, Result, StatusCode, ThisError};
 
 #[derive(ThisError, Debug)]
 pub enum PayloadError {
@@ -66,6 +66,12 @@ impl IntoResponse for PayloadError {
             self.to_string(),
         )
             .into_response()
+    }
+}
+
+impl From<PayloadError> for Error {
+    fn from(e: PayloadError) -> Self {
+        e.into_error()
     }
 }
 

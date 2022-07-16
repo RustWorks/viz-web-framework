@@ -14,6 +14,8 @@ mod params;
 mod query;
 #[cfg(feature = "session")]
 mod session;
+#[cfg(feature = "sse")]
+mod sse;
 #[cfg(feature = "websocket")]
 mod websocket;
 
@@ -37,6 +39,8 @@ pub use params::{Params, ParamsError};
 pub use query::Query;
 #[cfg(feature = "session")]
 pub use session::Session;
+#[cfg(feature = "sse")]
+pub use sse::{Event, Sse};
 #[cfg(feature = "websocket")]
 pub use websocket::{Message, WebSocket, WebSocketConfig, WebSocketError, WebSocketStream};
 

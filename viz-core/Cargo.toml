@@ -30,6 +30,7 @@ form = ["serde", "serde_urlencoded"]
 query = ["serde", "serde_urlencoded"]
 multipart = ["form-data"]
 websocket = ["tokio/rt", "tokio-tungstenite"]
+sse = ["tokio-stream", "tokio-util"]
 
 cookie = ["libcookie"]
 cookie-private = ["libcookie/private"]
@@ -66,6 +67,8 @@ tokio = { version = "1.20", optional = true }
 tokio-tungstenite = { version = "0.17.2", optional = true }
 # TODO: EmbedHandler
 rust-embed = { version = "6.4", optional = true }
+tokio-stream = { version = "0.1.9", optional = true }
+tokio-util = { version = "0.7.3", optional = true }
 
 [dev-dependencies]
 tokio = { version = "1.0", features = ["rt-multi-thread", "macros"] }

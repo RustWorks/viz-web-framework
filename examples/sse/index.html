@@ -4,7 +4,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Chat</title>
+  <title>Sys Stats</title>
   <style>
     ::selection {
       background-color: #79ffe1;
@@ -77,50 +77,23 @@
 
 <body>
   <header>
-    <h1><i>Chat</i></h1>
+    <h1><i>Sys Stats</i></h1>
   </header>
   <main>
     <ul id="logs"></ul>
   </main>
-  <form id="form">
-    <textarea placeholder="Enter your name" id="input"></textarea>
-    <button type="submit">Send</button>
-  </form>
 </body>
 <script>
-  let ws = null
-  let name = ''
-  let input = document.getElementById('input')
   let logs = document.getElementById('logs')
 
   const addLog = (e) => {
     const li = document.createElement('li')
-    let text = e.data
-    if (text.startsWith(name)) {
-      let tmp = text.split(': ')
-      tmp.reverse()
-      text = tmp.join(' :')
-      li.classList.add('right')
-    }
-    li.innerText = text
+    li.innerText = e.data
     logs.appendChild(li)
   }
 
-  document.getElementById('form').addEventListener('submit', (e) => {
-    e.preventDefault()
-    let text = input.value.trim()
-    if (!text) return
-    input.value = ''
-    if (ws === null) {
-      name = text
-      input.placeholder = 'Enter your message'
-      ws = new WebSocket('ws://127.0.0.1:3000/ws/' + name)
-      ws.onmessage = addLog
-      ws.onerror = console.error
-      return
-    }
-    ws.send(text)
-  })
+  let eventSource = new EventSource('stats')
+  eventSource.onmessage = addLog
 </script>
 
 </html>
