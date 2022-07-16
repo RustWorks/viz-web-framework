@@ -57,10 +57,10 @@ macros = ["viz-macros"]
 handlers = ["viz-handlers"]
 
 [dependencies]
-viz-core = { path = "../viz-core" }
-viz-router = { path = "../viz-router" }
-viz-macros = { path = "../viz-macros", optional = true }
-viz-handlers = { path = "../viz-handlers", optional = true }
+viz-core = { path = "../viz-core", version = "0.2.0-alpha" }
+viz-router = { path = "../viz-router", version = "0.2.0-alpha" }
+viz-macros = { path = "../viz-macros", version = "0.1.0-alpha", optional = true }
+viz-handlers = { path = "../viz-handlers", version = "0.1.0-alpha", optional = true }
 hyper = { version = "0.14", features = ["tcp", "server", "stream"] }
 tokio = { version = "1.20", features = ["net"] }
 
