@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-use crate::types::{Cookie, SameSite};
+use crate::types::{Cookie, Cookies, SameSite};
 
 /// Cookie's Options
 #[derive(Debug)]
@@ -71,8 +71,8 @@ impl CookieOptions {
         self
     }
 
-    pub fn into_cookie(&self, value: &str) -> Cookie<'static> {
-        let mut cookie = Cookie::new(self.name, value);
+    pub fn into_cookie(&self, value: impl Into<String>) -> Cookie<'_> {
+        let mut cookie = Cookie::new(self.name, value.into());
 
         cookie.set_path(self.path);
         cookie.set_secure(self.secure);
@@ -83,13 +83,13 @@ impl CookieOptions {
             cookie.set_domain(domain);
         }
         if let Some(max_age) = self.max_age {
-            cookie.set_max_age(
-                libcookie::time::Duration::try_from(max_age)
-                    .expect("cant convert std Duration into time::Duration"),
-            );
+            cookie.set_max_age(Some(libcookie::time::Duration::new(
+                max_age.as_secs() as i64,
+                max_age.subsec_nanos() as i32,
+            )));
         }
 
-        cookie.into_owned()
+        cookie
     }
 }
 
@@ -104,5 +104,73 @@ impl Default for CookieOptions {
             same_site: Some(SameSite::Lax),
             max_age: Some(Duration::from_secs(Self::MAX_AGE)),
         }
+    }
+}
+
+#[cfg(not(any(feature = "cookie-signed", feature = "cookie-private")))]
+pub trait Cookieable {
+    fn cookie(&self) -> &CookieOptions;
+
+    fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
+        cookies.get(self.cookie().name)
+    }
+
+    fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
+        cookies.remove(self.cookie().name)
+    }
+
+    fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: impl Into<String>) {
+        cookies.add(self.cookie().into_cookie(value))
+    }
+}
+
+#[cfg(all(feature = "cookie-signed", not(feature = "cookie-private")))]
+pub trait Cookieable {
+    fn cookie(&self) -> &CookieOptions;
+
+    fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
+        cookies.signed_get(self.cookie().name)
+    }
+
+    fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
+        cookies.signed_remove(self.cookie().name)
+    }
+
+    fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: impl Into<String>) {
+        cookies.signed_add(self.cookie().into_cookie(value))
+    }
+}
+
+#[cfg(all(feature = "cookie-private", not(feature = "cookie-signed")))]
+pub trait Cookieable {
+    fn cookie(&self) -> &CookieOptions;
+
+    fn get_cookie<'a>(&self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
+        cookies.private_get(self.cookie().name)
+    }
+
+    fn remove_cookie<'a>(&self, cookies: &'a Cookies) {
+        cookies.private_remove(self.cookie().name)
+    }
+
+    fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: impl Into<String>) {
+        cookies.private_add(self.cookie().into_cookie(value))
+    }
+}
+
+#[cfg(all(feature = "cookie-private", not(feature = "cookie-signed")))]
+pub trait Cookieable {
+    fn cookie(&self) -> &CookieOptions;
+
+    fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
+        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
+    }
+
+    fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
+        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
+    }
+
+    fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: impl Into<String>) {
+        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
     }
 }

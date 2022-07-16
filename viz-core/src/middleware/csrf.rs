@@ -5,8 +5,7 @@ use std::{collections::HashSet, sync::Arc};
 use crate::{
     async_trait,
     header::{HeaderName, HeaderValue, VARY},
-    middleware::helper::CookieOptions,
-    types::{Cookie, Cookies},
+    middleware::helper::{CookieOptions, Cookieable},
     Error, FromRequest, Handler, IntoResponse, Method, Request, RequestExt, Response, Result,
     StatusCode, Transform,
 };
@@ -71,10 +70,6 @@ impl<S, G, V> Config<S, G, V> {
         }))
     }
 
-    pub fn cookie(&self) -> &CookieOptions {
-        &self.0.cookie_options
-    }
-
     pub fn get<'a>(&self, req: &'a Request) -> Result<Option<Vec<u8>>> {
         let inner = self.as_ref();
         match inner.store {
@@ -111,63 +106,9 @@ impl<S, G, V> Config<S, G, V> {
     }
 }
 
-#[cfg(not(any(feature = "cookie-signed", feature = "cookie-private")))]
-impl<S, G, V> Config<S, G, V> {
-    pub fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.get(self.cookie().name)
-    }
-
-    pub fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
-        cookies.remove(self.cookie().name)
-    }
-
-    pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
-        cookies.add(self.cookie().into_cookie(value))
-    }
-}
-
-#[cfg(all(feature = "cookie-signed", not(feature = "cookie-private")))]
-impl<S, G, V> Config<S, G, V> {
-    pub fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.signed_get(self.cookie().name)
-    }
-
-    pub fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
-        cookies.signed_remove(self.cookie().name)
-    }
-
-    pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
-        cookies.signed_add(self.cookie().into_cookie(value))
-    }
-}
-
-#[cfg(all(feature = "cookie-private", not(feature = "cookie-signed")))]
-impl<S, G, V> Config<S, G, V> {
-    pub fn get_cookie<'a>(&self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.private_get(self.cookie().name)
-    }
-
-    pub fn remove_cookie<'a>(&self, cookies: &'a Cookies) {
-        cookies.private_remove(self.cookie().name)
-    }
-
-    pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
-        cookies.private_add(self.cookie().into_cookie(value))
-    }
-}
-
-#[cfg(all(feature = "cookie-signed", feature = "cookie-private"))]
-impl<S, G, V> Config<S, G, V> {
-    pub fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
-    }
-
-    pub fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
-        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
-    }
-
-    pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
-        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
+impl<S, G, V> Cookieable for Config<S, G, V> {
+    fn cookie(&self) -> &CookieOptions {
+        &self.0.cookie_options
     }
 }
 

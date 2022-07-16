@@ -5,8 +5,8 @@ use std::{
 
 use crate::{
     async_trait,
-    middleware::helper::CookieOptions,
-    types::{Cookie, Cookies, Session},
+    middleware::helper::{CookieOptions, Cookieable},
+    types::{Cookie, Session},
     Error, Handler, IntoResponse, Request, RequestExt, Response, Result, StatusCode, Transform,
 };
 
@@ -29,72 +29,14 @@ impl<S, G, V> Config<S, G, V> {
         &self.0 .0
     }
 
-    pub fn cookie(&self) -> &CookieOptions {
-        &self.0 .1
-    }
-
     pub fn ttl(&self) -> Option<Duration> {
         self.cookie().max_age
     }
 }
 
-#[cfg(not(any(feature = "cookie-signed", feature = "cookie-private")))]
-impl<S, G, V> Config<S, G, V> {
-    pub fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.get(self.cookie().name)
-    }
-
-    pub fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
-        cookies.remove(self.cookie().name)
-    }
-
-    pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
-        cookies.add(self.cookie().into_cookie(value))
-    }
-}
-
-#[cfg(all(feature = "cookie-signed", not(feature = "cookie-private")))]
-impl<S, G, V> Config<S, G, V> {
-    pub fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.signed_get(self.cookie().name)
-    }
-
-    pub fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
-        cookies.signed_remove(self.cookie().name)
-    }
-
-    pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
-        cookies.signed_add(self.cookie().into_cookie(value))
-    }
-}
-
-#[cfg(all(feature = "cookie-private", not(feature = "cookie-signed")))]
-impl<S, G, V> Config<S, G, V> {
-    pub fn get_cookie<'a>(&self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.private_get(self.cookie().name)
-    }
-
-    pub fn remove_cookie<'a>(&self, cookies: &'a Cookies) {
-        cookies.private_remove(self.cookie().name)
-    }
-
-    pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
-        cookies.private_add(self.cookie().into_cookie(value))
-    }
-}
-
-#[cfg(all(feature = "cookie-signed", feature = "cookie-private"))]
-impl<S, G, V> Config<S, G, V> {
-    pub fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
-    }
-
-    pub fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
-        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
-    }
-
-    pub fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: &str) {
-        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
+impl<S, G, V> Cookieable for Config<S, G, V> {
+    fn cookie(&self) -> &CookieOptions {
+        &self.0 .1
     }
 }
 
