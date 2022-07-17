@@ -1,4 +1,6 @@
-//! https://github.com/vercel/serve-handler MIT
+//! Directory
+//!
+//! <https://github.com/vercel/serve-handler> MIT
 
 use std::{
     fmt::{Display, Formatter, Result},
