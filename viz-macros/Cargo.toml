@@ -1,6 +1,6 @@
 [package]
 name = "viz-macros"
-version = "0.1.0-alpha"
+version = "0.1.0"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz proc macros"
 license = "MIT OR Apache-2.0"
