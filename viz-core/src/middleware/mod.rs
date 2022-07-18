@@ -9,4 +9,5 @@ pub mod limits;
 #[cfg(feature = "session")]
 pub mod session;
 
+#[cfg(feature = "cookie")]
 pub mod helper;

@@ -1,12 +1,14 @@
 use std::mem::replace;
 
+use crate::{async_trait, header, types::PayloadError, Body, Bytes, FromRequest, Request, Result};
+
+#[cfg(feature = "limits")]
+use crate::types::Limits;
+#[cfg(feature = "limits")]
 use http_body::{LengthLimitError, Limited};
 
-use crate::{
-    async_trait, header,
-    types::{Limits, Payload, PayloadError},
-    Body, Bytes, FromRequest, Request, Result,
-};
+#[cfg(any(feature = "form", feature = "json", feature = "multipart"))]
+use crate::types::Payload;
 
 #[cfg(feature = "form")]
 use crate::types::Form;
@@ -50,10 +52,12 @@ pub trait RequestExt {
     where
         T: serde::de::DeserializeOwned;
 
+    /// Reads bytes
+    async fn read(&mut self) -> Result<Bytes, PayloadError>;
+
+    #[cfg(feature = "limits")]
     /// Reads bytes with a limit by name.
-    async fn read_with<F>(&mut self, name: &str, f: F) -> Result<Bytes, PayloadError>
-    where
-        F: FnOnce() -> u64 + Send;
+    async fn read_with(&mut self, name: &str, max: u64) -> Result<Bytes, PayloadError>;
 
     /// Reads the request body, and returns with a raw binary data buffer.
     ///
@@ -165,11 +169,16 @@ impl RequestExt for Request<Body> {
             .map_err(PayloadError::UrlDecode)
     }
 
-    async fn read_with<F>(&mut self, name: &str, f: F) -> Result<Bytes, PayloadError>
-    where
-        F: FnOnce() -> u64 + Send,
-    {
-        let limit = self.limits().get(name).unwrap_or_else(f) as usize;
+    /// Reads bytes
+    async fn read(&mut self) -> Result<Bytes, PayloadError> {
+        hyper::body::to_bytes(replace(self.body_mut(), Body::empty()))
+            .await
+            .map_err(|_| PayloadError::Read)
+    }
+
+    #[cfg(feature = "limits")]
+    async fn read_with(&mut self, name: &str, max: u64) -> Result<Bytes, PayloadError> {
+        let limit = self.limits().get(name).unwrap_or(max) as usize;
         let body = Limited::new(replace(self.body_mut(), Body::empty()), limit);
         hyper::body::to_bytes(body).await.map_err(|err| {
             if err.downcast_ref::<LengthLimitError>().is_some() {
@@ -183,12 +192,21 @@ impl RequestExt for Request<Body> {
     }
 
     async fn bytes(&mut self) -> Result<Bytes, PayloadError> {
-        self.read_with("bytes", || Limits::NORMAL).await
+        #[cfg(feature = "limits")]
+        let bytes = self.read_with("bytes", Limits::NORMAL).await;
+        #[cfg(not(feature = "limits"))]
+        let bytes = self.read().await;
+
+        bytes
     }
 
     async fn text(&mut self) -> Result<String, PayloadError> {
-        String::from_utf8(self.read_with("text", || Limits::NORMAL).await?.to_vec())
-            .map_err(PayloadError::Utf8)
+        #[cfg(feature = "limits")]
+        let bytes = self.read_with("text", Limits::NORMAL).await?;
+        #[cfg(not(feature = "limits"))]
+        let bytes = self.read().await?;
+
+        String::from_utf8(bytes.to_vec()).map_err(PayloadError::Utf8)
     }
 
     #[cfg(feature = "form")]
@@ -197,11 +215,15 @@ impl RequestExt for Request<Body> {
         T: serde::de::DeserializeOwned,
     {
         let _ = <Form as Payload>::check_header(self.content_type(), self.content_length(), None)?;
-        serde_urlencoded::from_reader(bytes::Buf::reader(
-            self.read_with(<Form as Payload>::NAME, || <Form as Payload>::LIMIT)
-                .await?,
-        ))
-        .map_err(PayloadError::UrlDecode)
+
+        #[cfg(feature = "limits")]
+        let bytes = self
+            .read_with(<Form as Payload>::NAME, <Form as Payload>::LIMIT)
+            .await?;
+        #[cfg(not(feature = "limits"))]
+        let bytes = self.read().await?;
+
+        serde_urlencoded::from_reader(bytes::Buf::reader(bytes)).map_err(PayloadError::UrlDecode)
     }
 
     #[cfg(feature = "json")]
@@ -210,12 +232,15 @@ impl RequestExt for Request<Body> {
         T: serde::de::DeserializeOwned,
     {
         let _ = <Json as Payload>::check_header(self.content_type(), self.content_length(), None)?;
-        serde_json::from_slice(
-            &self
-                .read_with(<Json as Payload>::NAME, || <Json as Payload>::LIMIT)
-                .await?,
-        )
-        .map_err(PayloadError::Json)
+
+        #[cfg(feature = "limits")]
+        let bytes = self
+            .read_with(<Json as Payload>::NAME, <Json as Payload>::LIMIT)
+            .await?;
+        #[cfg(not(feature = "limits"))]
+        let bytes = self.read().await?;
+
+        serde_json::from_slice(&bytes).map_err(PayloadError::Json)
     }
 
     #[cfg(feature = "multipart")]

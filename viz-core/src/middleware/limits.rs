@@ -1,5 +1,6 @@
 //! Limits Middleware
 
+#[cfg(feature = "multipart")]
 use std::sync::Arc;
 
 use crate::{async_trait, types, Handler, IntoResponse, Request, Response, Result, Transform};
@@ -7,6 +8,7 @@ use crate::{async_trait, types, Handler, IntoResponse, Request, Response, Result
 #[derive(Debug, Clone)]
 pub struct Config {
     limits: types::Limits,
+    #[cfg(feature = "multipart")]
     multipart: Arc<types::MultipartLimits>,
 }
 
@@ -20,6 +22,7 @@ impl Config {
         self
     }
 
+    #[cfg(feature = "multipart")]
     pub fn multipart(mut self, limits: types::MultipartLimits) -> Self {
         *Arc::make_mut(&mut self.multipart) = limits;
         self
@@ -30,6 +33,7 @@ impl Default for Config {
     fn default() -> Self {
         Self {
             limits: types::Limits::default(),
+            #[cfg(feature = "multipart")]
             multipart: Arc::new(types::MultipartLimits::default()),
         }
     }
@@ -65,6 +69,7 @@ where
 
     async fn call(&self, mut req: Request) -> Self::Output {
         req.extensions_mut().insert(self.config.limits.clone());
+        #[cfg(feature = "multipart")]
         req.extensions_mut().insert(self.config.multipart.clone());
 
         self.h.call(req).await.map(IntoResponse::into_response)

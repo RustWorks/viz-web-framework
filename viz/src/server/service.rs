@@ -1,15 +1,18 @@
+use std::sync::Arc;
+
+#[cfg(any(
+    all(unix, feature = "unix-socket"),
+    any(feature = "http1", feature = "http2")
+))]
 use std::{
     convert::Infallible,
     future::{ready, Ready},
-    sync::Arc,
     task::{Context, Poll},
 };
 
-use hyper::{server::conn::AddrStream, service::Service};
-
 use crate::{Router, Tree};
 
-use super::Stream;
+#[allow(dead_code)]
 #[derive(Clone)]
 pub struct ServiceMaker {
     pub(crate) tree: Arc<Tree>,
@@ -31,8 +34,8 @@ impl From<Router> for ServiceMaker {
 
 // hyper-v0.14
 #[cfg(any(feature = "http1", feature = "http2"))]
-impl Service<&AddrStream> for ServiceMaker {
-    type Response = Stream;
+impl hyper::service::Service<&hyper::server::conn::AddrStream> for ServiceMaker {
+    type Response = super::Stream;
     type Error = Infallible;
     type Future = Ready<Result<Self::Response, Self::Error>>;
 
@@ -40,8 +43,8 @@ impl Service<&AddrStream> for ServiceMaker {
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, socket: &AddrStream) -> Self::Future {
-        ready(Ok(Stream::new(
+    fn call(&mut self, socket: &hyper::server::conn::AddrStream) -> Self::Future {
+        ready(Ok(super::Stream::new(
             self.tree.clone(),
             Some(socket.remote_addr()),
         )))
@@ -52,7 +55,7 @@ impl Service<&AddrStream> for ServiceMaker {
 /*
 #[cfg(any(feature = "http1", feature = "http2"))]
 impl Service<&tokio::net::TcpStream> for ServiceMaker {
-    type Response = Stream;
+    type Response = super::Stream;
     type Error = Infallible;
     type Future = Ready<Result<Self::Response, Self::Error>>;
 
@@ -70,8 +73,8 @@ impl Service<&tokio::net::TcpStream> for ServiceMaker {
 */
 
 #[cfg(all(unix, feature = "unix-socket"))]
-impl Service<&tokio::net::UnixStream> for ServiceMaker {
-    type Response = Stream;
+impl hyper::service::Service<&tokio::net::UnixStream> for ServiceMaker {
+    type Response = super::Stream;
     type Error = Infallible;
     type Future = Ready<Result<Self::Response, Self::Error>>;
 
@@ -80,6 +83,6 @@ impl Service<&tokio::net::UnixStream> for ServiceMaker {
     }
 
     fn call(&mut self, _: &tokio::net::UnixStream) -> Self::Future {
-        ready(Ok(Stream::new(self.tree.clone(), None)))
+        ready(Ok(super::Stream::new(self.tree.clone(), None)))
     }
 }

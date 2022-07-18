@@ -1,6 +1,6 @@
 [package]
 name = "viz-core"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 description = "Viz core components"
 license = "MIT OR Apache-2.0"
@@ -30,11 +30,11 @@ form = ["serde", "serde_urlencoded"]
 query = ["serde", "serde_urlencoded"]
 multipart = ["form-data"]
 websocket = ["tokio/rt", "tokio-tungstenite"]
-sse = ["tokio-stream", "tokio-util"]
+sse = ["tokio/time", "tokio-stream", "tokio-util"]
 
 cookie = ["libcookie"]
-cookie-private = ["libcookie/private"]
-cookie-signed = ["libcookie/signed"]
+cookie-private = ["cookie", "libcookie/private"]
+cookie-signed = ["cookie", "libcookie/signed"]
 
 session = ["cookie", "json", "sessions-core"]
 

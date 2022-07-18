@@ -158,19 +158,19 @@ pub trait Cookieable {
     }
 }
 
-#[cfg(all(feature = "cookie-private", not(feature = "cookie-signed")))]
+#[cfg(all(feature = "cookie-private", feature = "cookie-signed"))]
 pub trait Cookieable {
     fn cookie(&self) -> &CookieOptions;
 
-    fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
+    fn get_cookie<'a>(&'a self, _: &'a Cookies) -> Option<Cookie<'a>> {
         panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
     }
 
-    fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
+    fn remove_cookie<'a>(&'a self, _: &'a Cookies) {
         panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
     }
 
-    fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: impl Into<String>) {
+    fn set_cookie<'a>(&'a self, _: &'a Cookies, _: impl Into<String>) {
         panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
     }
 }

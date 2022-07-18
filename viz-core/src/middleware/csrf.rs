@@ -22,6 +22,7 @@ struct Inner<S, G, V> {
 
 pub enum Store {
     Cookie,
+    #[cfg(feature = "session")]
     Session,
 }
 
@@ -90,10 +91,12 @@ impl<S, G, V> Config<S, G, V> {
                     }
                 }
             }
+            #[cfg(feature = "session")]
             Store::Session => req.session().get(inner.cookie_options.name),
         }
     }
 
+    #[allow(unused)]
     pub fn set(&self, req: &Request, token: String, secret: Vec<u8>) -> Result<()> {
         let inner = self.as_ref();
         match inner.store {
@@ -101,6 +104,7 @@ impl<S, G, V> Config<S, G, V> {
                 self.set_cookie(&req.cookies()?, &token);
                 Ok(())
             }
+            #[cfg(feature = "session")]
             Store::Session => req.session().set(inner.cookie_options.name, secret),
         }
     }

@@ -1,4 +1,4 @@
-use crate::{header, types::PayloadError, Body, Response, Result, StatusCode};
+use crate::{header, Body, Response, Result, StatusCode};
 
 pub trait ResponseExt {
     /// Response body with `Content-Type`
@@ -30,13 +30,13 @@ pub trait ResponseExt {
 
     #[cfg(feature = "json")]
     /// Response JSON
-    fn json<T>(t: T) -> Result<Response, PayloadError>
+    fn json<T>(t: T) -> Result<Response, crate::types::PayloadError>
     where
         T: serde::Serialize,
     {
         serde_json::to_vec(&t)
             .map(|v| Self::with(v, mime::APPLICATION_JSON.as_ref()))
-            .map_err(PayloadError::Json)
+            .map_err(crate::types::PayloadError::Json)
     }
 
     /// Response Stream

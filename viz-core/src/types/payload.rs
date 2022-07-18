@@ -24,10 +24,12 @@ pub enum PayloadError {
     #[error("{0}")]
     Hyper(#[from] hyper::Error),
 
+    #[cfg(feature = "json")]
     /// 400
     #[error("json: {0}")]
     Json(#[from] serde_json::Error),
 
+    #[cfg(any(feature = "form", feature = "query"))]
     /// 400
     #[error("url decode: {0}")]
     UrlDecode(#[from] serde_urlencoded::de::Error),
@@ -57,9 +59,11 @@ impl IntoResponse for PayloadError {
                 | PayloadError::Parse
                 | PayloadError::MissingBoundary
                 | PayloadError::Utf8(_)
-                | PayloadError::Json(_)
-                | PayloadError::Hyper(_)
-                | PayloadError::UrlDecode(_) => StatusCode::BAD_REQUEST,
+                | PayloadError::Hyper(_) => StatusCode::BAD_REQUEST,
+                #[cfg(feature = "json")]
+                PayloadError::Json(_) => StatusCode::BAD_REQUEST,
+                #[cfg(any(feature = "form", feature = "query"))]
+                PayloadError::UrlDecode(_) => StatusCode::BAD_REQUEST,
                 PayloadError::LengthRequired => StatusCode::LENGTH_REQUIRED,
                 PayloadError::TooLarge => StatusCode::PAYLOAD_TOO_LARGE,
                 PayloadError::UnsupportedMediaType(_) => StatusCode::UNSUPPORTED_MEDIA_TYPE,

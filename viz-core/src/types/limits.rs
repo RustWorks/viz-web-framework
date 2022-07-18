@@ -2,9 +2,16 @@
 
 use std::{convert::Infallible, sync::Arc};
 
-use crate::{async_trait, Body, FromRequest, Request, RequestExt};
+use crate::{async_trait, FromRequest, Request, RequestExt};
 
-use super::{Form, Json, Payload};
+#[cfg(feature = "form")]
+use super::Form;
+
+#[cfg(feature = "json")]
+use super::Json;
+
+#[cfg(any(feature = "form", feature = "json"))]
+use super::Payload;
 
 #[derive(Debug, Clone)]
 pub struct Limits {
@@ -13,11 +20,17 @@ pub struct Limits {
 
 impl Default for Limits {
     fn default() -> Self {
-        Limits::new()
+        let limits = Limits::new()
             .insert("text", Limits::NORMAL)
-            .insert("bytes", Limits::NORMAL)
-            .insert("json", <Json as Payload>::LIMIT)
-            .insert("form", <Form as Payload>::LIMIT)
+            .insert("bytes", Limits::NORMAL);
+
+        #[cfg(feature = "json")]
+        let limits = limits.insert("json", <Json as Payload>::LIMIT);
+
+        #[cfg(feature = "form")]
+        let limits = limits.insert("form", <Form as Payload>::LIMIT);
+
+        limits
     }
 }
 
@@ -50,7 +63,7 @@ impl Limits {
 impl FromRequest for Limits {
     type Error = Infallible;
 
-    async fn extract(req: &mut Request<Body>) -> Result<Self, Self::Error> {
+    async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         Ok(req.limits())
     }
 }
