@@ -1,7 +1,7 @@
 //! Router for Viz Web Framework
 
 #![forbid(unsafe_code)]
-#![cfg_attr(docsrs, feature(ext))]
+#![cfg_attr(docsrs, doc(cfg(feature = "ext")))]
 
 mod resource;
 mod route;
