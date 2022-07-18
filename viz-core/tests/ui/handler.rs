@@ -47,10 +47,9 @@ async fn main() -> Result<()> {
         type Output = Result<Response>;
 
         async fn call(&self, i: I) -> Self::Output {
-            dbg!("catch error --------------------------");
             match self.h.call(i).await {
                 Ok(r) => Ok(r.into_response()),
-                Err(e) if dbg!(e.is::<E>()) => Ok(self
+                Err(e) if e.is::<E>() => Ok(self
                     .f
                     .call(e.downcast::<E>().unwrap())
                     .await
@@ -65,7 +64,6 @@ async fn main() -> Result<()> {
         where
             Self: Sized,
         {
-            dbg!(456);
             CatchError::new(self, f)
         }
     }
@@ -101,8 +99,6 @@ async fn main() -> Result<()> {
     }
 
     async fn it_works() -> Result<()> {
-        dbg!(233);
-
         #[derive(thiserror::Error, Debug)]
         enum CustomError {
             #[error("not found 233")]
@@ -138,7 +134,6 @@ async fn main() -> Result<()> {
 
         impl From<CustomError2> for Error {
             fn from(e: CustomError2) -> Self {
-                dbg!(555);
                 // Error::Responder(e.into_response())
                 Error::Report(Box::new(e), CustomError::NotFound.into_response())
             }
@@ -146,7 +141,6 @@ async fn main() -> Result<()> {
 
         impl IntoResponse for CustomError2 {
             fn into_response(self) -> Response {
-                dbg!(610);
                 Response::builder()
                     .status(http::StatusCode::NOT_FOUND)
                     .body(self.to_string().into())
@@ -155,16 +149,14 @@ async fn main() -> Result<()> {
         }
 
         async fn before(req: Request) -> Result<Request> {
-            dbg!("before");
             Ok(req)
         }
 
         async fn after(res: Result<Response>) -> Result<Response> {
-            dbg!("after");
             res
         }
 
-        async fn a(req: Request) -> Result<Response> {
+        async fn a(_req: Request) -> Result<Response> {
             // Err(CustomError::NotFound.into())
 
             Err(CustomError2::NotFound)?;
@@ -173,13 +165,13 @@ async fn main() -> Result<()> {
 
             // Err(CustomError2::NotFound.into())
         }
-        async fn b(req: Request) -> Result<Response> {
+        async fn b(_req: Request) -> Result<Response> {
             // Err("hello error".into())
 
             Err(MyString("hello error".to_string()))?;
             Ok(().into_response())
         }
-        async fn c(req: Request) -> Result<Response> {
+        async fn c(_req: Request) -> Result<Response> {
             // Ok(Response::new("hello".into()))
             // Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "file read failed").into())
 
@@ -195,16 +187,16 @@ async fn main() -> Result<()> {
             )
                 .into())
         }
-        async fn d(req: Request) -> Result<&'static str> {
+        async fn d(_req: Request) -> Result<&'static str> {
             Ok("hello")
         }
-        async fn e(req: Request) -> Result<impl IntoResponse> {
+        async fn e(_req: Request) -> Result<impl IntoResponse> {
             Ok("hello")
         }
-        async fn f(req: Request) -> Result<impl IntoResponse> {
+        async fn f(_req: Request) -> Result<impl IntoResponse> {
             Ok("world")
         }
-        async fn g(req: Request) -> Result<Vec<u8>> {
+        async fn g(_req: Request) -> Result<Vec<u8>> {
             Ok(vec![144, 233])
         }
         // async fn h() -> Vec<u8> {
@@ -220,16 +212,13 @@ async fn main() -> Result<()> {
         async fn j(MyU8(a): MyU8, MyU8(b): MyU8) -> Result<Vec<u8>> {
             Ok(vec![0, a, b])
         }
-        async fn k(a: MyU8, b: MyU8, c: MyString) -> Result<Vec<u8>> {
-            dbg!(c.0);
+        async fn k(a: MyU8, b: MyU8, _: MyString) -> Result<Vec<u8>> {
             Ok(vec![0, a.0, b.0])
         }
-        async fn l(a: MyU8, b: MyU8, c: MyString) -> Result<Response> {
-            dbg!(c.0);
+        async fn l(a: MyU8, b: MyU8, _: MyString) -> Result<Response> {
             Ok(vec![0, a.0, b.0].into_response())
         }
-        async fn m(a: MyU8, b: MyU8, c: MyString) -> Result<Response> {
-            dbg!(c.0);
+        async fn m(_a: MyU8, _b: MyU8, _c: MyString) -> Result<Response> {
             // Err(CustomError::NotFound)?;
             // Ok(().into_response())
             CustomError::NotFound.into()
@@ -247,7 +236,6 @@ async fn main() -> Result<()> {
             type Output = Result<I>;
 
             async fn call(&self, i: I) -> Self::Output {
-                dbg!(&self.name);
                 Ok(i)
             }
         }
@@ -271,7 +259,6 @@ async fn main() -> Result<()> {
             type Output = Result<O>;
 
             async fn call(&self, o: Self::Output) -> Self::Output {
-                dbg!(&self.name);
                 o
             }
         }
@@ -290,31 +277,24 @@ async fn main() -> Result<()> {
             type Output = H::Output;
 
             async fn call(&self, (i, h): Next<I, H>) -> Self::Output {
-                dbg!(&self.name);
-                // o
                 let res = h.call(i).await;
-                dbg!(&self.name);
                 res
             }
         }
 
         async fn map(res: Response) -> Response {
-            dbg!("map ok <--------");
             res
         }
 
         async fn map_err(err: Error) -> Error {
-            dbg!("map err <--------", &err);
             err
         }
 
         async fn and_then(res: Response) -> Result<Response> {
-            dbg!("and_then <--------");
             Ok(res)
         }
 
         async fn or_else(err: Error) -> Result<Response> {
-            dbg!("or_else <--------");
             Err(err)
         }
 
@@ -334,15 +314,14 @@ async fn main() -> Result<()> {
                 name: "round 1".to_string(),
             })
             .map(map)
-            .catch_error(|e: CustomError2| async move {
-                dbg!(e);
-                // "Custom Error 2"
-                panic!("Custom Error 2")
+            .catch_error(|_: CustomError2| async move {
+                "Custom Error 2"
             })
-            .catch_unwind(|e: Box<dyn std::any::Any + Send>| async move {
-                "Catch Unwind"
+            .catch_unwind(|_: Box<dyn std::any::Any + Send>| async move {
+                panic!("Custom Error 2")
             });
-        dbg!(Handler::call(&aa, Request::new(Body::empty())).await);
+
+        assert!(Handler::call(&aa, Request::new(Body::empty())).await.is_ok());
 
         let th = MyAround{
             name: "".to_string(),
@@ -350,6 +329,8 @@ async fn main() -> Result<()> {
 
         // let rha = Responder::new(a);
         let rha = Responder::new(aa)
+            .around(th.clone())
+            .around(th)
             .around(MyAround {
                 name: "round 2".to_string(),
             })
@@ -359,12 +340,10 @@ async fn main() -> Result<()> {
             .or_else(or_else);
         let rhb = Responder::new(b);
         let rhc = Responder::new(c)
-            .catch_error(|e: CustomError2| async move {
-                dbg!(&e, "catched");
+            .catch_error(|_: CustomError2| async move {
                 "Custom Error 2"
             })
             .catch_error2(|e: std::io::Error| async move {
-                dbg!(&e, "catched");
                 (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
             });
         let rhd = Responder::new(d)
@@ -382,25 +361,27 @@ async fn main() -> Result<()> {
         let rhl = ResponderExt::new(l);
         let rhm = ResponderExt::new(m);
 
-        dbg!(Handler::call(&rhc, Request::default()).await);
+        assert!(Handler::call(&rhc, Request::default()).await.is_ok());
 
-        dbg!(rha.call(Request::default()).await);
-        dbg!(Handler::call(&rha, Request::new(Body::empty())).await);
-        dbg!(rhb.call(Request::default()).await);
-        dbg!(rhc.call(Request::default()).await);
-        dbg!(rhd.call(Request::default()).await);
-        dbg!(rhe.call(Request::default()).await);
-        dbg!(rhf.call(Request::default()).await);
-        dbg!(rhg.call(Request::default()).await);
-        dbg!(rhh.call(Request::default()).await);
-        dbg!(Handler::call(&rhh, Request::default()).await);
-        dbg!(rhi.call(Request::default()).await);
-        dbg!(rhj.call(Request::default()).await);
+        assert!(rha.call(Request::default()).await.is_ok());
 
-        dbg!(Handler::call(&rhk, Request::default()).await);
-        dbg!(Handler::call(&rhl, Request::default()).await);
-        dbg!(Handler::call(&rhm, Request::default()).await);
-        dbg!(Handler::call(&rhi, Request::default()).await);
+        assert!(Handler::call(&rha, Request::new(Body::empty())).await.is_ok());
+
+        assert!(rhb.call(Request::default()).await.is_err());
+        // dbg!(rhc.call(Request::default()).await);
+        // dbg!(rhd.call(Request::default()).await);
+        // dbg!(rhe.call(Request::default()).await);
+        // dbg!(rhf.call(Request::default()).await);
+        // dbg!(rhg.call(Request::default()).await);
+        // dbg!(rhh.call(Request::default()).await);
+        // dbg!(Handler::call(&rhh, Request::default()).await);
+        // dbg!(rhi.call(Request::default()).await);
+        // dbg!(rhj.call(Request::default()).await);
+
+        // dbg!(Handler::call(&rhk, Request::default()).await);
+        // dbg!(Handler::call(&rhl, Request::default()).await);
+        // dbg!(Handler::call(&rhm, Request::default()).await);
+        // dbg!(Handler::call(&rhi, Request::default()).await);
 
         let brha: BoxHandler = rha.boxed();
         let brhb: BoxHandler = Box::new(rhb).around(MyAround { name: "MyRound 3".to_string() }).boxed();
@@ -421,6 +402,8 @@ async fn main() -> Result<()> {
         ];
 
         let y = v.clone();
+
+        assert!(!y.is_empty());
 
         Ok(())
     }
