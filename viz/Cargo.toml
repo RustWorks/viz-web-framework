@@ -56,6 +56,9 @@ router-ext = ["viz-router/ext"]
 macros = ["viz-macros"]
 handlers = ["viz-handlers"]
 
+rustls = ["rustls-pemfile", "tokio-rustls", "futures-core"]
+native-tls = ["tokio-native-tls", "futures-core"]
+
 [dependencies]
 viz-core = { path = "../viz-core", version = "0.2.0-alpha" }
 viz-router = { path = "../viz-router", version = "0.2.0-alpha" }
@@ -63,6 +66,12 @@ viz-macros = { path = "../viz-macros", version = "0.1.0-alpha", optional = true 
 viz-handlers = { path = "../viz-handlers", version = "0.1.0-alpha", optional = true }
 hyper = { version = "0.14", features = ["tcp", "server", "stream"] }
 tokio = { version = "1.20", features = ["net"] }
+
+tokio-rustls = { version = "0.23.4", optional = true }
+rustls-pemfile = { version = "1.0.0", optional = true }
+tokio-native-tls = { version = "0.3.0", optional = true }
+futures-core = { version = "0.3.21", default-features = false, optional = true }
+futures-util = "0.3.21"
 
 [package.metadata.docs.rs]
 all-features = true

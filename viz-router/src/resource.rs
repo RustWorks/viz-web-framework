@@ -238,8 +238,7 @@ mod tests {
             type Output = H::Output;
 
             async fn call(&self, req: Request) -> Self::Output {
-                let res = self.0.call(req).await;
-                res
+                self.0.call(req).await
             }
         }
 
@@ -256,8 +255,7 @@ mod tests {
             H: Handler<Request, Output = Result<O>> + Clone,
             O: IntoResponse + Send + Sync + 'static,
         {
-            let res = handler.call(req).await.map(IntoResponse::into_response);
-            res
+            handler.call(req).await.map(IntoResponse::into_response)
         }
 
         async fn index(_: Request) -> Result<impl IntoResponse> {

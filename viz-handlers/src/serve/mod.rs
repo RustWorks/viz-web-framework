@@ -53,13 +53,13 @@ impl Handler<Request> for File {
 }
 
 #[derive(Clone)]
-pub struct Files {
+pub struct Dir {
     path: PathBuf,
     listing: bool,
     unlisted: Option<Vec<&'static str>>,
 }
 
-impl Files {
+impl Dir {
     pub fn new(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
 
@@ -86,7 +86,7 @@ impl Files {
 }
 
 #[async_trait]
-impl Handler<Request> for Files {
+impl Handler<Request> for Dir {
     type Output = Result<Response>;
 
     async fn call(&self, req: Request) -> Self::Output {

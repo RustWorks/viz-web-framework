@@ -48,13 +48,14 @@ impl Session {
     where
         T: DeserializeOwned,
     {
-        match self
+        let read = self
             .lock_data()
             .read()
-            .map_err(|e| responder_error((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())))?
-            .get(key)
-            .cloned()
-        {
+            .map_err(|e| responder_error((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())))?;
+
+        let val = read.get(key).cloned();
+
+        match val {
             Some(t) => from_value(t).map(Some).map_err(report_error),
             None => Ok(None),
         }

@@ -5,9 +5,11 @@ use std::{
     task::{Context, Poll},
 };
 
-use super::Stream;
+use hyper::{server::conn::AddrStream, service::Service};
+
 use crate::{Router, Tree};
 
+use super::Stream;
 #[derive(Clone)]
 pub struct ServiceMaker {
     pub(crate) tree: Arc<Tree>,
@@ -29,7 +31,7 @@ impl From<Router> for ServiceMaker {
 
 // hyper-v0.14
 #[cfg(any(feature = "http1", feature = "http2"))]
-impl hyper::service::Service<&hyper::server::conn::AddrStream> for ServiceMaker {
+impl Service<&AddrStream> for ServiceMaker {
     type Response = Stream;
     type Error = Infallible;
     type Future = Ready<Result<Self::Response, Self::Error>>;
@@ -38,7 +40,7 @@ impl hyper::service::Service<&hyper::server::conn::AddrStream> for ServiceMaker 
         Poll::Ready(Ok(()))
     }
 
-    fn call(&mut self, socket: &hyper::server::conn::AddrStream) -> Self::Future {
+    fn call(&mut self, socket: &AddrStream) -> Self::Future {
         ready(Ok(Stream::new(
             self.tree.clone(),
             Some(socket.remote_addr()),
@@ -49,7 +51,7 @@ impl hyper::service::Service<&hyper::server::conn::AddrStream> for ServiceMaker 
 // hyper-v1.0
 /*
 #[cfg(any(feature = "http1", feature = "http2"))]
-impl hyper::service::Service<&tokio::net::TcpStream> for ServiceMaker {
+impl Service<&tokio::net::TcpStream> for ServiceMaker {
     type Response = Stream;
     type Error = Infallible;
     type Future = Ready<Result<Self::Response, Self::Error>>;
@@ -68,7 +70,7 @@ impl hyper::service::Service<&tokio::net::TcpStream> for ServiceMaker {
 */
 
 #[cfg(all(unix, feature = "unix-socket"))]
-impl hyper::service::Service<&tokio::net::UnixStream> for ServiceMaker {
+impl Service<&tokio::net::UnixStream> for ServiceMaker {
     type Response = Stream;
     type Error = Infallible;
     type Future = Ready<Result<Self::Response, Self::Error>>;

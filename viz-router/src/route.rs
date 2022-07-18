@@ -370,8 +370,7 @@ mod tests {
             type Output = H::Output;
 
             async fn call(&self, req: Request) -> Self::Output {
-                let res = self.0.call(req).await;
-                res
+                self.0.call(req).await
             }
         }
 
@@ -388,8 +387,7 @@ mod tests {
             H: Handler<Request, Output = Result<O>> + Clone,
             O: IntoResponse + Send + Sync + 'static,
         {
-            let res = handler.call(req).await.map(IntoResponse::into_response);
-            res
+            handler.call(req).await.map(IntoResponse::into_response)
         }
 
         async fn around_1<H, O>((req, handler): Next<Request, H>) -> Result<Response>
@@ -397,16 +395,14 @@ mod tests {
             H: Handler<Request, Output = Result<O>> + Clone,
             O: IntoResponse + Send + Sync + 'static,
         {
-            let res = handler.call(req).await.map(IntoResponse::into_response);
-            res
+            handler.call(req).await.map(IntoResponse::into_response)
         }
 
         async fn around_2<H>((req, handler): Next<Request, H>) -> Result<Response>
         where
             H: Handler<Request, Output = Result<Response>> + Clone,
         {
-            let res = handler.call(req).await;
-            res
+            handler.call(req).await
         }
 
         #[derive(Clone)]
@@ -423,8 +419,7 @@ mod tests {
             type Output = H::Output;
 
             async fn call(&self, (i, h): Next<I, H>) -> Self::Output {
-                let res = h.call(i).await;
-                res
+                h.call(i).await
             }
         }
 
@@ -442,8 +437,7 @@ mod tests {
             type Output = Result<Response>;
 
             async fn call(&self, (i, h): Next<Request, H>) -> Self::Output {
-                let res = h.call(i).await.map(IntoResponse::into_response);
-                res
+                h.call(i).await.map(IntoResponse::into_response)
             }
         }
 
@@ -460,8 +454,7 @@ mod tests {
             type Output = Result<Response>;
 
             async fn call(&self, (i, h): Next<Request, H>) -> Self::Output {
-                let res = h.call(i).await;
-                res
+                h.call(i).await
             }
         }
 

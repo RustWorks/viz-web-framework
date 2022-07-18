@@ -15,3 +15,8 @@ pub use server::{ServiceMaker, Stream};
 pub use viz_handlers as handlers;
 #[cfg(feature = "macros")]
 pub use viz_macros::handler;
+
+#[cfg(any(feature = "rustls", feature = "native-tls"))]
+pub mod tls {
+    pub use crate::server::tls::*;
+}

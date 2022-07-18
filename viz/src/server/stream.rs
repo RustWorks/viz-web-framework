@@ -7,8 +7,6 @@ use std::{
     task::{Context, Poll},
 };
 
-use hyper::service::Service;
-
 use crate::{
     types::Params, Handler, IntoResponse, Method, Request, RequestExt, Response, StatusCode, Tree,
 };
@@ -24,7 +22,7 @@ impl Stream {
     }
 }
 
-impl Service<Request> for Stream {
+impl hyper::service::Service<Request> for Stream {
     type Response = Response;
     type Error = Infallible;
     type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
