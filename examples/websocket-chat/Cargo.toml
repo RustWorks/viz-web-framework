@@ -7,9 +7,5 @@ publish = false
 [dependencies]
 viz = { path = "../../viz", features = ["params", "websocket", "router-ext"] }
 
-tokio = { version = "1.0", default-features = false, features = [
-  "rt",
-  "rt-multi-thread",
-  "macros",
-] }
+tokio = { version = "1.0", features = ["rt", "rt-multi-thread", "macros"] }
 futures-util = "0.3.21"
