@@ -43,6 +43,7 @@ jobs:
       - name: Install Rust
         run: rustup toolchain install nightly --component clippy && rustup default nightly
       - run: cargo clippy --workspace --all-targets
+      - run: cargo clippy --workspace --all-targets --manifest-path examples/Cargo.toml
 
   fmt:
     name: cargo fmt
@@ -52,6 +53,7 @@ jobs:
       - name: Install Rust
         run: rustup update stable
       - run: cargo fmt --all -- --check
+      - run: cargo fmt --all --manifest-path examples/Cargo.toml -- --check
 
   docs:
     name: cargo doc
