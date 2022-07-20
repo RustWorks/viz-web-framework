@@ -25,9 +25,9 @@
 
 ## Example
 
-```rust
-use viz_core::{IntoResponse, Response, Result, Request};
-use viz_router::{get, get_ext, Router};
+```rust,no_run
+use viz_core::{IntoResponse, Response, Result, Request, FnExt};
+use viz_router::{get, Router};
 
 async fn index() -> Result<impl IntoResponse> {
   Ok(())
@@ -38,7 +38,7 @@ async fn ws(_: Request) -> Result<Response> {
 }
 
 let app = Router::new()
-    .route("/", get_ext(index))
+    .route("/", get(index.to_handler()))
     .route("/ws/:name", get(ws));
 ```
 
