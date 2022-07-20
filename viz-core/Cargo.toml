@@ -1,11 +1,14 @@
 [package]
 name = "viz-core"
-version = "0.2.2"
-authors = ["Fangdun Tsai <cfddream@gmail.com>"]
-description = "Viz core components"
-license = "MIT OR Apache-2.0"
+version = "0.2.3"
 edition = "2021"
+license = "MIT OR Apache-2.0"
+authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 categories = ["asynchronous", "network-programming", "web-programming"]
+homepage = "https://viz.rs"
+repository = "https://github.com/viz-rs/viz"
+documentation = "https://docs.rs/viz-core"
+description = "Viz core components"
 
 [features]
 default = [

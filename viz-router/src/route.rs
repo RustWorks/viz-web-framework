@@ -191,11 +191,6 @@ where
     Route::new().any(handler)
 }
 
-#[cfg(feature = "ext")]
-mod ext;
-#[cfg(feature = "ext")]
-pub use ext::*;
-
 impl fmt::Debug for Route {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_struct("Route")
@@ -220,7 +215,7 @@ mod tests {
         async_trait,
         handler::Transform,
         types::{Data, Query},
-        Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
+        FnExt, Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
     };
 
     #[tokio::test]
@@ -349,7 +344,7 @@ mod tests {
         }
 
         let route = Route::new()
-            .any_ext(ext)
+            .any(ext.to_handler())
             .on(Method::GET, handler.before(before))
             .on(Method::POST, handler.after(after))
             .put(handler.around(Around2 {

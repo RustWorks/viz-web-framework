@@ -1,3 +1,46 @@
+//! Fast, robust, flexible, lightweight web framework for Rust.
+//!
+//! ## 🦀 Features
+//!
+//! * **Safety** `#![forbid(unsafe_code)]`
+//!
+//! * Lightweight
+//!
+//! * Robust `Routing`
+//!
+//! * Flexible + Simple `Handler` & `Middleware`
+//!
+//! * Easy use `Extractors`
+//!
+//! ## Example
+//!
+//! ```rust,no_run
+//! use std::net::SocketAddr;
+//! use viz::{get, Body, Request, Result, Router, Server, ServiceMaker};
+//!
+//! async fn index(_: Request<Body>) -> Result<&'static str> {
+//!     Ok("Hello, World!")
+//! }
+//!
+//! #[tokio::main]
+//! async fn main() -> Result<()> {
+//!     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+//!     println!("listening on {}", addr);
+//!
+//!     let app = Router::new().route("/", get(index));
+//!
+//!     if let Err(err) = Server::bind(&addr)
+//!         .tcp_nodelay(true)
+//!         .serve(ServiceMaker::from(app))
+//!         .await
+//!     {
+//!         println!("{}", err);
+//!     }
+//!
+//!     Ok(())
+//! }
+//! ```
+
 #![forbid(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 

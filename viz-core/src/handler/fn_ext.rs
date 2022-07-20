@@ -1,19 +1,32 @@
+//! A handler with extractors
+
 use std::marker::PhantomData;
 
 use crate::{async_trait, FromRequest, Handler, IntoResponse, Request, Response, Result};
 
-/// Fn Extractor Trait
+/// A handler with extractors
 #[async_trait]
-pub trait FnExt<Args>: Clone + Send + Sync + 'static {
+pub trait FnExt<I>: Clone + Send + Sync + 'static {
     type Output;
 
+    #[must_use]
     async fn call(&self, req: Request) -> Self::Output;
+
+    /// Converts it into a handler
+    fn to_handler<O>(self) -> ResponderExt<Self, I, O>
+    where
+        I: FromRequest + Send + Sync + 'static,
+        I::Error: IntoResponse + Send + Sync,
+        O: IntoResponse + Send + Sync + 'static,
+    {
+        ResponderExt::new(self)
+    }
 }
 
 /// Responder with extractor
-pub struct ResponderExt<H, O, I = ()>(H, PhantomData<O>, PhantomData<I>);
+pub struct ResponderExt<H, I = (), O = ()>(H, PhantomData<I>, PhantomData<O>);
 
-impl<H, O, I> Clone for ResponderExt<H, O, I>
+impl<H, I, O> Clone for ResponderExt<H, I, O>
 where
     H: Clone,
 {
@@ -22,14 +35,14 @@ where
     }
 }
 
-impl<H, O, I> ResponderExt<H, O, I> {
+impl<H, I, O> ResponderExt<H, I, O> {
     pub fn new(h: H) -> Self {
         Self(h, PhantomData, PhantomData)
     }
 }
 
 #[async_trait]
-impl<H, O, I> Handler<Request> for ResponderExt<H, O, I>
+impl<H, I, O> Handler<Request> for ResponderExt<H, I, O>
 where
     I: FromRequest + Send + Sync + 'static,
     I::Error: IntoResponse + Send + Sync,

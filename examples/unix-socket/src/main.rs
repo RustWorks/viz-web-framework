@@ -7,7 +7,7 @@
 
 use tokio::net::UnixListener;
 use tokio_stream::wrappers::UnixListenerStream;
-use viz::{get_ext, Result, Router, Server, ServiceMaker};
+use viz::{get, FnExt, Result, Router, Server, ServiceMaker};
 
 async fn index() -> Result<&'static str> {
     Ok("Hello world!")
@@ -18,10 +18,11 @@ async fn index() -> Result<&'static str> {
 async fn main() -> Result<()> {
     let path = "/tmp/viz.sock";
     println!("listening on {}", &path);
+
     let listener = UnixListener::bind(path).unwrap();
     let incoming = UnixListenerStream::new(listener);
 
-    let app = Router::new().route("/", get_ext(index));
+    let app = Router::new().route("/", get(index.to_handler()));
 
     if let Err(err) = Server::builder(viz::accept_from_stream(incoming))
         .serve(ServiceMaker::from(app))
