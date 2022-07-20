@@ -5,17 +5,17 @@
 //! ```
 #![deny(warnings)]
 
-use tokio::net::UnixListener;
-use tokio_stream::wrappers::UnixListenerStream;
-use viz::{get, FnExt, Result, Router, Server, ServiceMaker};
-
-async fn index() -> Result<&'static str> {
-    Ok("Hello world!")
-}
-
 #[cfg(unix)]
 #[tokio::main]
-async fn main() -> Result<()> {
+async fn main() -> viz::Result<()> {
+    use tokio::net::UnixListener;
+    use tokio_stream::wrappers::UnixListenerStream;
+    use viz::{get, FnExt, Result, Router, Server, ServiceMaker};
+
+    async fn index() -> Result<&'static str> {
+        Ok("Hello world!")
+    }
+
     let path = "/tmp/viz.sock";
     println!("listening on {}", &path);
 
