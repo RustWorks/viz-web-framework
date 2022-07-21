@@ -47,9 +47,9 @@
 
 ```rust,no_run
 use std::net::SocketAddr;
-use viz::{get, Body, Request, Result, Router, Server, ServiceMaker};
+use viz::{get, Request, Result, Router, Server, ServiceMaker};
 
-async fn index(_: Request<Body>) -> Result<&'static str> {
+async fn index(_: Request) -> Result<&'static str> {
     Ok("Hello, World!")
 }
 
