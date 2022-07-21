@@ -1,3 +1,5 @@
+//! The Request Extension
+
 use std::mem::replace;
 
 use crate::{async_trait, header, types::PayloadError, Body, Bytes, FromRequest, Request, Result};

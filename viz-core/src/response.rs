@@ -1,3 +1,7 @@
+//! The Response Extension
+
+use bytes::{BufMut, BytesMut};
+
 use crate::{header, Body, Response, Result, StatusCode};
 
 pub trait ResponseExt {
@@ -34,8 +38,9 @@ pub trait ResponseExt {
     where
         T: serde::Serialize,
     {
-        serde_json::to_vec(&t)
-            .map(|v| Self::with(v, mime::APPLICATION_JSON.as_ref()))
+        let mut buf = BytesMut::new().writer();
+        serde_json::to_writer(&mut buf, &t)
+            .map(|_| Self::with(buf.into_inner().freeze(), mime::APPLICATION_JSON.as_ref()))
             .map_err(crate::types::PayloadError::Json)
     }
 
