@@ -11,10 +11,10 @@ use viz::{
         helper::CookieOptions,
         session::{self, Store},
     },
-    Body, Request, RequestExt, Result, Router, Server, ServiceMaker,
+    Request, RequestExt, Result, Router, Server, ServiceMaker,
 };
 
-async fn index(req: Request<Body>) -> Result<&'static str> {
+async fn index(req: Request) -> Result<&'static str> {
     req.session().set(
         "counter",
         req.session().get::<u64>("counter")?.unwrap_or_default() + 1,

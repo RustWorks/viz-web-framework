@@ -4,7 +4,7 @@ use hyper::service::{make_service_fn, service_fn};
 use once_cell::sync::Lazy;
 use std::{convert::Infallible, net::SocketAddr};
 use viz::{
-    get, types::Params, Body, IntoResponse, Method, Request, RequestExt, Response, Result, Router,
+    get, types::Params, IntoResponse, Method, Request, RequestExt, Response, Result, Router,
     Server, StatusCode, Tree,
 };
 
@@ -16,11 +16,11 @@ static TREE: Lazy<Tree> = Lazy::new(|| {
         .into()
 });
 
-async fn index(_: Request<Body>) -> Result<&'static str> {
+async fn index(_: Request) -> Result<&'static str> {
     Ok("Hello, World!")
 }
 
-async fn me(_: Request<Body>) -> Result<&'static str> {
+async fn me(_: Request) -> Result<&'static str> {
     Ok("Hi, It's me!")
 }
 
@@ -40,10 +40,7 @@ async fn main() -> Result<()> {
 }
 
 /// Serves a request and returns a response.
-pub async fn serve(
-    mut req: Request<Body>,
-    mut addr: Option<SocketAddr>,
-) -> Result<Response<Body>, Infallible> {
+pub async fn serve(mut req: Request, mut addr: Option<SocketAddr>) -> Result<Response, Infallible> {
     let method = req.method().to_owned();
     let path = req.path().to_owned();
 

@@ -3,11 +3,10 @@
 use std::env;
 use std::net::SocketAddr;
 use viz::{
-    any, get, handlers::serve, Body, Request, Response, ResponseExt, Result, Router, Server,
-    ServiceMaker,
+    any, get, handlers::serve, Request, Response, ResponseExt, Result, Router, Server, ServiceMaker,
 };
 
-async fn index(_: Request<Body>) -> Result<&'static str> {
+async fn index(_: Request) -> Result<&'static str> {
     Ok("Hello, World!")
 }
 
