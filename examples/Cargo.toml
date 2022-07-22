@@ -1,16 +1,16 @@
 [workspace]
 members = [
-  "cors",
-  "csrf",
-  "forms/form",
   "hello-world",
-  "rustls",
-  "serve",
-  "session",
-  "sse",
-  "static-routes",
   "unix-socket",
+  "serve",
+  "forms/form",
   "websocket-chat",
+  "sse",
+  "session",
+  "csrf",
+  "cors",
+  "rustls",
+  "static-routes",
 ]
 exclude = ["tls", "target"]
 
