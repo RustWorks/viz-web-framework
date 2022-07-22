@@ -89,13 +89,10 @@ let search = Router.new()
 
 ```rust
 let todos = Router::new()
-  .route("/", get(index))
+  .route("/", get(index).post(create))
   .route("/new", post(new))
-  .route("/", post(create))
-  .route("/:id", get(show))
-  .route("/:id/edit", get(edit))
-  .route("/:id", patch(update))
-  .route("/:id", delete(destroy));
+  .route("/:id", get(show).patch(update).delete(destroy))
+  .route("/:id/edit", get(edit));
 ```
 
 ### Resources
