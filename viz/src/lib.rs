@@ -1,18 +1,18 @@
 //! Fast, robust, flexible, lightweight web framework for Rust.
 //!
-//! ## 🦀 Features
+//! # Features
 //!
 //! * **Safety** `#![forbid(unsafe_code)]`
 //!
 //! * Lightweight
 //!
-//! * Robust `Routing`
+//! * Robust [`Routing`](#routing)
 //!
-//! * Flexible + Simple `Handler` & `Middleware`
+//! * Handy `Extractors`
 //!
-//! * Easy use `Extractors`
+//! * Simple + Flexible `Handler` & `Middleware`
 //!
-//! ## Example
+//! # Quick start
 //!
 //! ```rust,no_run
 //! use std::net::SocketAddr;
@@ -40,6 +40,16 @@
 //!     Ok(())
 //! }
 //! ```
+//!
+//! # Routing
+//!
+//! # Handler
+//!
+//! # Middleware
+//!
+//! # Extractors
+//!
+//! More examples can be found [here](https://github.com/viz-rs/viz/tree/main/examples).
 
 #![forbid(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
