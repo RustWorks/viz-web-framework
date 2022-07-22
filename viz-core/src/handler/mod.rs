@@ -1,5 +1,3 @@
-//! Handler
-
 use crate::{async_trait, Future};
 
 mod after;

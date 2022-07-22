@@ -13,6 +13,7 @@ pub trait FnExt<I>: Clone + Send + Sync + 'static {
     async fn call(&self, req: Request) -> Self::Output;
 
     /// Converts it into a handler
+    #[must_use]
     fn to_handler<O>(self) -> ResponderExt<Self, I, O>
     where
         I: FromRequest + Send + Sync + 'static,

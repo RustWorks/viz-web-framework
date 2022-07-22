@@ -33,11 +33,11 @@
 
 * Lightweight
 
-* Robust [`Routing`](#routing)
+* Robust `Routing`
 
-* Handy [`Extractors`](#extractors)
+* Handy `Extractors`
 
-* Simple + Flexible [`Handler`](#handler) & [`Middleware`](#middleware)
+* Simple + Flexible `Handler` & `Middleware`
 
 ## Quick start
 
@@ -70,70 +70,6 @@ async fn main() -> Result<()> {
 
 More examples can be found [here](https://github.com/viz-rs/viz/tree/main/examples).
 
-## Routing
-
-The Viz router recognizes URLs and dispatches them to a handler.
-
-### Simple routes 
-
-```rust
-let root = Router.new()
-  .route("/", get(home))
-  .route("/about", get(about));
-
-let search = Router.new()
-  .route("/", get(show_search));
-```
-
-### CRUD, Verbs
-
-```rust
-let todos = Router::new()
-  .route("/", get(index).post(create))
-  .route("/new", post(new))
-  .route("/:id", get(show).patch(update).delete(destroy))
-  .route("/:id/edit", get(edit));
-```
-
-### Resources
-
-```rust
-let users = Resource::default()
-  .named("users")
-  .route("/search", get(search_users))
-  .index(index_users)
-  .new(new_user)
-  .create(create_user)
-  .show(show_user)
-  .edit(edit_user)
-  .update(update_user)
-  .destroy(delete_user);
-```
-
-### Nested
-
-```rust
-let app = Router::new()
-  .nest("/", root) 
-  .nest("/search", search) 
-  .nest("/todos", todos.clone())  
-  .nest("/users", users.nest("todos", todos))
-  .route("/*", any(not_found));
-```
-
-## Handler
-
-```rust
-```
-
-## Middleware
-
-```rust
-```
-## Extractors
-
-```rust
-```
 ## License
 
 Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
