@@ -1,5 +1,17 @@
 [workspace]
-members = ["*"]
+members = [
+  "cors",
+  "csrf",
+  "forms/form",
+  "hello-world",
+  "rustls",
+  "serve",
+  "session",
+  "sse",
+  "static-routes",
+  "unix-socket",
+  "websocket-chat",
+]
 exclude = ["tls", "target"]
 
 [profile.release]
