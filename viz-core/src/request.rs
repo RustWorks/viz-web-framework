@@ -304,7 +304,7 @@ impl RequestExt for Request<Body> {
         self.extensions()
             .get::<Limits>()
             .cloned()
-            .expect("add Limits Middleware")
+            .expect("Limits middleware is required")
     }
 
     #[cfg(feature = "session")]

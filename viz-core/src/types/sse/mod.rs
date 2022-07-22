@@ -1,4 +1,4 @@
-//! Server Side Event
+//! Server-Sent Event
 //!
 //! [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events>
 

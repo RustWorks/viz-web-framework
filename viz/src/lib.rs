@@ -12,14 +12,14 @@
 //!
 //! * Simple + Flexible `Handler` & `Middleware`
 //!
-//! # Quick start
+//! # Hello Viz
 //!
 //! ```rust,no_run
 //! use std::net::SocketAddr;
 //! use viz::{get, Request, Result, Router, Server, ServiceMaker};
 //!
 //! async fn index(_: Request) -> Result<&'static str> {
-//!     Ok("Hello, World!")
+//!     Ok("Hello Viz")
 //! }
 //!
 //! #[tokio::main]

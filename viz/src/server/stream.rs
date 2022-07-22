@@ -42,7 +42,7 @@ impl hyper::service::Service<Request> for Stream {
 pub async fn serve(
     mut req: Request,
     tree: Arc<Tree>,
-    mut addr: Option<SocketAddr>,
+    addr: Option<SocketAddr>,
 ) -> Result<Response, Infallible> {
     let method = req.method().to_owned();
     let path = req.path().to_owned();
@@ -56,9 +56,7 @@ pub async fn serve(
             }
         }) {
             Some((handler, params)) => {
-                if addr.is_some() {
-                    req.extensions_mut().insert(addr.take());
-                }
+                req.extensions_mut().insert(addr);
                 req.extensions_mut().insert(Into::<Params>::into(params));
                 handler
                     .call(req)

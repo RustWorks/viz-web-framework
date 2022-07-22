@@ -39,14 +39,14 @@
 
 * Simple + Flexible `Handler` & `Middleware`
 
-## Quick start
+## Hello Viz
 
 ```rust
 use std::net::SocketAddr;
 use viz::{get, Request, Result, Router, Server, ServiceMaker};
 
 async fn index(_: Request) -> Result<&'static str> {
-    Ok("Hello, World!")
+    Ok("Hello Viz")
 }
 
 #[tokio::main]
@@ -57,7 +57,6 @@ async fn main() -> Result<()> {
     let app = Router::new().route("/", get(index));
 
     if let Err(err) = Server::bind(&addr)
-        .tcp_nodelay(true)
         .serve(ServiceMaker::from(app))
         .await
     {
