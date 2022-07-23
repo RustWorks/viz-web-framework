@@ -6,6 +6,7 @@ use viz_core::{
 
 use crate::Route;
 
+/// Resource Kind
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Kind {
     /// index | create: ``
@@ -20,18 +21,26 @@ pub(crate) enum Kind {
     Custom(String),
 }
 
+/// A resourceful route provides a mapping between HTTP verbs and URLs to handlers.
 #[derive(Clone, Debug, Default)]
-pub struct Resource {
+pub struct Resources {
     name: String,
+    singular: bool,
     pub(crate) routes: Vec<(Kind, Route)>,
 }
 
-impl Resource {
+impl Resources {
     pub fn named<S>(mut self, name: S) -> Self
     where
         S: AsRef<str>,
     {
         self.name = name.as_ref().to_owned();
+        self
+    }
+
+    /// Without referencing an ID for a resource.
+    pub fn singular(mut self) -> Self {
+        self.singular = true;
         self
     }
 
@@ -146,6 +155,7 @@ impl Resource {
     {
         Self {
             name: self.name,
+            singular: self.singular,
             routes: self
                 .routes
                 .into_iter()
@@ -168,6 +178,7 @@ impl Resource {
     {
         Self {
             name: self.name,
+            singular: self.singular,
             routes: self
                 .routes
                 .into_iter()
@@ -185,7 +196,7 @@ impl Resource {
     }
 }
 
-impl IntoIterator for Resource {
+impl IntoIterator for Resources {
     type Item = (String, Route);
 
     type IntoIter = std::vec::IntoIter<Self::Item>;
@@ -198,8 +209,20 @@ impl IntoIterator for Resource {
                     match kind {
                         Kind::Empty => "".to_string(),
                         Kind::New => "new".to_string(),
-                        Kind::Id => format!(":{}_id", &self.name),
-                        Kind::Edit => format!(":{}_id/edit", &self.name),
+                        Kind::Id => {
+                            if self.singular {
+                                "".to_string()
+                            } else {
+                                format!(":{}_id", &self.name)
+                            }
+                        }
+                        Kind::Edit => {
+                            if self.singular {
+                                "edit".to_string()
+                            } else {
+                                format!(":{}_id/edit", &self.name)
+                            }
+                        }
                         Kind::Custom(path) => path,
                     },
                     route,
@@ -213,7 +236,7 @@ impl IntoIterator for Resource {
 #[cfg(test)]
 mod tests {
     use super::Kind;
-    use crate::{get, Resource};
+    use crate::{get, Resources};
     use viz_core::{
         async_trait, Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
         Transform,
@@ -313,13 +336,13 @@ mod tests {
             Ok(Response::new("search posts".into()))
         }
 
-        let resource = Resource::default()
+        let resource = Resources::default()
             .index(index)
             .update_with_patch(any_posts);
 
         assert_eq!(2, resource.into_iter().count());
 
-        let resource = Resource::default()
+        let resource = Resources::default()
             .named("post")
             .route("search", get(search_posts))
             .index(index_posts.before(before))
@@ -358,6 +381,18 @@ mod tests {
 
         let res = h.call(Request::default()).await?;
         assert_eq!(hyper::body::to_bytes(res.into_body()).await?, "show post");
+
+        let handler = |_| async { Ok(()) };
+        let geocoder = Resources::default()
+            .singular()
+            .new(handler)
+            .create(handler)
+            .show(handler)
+            .edit(handler)
+            .update(handler)
+            .destroy(handler);
+
+        assert_eq!(6, geocoder.clone().into_iter().count());
 
         Ok(())
     }

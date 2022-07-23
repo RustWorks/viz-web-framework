@@ -3,13 +3,13 @@
 #![forbid(unsafe_code)]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
-mod resource;
+mod resources;
 mod route;
 mod router;
 mod tree;
 
 pub use path_tree::PathTree;
-pub use resource::Resource;
+pub use resources::Resources;
 pub use route::*;
 pub use router::Router;
 pub use tree::Tree;

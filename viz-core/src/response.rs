@@ -1,5 +1,6 @@
 //! The Response Extension
 
+#[cfg(feature = "json")]
 use bytes::{BufMut, BytesMut};
 
 use crate::{header, Body, Response, Result, StatusCode};

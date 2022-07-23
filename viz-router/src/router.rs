@@ -2,7 +2,7 @@
 
 use viz_core::{BoxHandler, Handler, HandlerExt, Next, Request, Response, Result, Transform};
 
-use crate::{Resource, Route};
+use crate::{Resources, Route};
 
 #[derive(Clone, Debug, Default)]
 pub struct Router {
@@ -40,7 +40,7 @@ impl Router {
         self
     }
 
-    pub fn resource<S>(self, path: S, resource: Resource) -> Self
+    pub fn resources<S>(self, path: S, resource: Resources) -> Self
     where
         S: AsRef<str>,
     {
@@ -153,7 +153,7 @@ impl Router {
 
 #[cfg(test)]
 mod tests {
-    use crate::{any, get, Resource, Route, Router, Tree};
+    use crate::{any, get, Resources, Route, Router, Tree};
     use viz_core::{
         async_trait, types::Params, Body, Error, Handler, HandlerExt, IntoResponse, Method,
         Request, RequestExt, Response, Result, StatusCode, Transform,
@@ -243,7 +243,7 @@ mod tests {
             Ok(Response::new(("delete".to_string() + &items).into()))
         }
 
-        let users = Resource::default()
+        let users = Resources::default()
             .named("user")
             .index(index)
             .create(create.before(|r: Request| async { Ok(r) }))
@@ -263,9 +263,9 @@ mod tests {
                 .boxed()
             });
 
-        let posts = Router::new().route("search", get(search)).resource(
+        let posts = Router::new().route("search", get(search)).resources(
             "",
-            Resource::default()
+            Resources::default()
                 .named("post")
                 .create(create)
                 .show(show)
@@ -287,8 +287,8 @@ mod tests {
 
         let router = Router::new()
             .route("", get(index))
-            .resource("users", users.clone())
-            .nest("posts", posts.resource(":post_id/users", users))
+            .resources("users", users.clone())
+            .nest("posts", posts.resources(":post_id/users", users))
             .route("search", any(all))
             .route("*", Route::new().any(not_found))
             .with(Logger::new());
