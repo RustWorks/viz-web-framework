@@ -85,3 +85,9 @@ impl From<http::Error> for Error {
         (e, StatusCode::BAD_REQUEST).into()
     }
 }
+
+impl From<std::io::Error> for Error {
+    fn from(e: std::io::Error) -> Self {
+        Error::normal(e)
+    }
+}
