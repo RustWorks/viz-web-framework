@@ -3,7 +3,7 @@
 use form_data::FormData;
 
 use crate::{
-    async_trait, Body, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
+    async_trait, Body, Error, FromRequest, IntoResponse, Request, RequestExt, Response, StatusCode,
 };
 
 use super::{Payload, PayloadError};
@@ -20,7 +20,7 @@ impl<T> Payload for Multipart<T> {
     const LIMIT: u64 = 1024 * 1024 * 2;
 
     fn detect(m: &mime::Mime) -> bool {
-        m.type_() == mime::APPLICATION && m.subtype() == mime::MULTIPART
+        m.type_() == mime::MULTIPART && m.subtype() == mime::FORM_DATA
     }
 
     fn mime() -> mime::Mime {
@@ -58,5 +58,11 @@ impl IntoResponse for MultipartError {
             self.to_string(),
         )
             .into_response()
+    }
+}
+
+impl From<MultipartError> for Error {
+    fn from(e: MultipartError) -> Self {
+        e.into_error()
     }
 }
