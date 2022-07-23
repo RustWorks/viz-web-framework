@@ -6,7 +6,7 @@ use viz_core::{
 
 use crate::Route;
 
-/// Resource Kind
+/// A Kind for generating Resources path.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) enum Kind {
     /// index | create: ``
