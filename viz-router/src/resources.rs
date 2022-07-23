@@ -396,7 +396,6 @@ mod tests {
         assert_eq!(
             6,
             geocoder
-                .clone()
                 .into_iter()
                 .fold(0, |sum, (_, r)| sum + r.into_iter().count())
         );
