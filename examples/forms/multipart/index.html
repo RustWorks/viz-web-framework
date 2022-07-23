@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Upload Photos</title>
+  <style>
+    body {
+      margin: 0;
+      background: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+        'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans',
+        'Helvetica Neue', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex;
+      padding: 30px;
+      max-width: 920px;
+      height: 100vh;
+      box-sizing: border-box;
+      flex-direction: column;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    form > * {
+      margin-bottom: 20px;
+    }
+    label {
+      display: flex;
+      flex-direction: row;
+      justify-content: space-between;
+      align-items: center;
+    }
+    strong {
+      min-width: 100px;
+    }
+    input, textarea {
+      flex: 1;
+    }
+    button {
+      width: calc(100% - 100px);
+      margin-left: 100px;
+    }
+  </style>
+</head>
+<body>
+  <form target="/" method="post" enctype="multipart/form-data">
+    <label for="group">
+      <strong>Group: </strong>
+      <input type="text" name="group" placeholder="Enter group name" />
+    </label>
+    <label for="photos">
+      <strong>Photos: </strong>
+      <input type="file" name="photos" accept="images/*" multiple placeholder="Select photos" />
+    </label>
+    <button type="submit">Submit</button>
+  </form>
+</body>
+</html>

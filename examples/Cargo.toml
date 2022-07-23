@@ -4,6 +4,7 @@ members = [
   "unix-socket",
   "serve",
   "forms/form",
+  "forms/multipart",
   "websocket-chat",
   "sse",
   "session",
