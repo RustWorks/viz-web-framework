@@ -13,7 +13,7 @@ description = "Viz Router"
 default = []
 
 [dependencies]
-viz-core = { path = "../viz-core", version = "0.2.3" }
+viz-core = { path = "../viz-core", version = "0.2" }
 path-tree = "0.4"
 serde = "1.0"
 thiserror = "1.0"

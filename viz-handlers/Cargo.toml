@@ -22,7 +22,7 @@ serve = [
 ]
 
 [dependencies]
-viz-core = { path = "../viz-core", version = '0.2.3' }
+viz-core = { path = "../viz-core", version = '0.2' }
 
 # required!
 thiserror = "1.0"
