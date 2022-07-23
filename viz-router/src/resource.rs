@@ -6,10 +6,24 @@ use viz_core::{
 
 use crate::Route;
 
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum Kind {
+    /// index | create: ``
+    Empty,
+    /// new: `new`
+    New,
+    /// show | update | destroy: `{}_id`
+    Id,
+    /// edit: `{}_id/edit`
+    Edit,
+    /// `String`
+    Custom(String),
+}
+
 #[derive(Clone, Debug, Default)]
 pub struct Resource {
     name: String,
-    pub(crate) routes: Vec<(String, Route)>,
+    pub(crate) routes: Vec<(Kind, Route)>,
 }
 
 impl Resource {
@@ -25,39 +39,37 @@ impl Resource {
     where
         S: AsRef<str>,
     {
-        let path = path.as_ref().to_owned();
+        let kind = Kind::Custom(path.as_ref().to_owned());
         match self
             .routes
             .iter_mut()
-            .find(|(p, _)| p == &path)
+            .find(|(p, _)| p == &kind)
             .map(|(_, r)| r)
         {
             Some(r) => *r = route.into_iter().fold(r.to_owned(), |r, (m, h)| r.on(m, h)),
             None => {
-                self.routes.push((path, route));
+                self.routes.push((kind, route));
             }
         }
         self
     }
 
-    pub fn on<S, H, O>(mut self, path: S, method: Method, handler: H) -> Self
+    pub(crate) fn on<H, O>(mut self, kind: Kind, method: Method, handler: H) -> Self
     where
-        S: AsRef<str>,
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        let path = path.as_ref().to_owned();
         match self
             .routes
             .iter_mut()
-            .find(|(p, _)| p == &path)
+            .find(|(p, _)| p == &kind)
             .map(|(_, r)| r)
         {
             Some(r) => {
                 *r = r.to_owned().on(method, handler);
             }
             None => {
-                self.routes.push((path, Route::new().on(method, handler)));
+                self.routes.push((kind, Route::new().on(method, handler)));
             }
         }
         self
@@ -68,7 +80,7 @@ impl Resource {
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        self.on("", Method::GET, handler)
+        self.on(Kind::Empty, Method::GET, handler)
     }
 
     pub fn new<H, O>(self, handler: H) -> Self
@@ -76,7 +88,7 @@ impl Resource {
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        self.on("new", Method::GET, handler)
+        self.on(Kind::New, Method::GET, handler)
     }
 
     pub fn create<H, O>(self, handler: H) -> Self
@@ -84,7 +96,7 @@ impl Resource {
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        self.on("", Method::POST, handler)
+        self.on(Kind::Empty, Method::POST, handler)
     }
 
     pub fn show<H, O>(self, handler: H) -> Self
@@ -92,8 +104,7 @@ impl Resource {
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        let path = format!(":{}_id", self.name);
-        self.on(path, Method::GET, handler)
+        self.on(Kind::Id, Method::GET, handler)
     }
 
     pub fn edit<H, O>(self, handler: H) -> Self
@@ -101,8 +112,7 @@ impl Resource {
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        let path = format!(":{}_id/edit", self.name);
-        self.on(path, Method::GET, handler)
+        self.on(Kind::Edit, Method::GET, handler)
     }
 
     pub fn update<H, O>(self, handler: H) -> Self
@@ -110,8 +120,7 @@ impl Resource {
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        let path = format!(":{}_id", self.name);
-        self.on(path, Method::PUT, handler)
+        self.on(Kind::Id, Method::PUT, handler)
     }
 
     pub fn update_with_patch<H, O>(self, handler: H) -> Self
@@ -119,8 +128,7 @@ impl Resource {
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        let path = format!(":{}_id", self.name);
-        self.on(path, Method::PATCH, handler)
+        self.on(Kind::Id, Method::PATCH, handler)
     }
 
     pub fn destroy<H, O>(self, handler: H) -> Self
@@ -128,8 +136,7 @@ impl Resource {
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        let path = format!(":{}_id", self.name);
-        self.on(path, Method::DELETE, handler)
+        self.on(Kind::Id, Method::DELETE, handler)
     }
 
     pub fn with<T>(self, t: T) -> Self
@@ -184,24 +191,28 @@ impl IntoIterator for Resource {
     type IntoIter = std::vec::IntoIter<Self::Item>;
 
     fn into_iter(self) -> Self::IntoIter {
-        self.routes.into_iter()
-    }
-}
-
-impl FromIterator<(String, Route)> for Resource {
-    fn from_iter<T>(iter: T) -> Self
-    where
-        T: IntoIterator<Item = (String, Route)>,
-    {
-        Self {
-            name: "".to_string(),
-            routes: iter.into_iter().collect(),
-        }
+        self.routes
+            .into_iter()
+            .map(|(kind, route)| {
+                (
+                    match kind {
+                        Kind::Empty => "".to_string(),
+                        Kind::New => "new".to_string(),
+                        Kind::Id => format!(":{}_id", &self.name),
+                        Kind::Edit => format!(":{}_id/edit", &self.name),
+                        Kind::Custom(path) => path,
+                    },
+                    route,
+                )
+            })
+            .collect::<Vec<Self::Item>>()
+            .into_iter()
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::Kind;
     use crate::{get, Resource};
     use viz_core::{
         async_trait, Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
@@ -327,10 +338,7 @@ mod tests {
                     .around(around)
                     .with(Logger::new())
                     .boxed()
-            })
-            .into_iter()
-            .collect::<Resource>()
-            .named("post");
+            });
 
         assert_eq!(5, resource.clone().into_iter().count());
         assert_eq!(
@@ -344,7 +352,7 @@ mod tests {
         let (_, h) = resource
             .routes
             .iter()
-            .find(|(p, _)| p == ":post_id")
+            .find(|(p, _)| p == &Kind::Id)
             .and_then(|(_, r)| r.methods.iter().find(|(m, _)| m == Method::GET))
             .unwrap();
 

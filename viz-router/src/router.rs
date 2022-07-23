@@ -49,17 +49,14 @@ impl Router {
             path.push('/');
         }
 
-        resource
-            .routes
-            .into_iter()
-            .fold(self, |router, (mut sp, route)| {
-                let is_empty = sp.is_empty();
-                sp = path.clone() + &sp;
-                if is_empty {
-                    sp = sp.trim_end_matches('/').to_string();
-                }
-                router.route(sp, route)
-            })
+        resource.into_iter().fold(self, |router, (mut sp, route)| {
+            let is_empty = sp.is_empty();
+            sp = path.clone() + &sp;
+            if is_empty {
+                sp = sp.trim_end_matches('/').to_string();
+            }
+            router.route(sp, route)
+        })
     }
 
     pub fn nest<S>(self, path: S, router: Self) -> Self
