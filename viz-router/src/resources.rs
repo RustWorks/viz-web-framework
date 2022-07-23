@@ -92,6 +92,7 @@ impl Resources {
         self.on(Kind::Empty, Method::GET, handler)
     }
 
+    /// `:{}_id/new` or `/new`
     pub fn new<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -392,7 +393,13 @@ mod tests {
             .update(handler)
             .destroy(handler);
 
-        assert_eq!(6, geocoder.clone().into_iter().count());
+        assert_eq!(
+            6,
+            geocoder
+                .clone()
+                .into_iter()
+                .fold(0, |sum, (_, r)| sum + r.into_iter().count())
+        );
 
         Ok(())
     }

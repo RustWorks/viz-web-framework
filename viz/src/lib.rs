@@ -14,7 +14,7 @@
 //!
 //! # Hello Viz
 //!
-//! ```rust,no_run
+//! ```rust,ignore
 //! use std::net::SocketAddr;
 //! use viz::{get, Request, Result, Router, Server, ServiceMaker};
 //!
@@ -30,7 +30,6 @@
 //!     let app = Router::new().route("/", get(index));
 //!
 //!     if let Err(err) = Server::bind(&addr)
-//!         .tcp_nodelay(true)
 //!         .serve(ServiceMaker::from(app))
 //!         .await
 //!     {
