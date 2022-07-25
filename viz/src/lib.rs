@@ -1,3 +1,5 @@
+//! Viz
+//!
 //! Fast, robust, flexible, lightweight web framework for Rust.
 //!
 //! # Features
@@ -14,7 +16,7 @@
 //!
 //! # Hello Viz
 //!
-//! ```rust,ignore
+//! ```no_run
 //! use std::net::SocketAddr;
 //! use viz::{get, Request, Result, Router, Server, ServiceMaker};
 //!
@@ -48,7 +50,7 @@
 //!
 //! ## Simple routes
 //!
-//! ```rust,ignore
+//! ```no_run
 //! let root = Router.new()
 //!   .route("/", Route::new().get(index))
 //!   .route("/about", Route::new().get(about));
@@ -59,7 +61,7 @@
 //!
 //! ## CRUD, Verbs
 //!
-//! ```rust,ignore
+//! ```no_run
 //! let todos = Router::new()
 //!   .route("/", get(index_todos).post(create_todo))
 //!   .route("/new", post(new_todo))
@@ -69,7 +71,7 @@
 //!
 //! ## Resources
 //!
-//! ```rust,ignore
+//! ```no_run
 //! let users = Resource::default()
 //!   .named("users")
 //!   .route("/search", get(search_users))
@@ -84,7 +86,7 @@
 //!
 //! ## Nested
 //!
-//! ```rust,ignore
+//! ```no_run
 //! let app = Router::new()
 //!   .nest("/", root)
 //!   .nest("/search", search)
@@ -97,7 +99,7 @@
 //!
 //! ### Simple handlers
 //!
-//! ```rust,ignore
+//! ```no_run
 //! async fn index(_: Request) -> Result<Response> {
 //!   Ok(Response::text("Hello, World!"))
 //! }
@@ -109,7 +111,7 @@
 //!
 //! ## Implemented `Handler` for handlers
 //!
-//! ```rust,ignore
+//! ```no_run
 //! #[derive(Clone, Serialize)]
 //! struct About {
 //!   title: &'static str,
@@ -132,7 +134,7 @@
 //!
 //! `eg: .route("/", get(show_todo_ext.to_handler()))`
 //!
-//! ```rust,ignore
+//! ```no_run
 //! async fn show_todo_ext(Params(id): Params<u64>) -> Result<impl IntoResponse> {
 //!   Ok(format!("Hi, NO.{}", id))
 //! }
@@ -140,7 +142,7 @@
 //!
 //! ## Wrap handlers, add more operations
 //!
-//! ```rust,ignore
+//! ```no_run
 //! let posts = Router.new()
 //!   .route("/:id", get(show_post.before(filter)));
 //! ```
@@ -150,7 +152,16 @@
 //! ## Extractors
 //!
 
+#![doc(html_logo_url = "https://viz.rs/logo.svg")]
+#![doc(html_favicon_url = "https://viz.rs/logo.svg")]
 #![forbid(unsafe_code)]
+#![deny(
+    rust_2018_idioms,
+    nonstandard_style,
+    unreachable_pub,
+    private_in_public
+)]
+#![warn(missing_docs, future_incompatible)]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
 mod server;

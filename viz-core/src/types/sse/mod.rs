@@ -16,7 +16,7 @@ mod event;
 
 pub use event::Event;
 
-/// Server Side Event
+/// Server-Sent Event
 pub struct Sse<S> {
     stream: S,
     interval: Option<Duration>,

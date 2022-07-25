@@ -14,7 +14,7 @@ categories = [
   "network-programming",
   "web-programming::http-server",
 ]
-description = "Fast, flexible, minimalist web framework for Rust"
+description = "Fast, robust, flexible, lightweight web framework for Rust"
 
 [features]
 default = [

@@ -1,4 +1,8 @@
-<h1 align="center">Víz</h1>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/viz-rs/viz.rs/main/static/logo.svg" height="200" />
+</p>
+
+<h1 align="center">Viz</h1>
 
 <div align="center">
   <p><strong>Fast, robust, flexible, lightweight web framework for Rust</strong></p>

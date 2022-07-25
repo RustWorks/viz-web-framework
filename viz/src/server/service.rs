@@ -12,6 +12,7 @@ use std::{
 
 use crate::{Router, Tree};
 
+/// Service Maker
 #[allow(dead_code)]
 #[derive(Clone)]
 pub struct ServiceMaker {
@@ -19,6 +20,7 @@ pub struct ServiceMaker {
 }
 
 impl ServiceMaker {
+    /// Creates a service from router
     pub fn new(router: Router) -> Self {
         Self {
             tree: Arc::new(router.into()),

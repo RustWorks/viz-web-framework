@@ -11,12 +11,14 @@ use crate::{
     types::Params, Handler, IntoResponse, Method, Request, RequestExt, Response, StatusCode, Tree,
 };
 
+/// Stream
 pub struct Stream {
     tree: Arc<Tree>,
     addr: Option<SocketAddr>,
 }
 
 impl Stream {
+    /// Creates a stream
     pub fn new(tree: Arc<Tree>, addr: Option<SocketAddr>) -> Self {
         Self { tree, addr }
     }
@@ -39,7 +41,7 @@ impl hyper::service::Service<Request> for Stream {
 }
 
 /// Serves a request and returns a response.
-pub async fn serve(
+async fn serve(
     mut req: Request,
     tree: Arc<Tree>,
     addr: Option<SocketAddr>,
