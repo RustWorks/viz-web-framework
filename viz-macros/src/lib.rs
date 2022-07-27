@@ -2,16 +2,16 @@
 //!
 //! Generators for handler
 //!
-//! ## Handler
+//! # handler
 //!
-//! TODO: `#[handler.before(a).after(b).around(c)]
+//! TODO: `#[handler.before(a).after(b).around(c)]`
 //!
 //! ## Example
 //!
-//! ```rust
-//! use viz::{IntoResponse, Result};
-//! use viz_macros::handler;
-//!
+//! ```
+//! # use viz::{IntoResponse, Result};
+//! # use viz_macros::handler;
+//! #
 //! #[handler]
 //! async fn index() -> impl IntoResponse {
 //!     ()
@@ -23,10 +23,29 @@
 //! }
 //! ```
 
+#![doc(html_logo_url = "https://viz.rs/logo.svg")]
+#![doc(html_favicon_url = "https://viz.rs/logo.svg")]
+#![forbid(unsafe_code)]
+#![warn(
+    missing_debug_implementations,
+    missing_docs,
+    rust_2018_idioms,
+    unreachable_pub
+)]
+#![doc(test(
+    no_crate_inject,
+    attr(
+        deny(warnings, rust_2018_idioms),
+        allow(dead_code, unused_assignments, unused_variables)
+    )
+))]
+#![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
+
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::{parse_macro_input, AttributeArgs, FnArg, ItemFn, Result, ReturnType};
 
+/// Transforms `extract-handler` to a Handler instance.
 #[proc_macro_attribute]
 pub fn handler(args: TokenStream, input: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args as syn::AttributeArgs);

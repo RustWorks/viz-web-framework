@@ -15,12 +15,14 @@ enum State<A, S> {
     Streaming(S),
 }
 
+/// Unified TLS stream type.
 pub struct Stream<A, S> {
     state: State<A, S>,
     pub(crate) remote_addr: Option<SocketAddr>,
 }
 
 impl<A, S> Stream<A, S> {
+    /// Creates a new TLS stream.
     pub fn new(accept: A, remote_addr: Option<SocketAddr>) -> Self {
         Self {
             state: State::Handshaking(accept),

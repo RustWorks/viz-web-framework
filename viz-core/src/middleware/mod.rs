@@ -1,3 +1,5 @@
+//! Built-in Middleware.
+
 #[cfg(feature = "cookie")]
 pub mod cookie;
 #[cfg(feature = "cors")]

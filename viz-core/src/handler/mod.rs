@@ -1,3 +1,5 @@
+//! Traits and types for handling an HTTP.
+
 use crate::{async_trait, Future};
 
 mod after;
@@ -9,10 +11,12 @@ mod catch_error;
 mod catch_unwind;
 mod either;
 mod fn_ext;
+mod into_handler;
 mod map;
 mod map_err;
 mod or_else;
 mod responder;
+mod responder_ext;
 mod transform;
 
 pub use after::After;
@@ -23,20 +27,26 @@ pub use boxed::BoxHandler;
 pub use catch_error::CatchError;
 pub use catch_unwind::CatchUnwind;
 pub use either::Either;
-pub use fn_ext::{FnExt, ResponderExt};
+pub use fn_ext::FnExt;
+pub use into_handler::IntoHandler;
 pub use map::Map;
 pub use map_err::MapErr;
 pub use or_else::OrElse;
 pub use responder::Responder;
+pub use responder_ext::ResponderExt;
 pub use transform::Transform;
 
+/// An asynchronous interface for handling input and output.
+///
 /// Composable request handlers.
 #[async_trait]
-pub trait Handler<Args>: dyn_clone::DynClone + Send + Sync + 'static {
+pub trait Handler<Input>: dyn_clone::DynClone + Send + Sync + 'static {
+    /// The returned type after the call operator is used.
     type Output;
 
+    /// Performs the call operation.
     #[must_use]
-    async fn call(&self, args: Args) -> Self::Output;
+    async fn call(&self, input: Input) -> Self::Output;
 }
 
 impl<I, T> HandlerExt<I> for T where T: Handler<I> + ?Sized {}
@@ -50,8 +60,8 @@ where
 {
     type Output = Fut::Output;
 
-    async fn call(&self, args: I) -> Self::Output {
-        (self)(args).await
+    async fn call(&self, i: I) -> Self::Output {
+        (self)(i).await
     }
 }
 
@@ -62,6 +72,7 @@ pub trait HandlerExt<I>: Handler<I> {
     where
         Self: Sized,
     {
+        // box_into_inner
         Box::new(self)
     }
 
@@ -105,6 +116,13 @@ pub trait HandlerExt<I>: Handler<I> {
         Self: Sized,
     {
         MapErr::new(self, f)
+    }
+
+    fn to_responder<O>(self) -> Responder<Self, O>
+    where
+        Self: Sized,
+    {
+        Responder::new(self)
     }
 
     fn or_else<F>(self, f: F) -> OrElse<Self, F>

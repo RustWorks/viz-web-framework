@@ -1,5 +1,6 @@
 use std::marker::PhantomData;
 
+/// Unified TLS listener type.
 pub struct Listener<T, A, IO> {
     pub(crate) inner: T,
     pub(crate) acceptor: A,
@@ -7,6 +8,7 @@ pub struct Listener<T, A, IO> {
 }
 
 impl<T, A, IO> Listener<T, A, IO> {
+    /// Creates a new TLS listener.
     pub fn new(t: T, a: A) -> Self {
         Self {
             inner: t,

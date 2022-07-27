@@ -1,12 +1,13 @@
-//! The Response Extension
-
 #[cfg(feature = "json")]
 use bytes::{BufMut, BytesMut};
 
 use crate::{header, Body, Response, Result, StatusCode};
 
+/// The [Response] Extension.
 pub trait ResponseExt {
-    /// Response body with `Content-Type`
+    /// The response with the specified [`Content-Type`][mdn].
+    ///
+    /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type>
     fn with<T>(t: T, c: &'static str) -> Response
     where
         T: Into<Body>,
@@ -17,7 +18,7 @@ pub trait ResponseExt {
         res
     }
 
-    /// Response TEXT
+    /// The response with `text/plain; charset=utf-8` media type.
     fn text<T>(t: T) -> Response
     where
         T: Into<Body>,
@@ -25,7 +26,7 @@ pub trait ResponseExt {
         Self::with(t, mime::TEXT_PLAIN_UTF_8.as_ref())
     }
 
-    /// Response HTML
+    /// The response with `text/html; charset=utf-8` media type.
     fn html<T>(t: T) -> Response
     where
         T: Into<Body>,
@@ -34,18 +35,23 @@ pub trait ResponseExt {
     }
 
     #[cfg(feature = "json")]
-    /// Response JSON
+    /// The response with `application/javascript; charset=utf-8` media type.
     fn json<T>(t: T) -> Result<Response, crate::types::PayloadError>
     where
         T: serde::Serialize,
     {
         let mut buf = BytesMut::new().writer();
         serde_json::to_writer(&mut buf, &t)
-            .map(|_| Self::with(buf.into_inner().freeze(), mime::APPLICATION_JSON.as_ref()))
+            .map(|_| {
+                Self::with(
+                    buf.into_inner().freeze(),
+                    mime::APPLICATION_JAVASCRIPT_UTF_8.as_ref(),
+                )
+            })
             .map_err(crate::types::PayloadError::Json)
     }
 
-    /// Response Stream
+    /// Responds to a stream.
     fn stream<S, O, E>(s: S) -> Response
     where
         S: futures_util::Stream<Item = Result<O, E>> + Send + 'static,
@@ -63,6 +69,9 @@ pub trait ResponseExt {
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/ok>
     fn ok(&self) -> bool;
 
+    /// The [`Content-Location`][mdn] header indicates an alternate location for the returned data.
+    ///
+    /// [mdn]: <https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Content-Location>
     fn location(location: &'static str) -> Self;
 
     /// The response redirects to the specified URL.
@@ -79,7 +88,9 @@ pub trait ResponseExt {
     where
         T: AsRef<str>;
 
-    /// <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/303>
+    /// The response redirects to the [`303`][mdn].
+    ///
+    /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/303>
     fn see_other<T>(url: T) -> Response
     where
         T: AsRef<str>,
@@ -87,7 +98,9 @@ pub trait ResponseExt {
         Self::redirect_with_status(url, StatusCode::SEE_OTHER)
     }
 
-    /// <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/307>
+    /// The response redirects to the [`307`][mdn].
+    ///
+    /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/307>
     fn temporary<T>(url: T) -> Response
     where
         T: AsRef<str>,
@@ -95,7 +108,9 @@ pub trait ResponseExt {
         Self::redirect_with_status(url, StatusCode::TEMPORARY_REDIRECT)
     }
 
-    /// <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/308>
+    /// The response redirects to the [`308`][mdn].
+    ///
+    /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Status/308>
     fn permanent<T>(url: T) -> Response
     where
         T: AsRef<str>,

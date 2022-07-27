@@ -35,7 +35,8 @@ macro_rules! tuple_impls {
 
             #[allow(unused, unused_mut)]
             async fn call(&self, mut req: Request) -> Self::Output {
-                (self)($($T::extract(&mut req).await.map_err(IntoResponse::into_error)?,)*).await.map(IntoResponse::into_response)
+                (self)($($T::extract(&mut req).await.map_err(IntoResponse::into_error)?,)*)
+                    .await.map(IntoResponse::into_response)
             }
         }
     };

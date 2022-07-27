@@ -1,4 +1,4 @@
-//! Static file serving and directory listing
+//! Static file serving and directory listing.
 
 use std::{
     collections::Bound,
@@ -26,6 +26,7 @@ mod error;
 use directory::Directory;
 pub use error::Error;
 
+/// Serve a single file handler.
 #[derive(Clone)]
 pub struct File {
     path: PathBuf,
@@ -52,6 +53,7 @@ impl Handler<Request> for File {
     }
 }
 
+/// Serve a directory handler.
 #[derive(Clone)]
 pub struct Dir {
     path: PathBuf,

@@ -10,7 +10,7 @@
 async fn main() -> viz::Result<()> {
     use tokio::net::UnixListener;
     use tokio_stream::wrappers::UnixListenerStream;
-    use viz::{get, FnExt, Result, Router, Server, ServiceMaker};
+    use viz::{get, IntoHandler, Result, Router, Server, ServiceMaker};
 
     async fn index() -> Result<&'static str> {
         Ok("Hello world!")
@@ -22,7 +22,7 @@ async fn main() -> viz::Result<()> {
     let listener = UnixListener::bind(path).unwrap();
     let incoming = UnixListenerStream::new(listener);
 
-    let app = Router::new().route("/", get(index.to_handler()));
+    let app = Router::new().route("/", get(index.into_handler()));
 
     if let Err(err) = Server::builder(viz::accept_from_stream(incoming))
         .serve(ServiceMaker::from(app))

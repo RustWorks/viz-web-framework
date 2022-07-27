@@ -1,3 +1,5 @@
+//! Extractors types and traits.
+
 #[cfg(feature = "cookie")]
 mod cookie;
 #[cfg(any(feature = "cookie-signed", feature = "cookie-private"))]

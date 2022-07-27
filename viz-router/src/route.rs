@@ -3,8 +3,8 @@
 use core::fmt;
 
 use viz_core::{
-    BoxHandler, Handler, HandlerExt, IntoResponse, Method, Next, Request, Responder, Response,
-    Result, Transform,
+    BoxHandler, Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
+    Transform,
 };
 
 macro_rules! repeat {
@@ -17,7 +17,7 @@ macro_rules! repeat {
 
 macro_rules! export_internal_verb {
     ($name:ident $verb:tt) => {
-        #[doc = concat!(" Appends a route, handle HTTP verb `", stringify!($verb), "`.")]
+        #[doc = concat!(" Appends a route to handle HTTP `", stringify!($verb), "` verb.")]
         pub fn $name<H, O>(self, handler: H) -> Self
         where
             H: Handler<Request, Output = Result<O>> + Clone,
@@ -30,7 +30,7 @@ macro_rules! export_internal_verb {
 
 macro_rules! export_verb {
     ($name:ident $verb:ty) => {
-        #[doc = concat!(" Appends a route, handle HTTP verb `", stringify!($verb), "`.")]
+        #[doc = concat!(" Appends a route to handle HTTP `", stringify!($verb), "` verb.")]
         pub fn $name<H, O>(handler: H) -> Route
         where
             H: Handler<Request, Output = Result<O>> + Clone,
@@ -73,7 +73,7 @@ impl Route {
         H: Handler<Request, Output = Result<O>> + Clone,
         O: IntoResponse + Send + Sync + 'static,
     {
-        self.push(method, Responder::new(handler).boxed())
+        self.push(method, handler.to_responder().boxed())
     }
 
     /// Appends a route, with a HTTP verb and handler.
@@ -182,7 +182,7 @@ repeat!(
     trace TRACE
 );
 
-/// Appends a route, with handler by any HTTP verbs.
+/// Appends a route to handle any HTTP verbs.
 pub fn any<H, O>(handler: H) -> Route
 where
     H: Handler<Request, Output = Result<O>> + Clone,
@@ -215,7 +215,7 @@ mod tests {
         async_trait,
         handler::Transform,
         types::{Data, Query},
-        FnExt, Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
+        Handler, HandlerExt, IntoHandler, IntoResponse, Method, Next, Request, Response, Result,
     };
 
     #[tokio::test]
@@ -344,7 +344,7 @@ mod tests {
         }
 
         let route = Route::new()
-            .any(ext.to_handler())
+            .any(ext.into_handler())
             .on(Method::GET, handler.before(before))
             .on(Method::POST, handler.after(after))
             .put(handler.around(Around2 {
@@ -368,6 +368,8 @@ mod tests {
                         name: "3".to_string(),
                     })
                     .with(Logger::new())
+                    // .boxed()
+                    // .boxed()
                     .boxed()
             })
             .with_handler(around)

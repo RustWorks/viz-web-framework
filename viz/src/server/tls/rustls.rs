@@ -41,7 +41,7 @@ pub(crate) enum ClientAuth {
     Required(Vec<u8>),
 }
 
-/// Tls Config
+/// `rustls`'s config.
 pub struct Config {
     cert: Vec<u8>,
     key: Vec<u8>,

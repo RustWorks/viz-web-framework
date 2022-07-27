@@ -1,5 +1,3 @@
-//! The Request Extension
-
 use std::mem::replace;
 
 use crate::{async_trait, header, types::PayloadError, Body, Bytes, FromRequest, Request, Result};
@@ -30,54 +28,65 @@ use crate::types::Session;
 #[cfg(feature = "params")]
 use crate::types::{Params, ParamsError, PathDeserializer};
 
+/// The [Request] Extension.
 #[async_trait]
 pub trait RequestExt {
+    /// Get URL's path of this request.
     fn path(&self) -> &str;
 
+    /// Get URL's query string of this request.
     fn query_string(&self) -> Option<&str>;
 
+    #[cfg(feature = "query")]
+    /// Get query data by type.
+    fn query<T>(&self) -> Result<T, PayloadError>
+    where
+        T: serde::de::DeserializeOwned;
+
+    /// Get a header with specified type by the key.
     fn header<K, T>(&self, key: K) -> Option<T>
     where
         K: header::AsHeaderName,
         T: std::str::FromStr;
 
+    /// Get the size of this request's body.
     fn content_length(&self) -> Option<u64>;
 
+    /// Get the media type of this request.
     fn content_type(&self) -> Option<mime::Mime>;
 
+    /// Extract the data from this request by the specified type.
     async fn extract<T>(&mut self) -> Result<T, T::Error>
     where
         T: FromRequest;
 
-    #[cfg(feature = "query")]
-    fn query<T>(&self) -> Result<T, PayloadError>
-    where
-        T: serde::de::DeserializeOwned;
-
-    /// Reads bytes
-    async fn read(&mut self) -> Result<Bytes, PayloadError>;
-
-    #[cfg(feature = "limits")]
-    /// Reads bytes with a limit by name.
-    async fn read_with(&mut self, name: &str, max: u64) -> Result<Bytes, PayloadError>;
-
-    /// Reads the request body, and returns with a raw binary data buffer.
+    /// Return with a [Bytes][mdn] representation of the request body.
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/arrayBuffer>
     async fn bytes(&mut self) -> Result<Bytes, PayloadError>;
 
-    /// Reads the request body, and returns with a String, it is always decoded using UTF-8.
+    #[cfg(feature = "limits")]
+    /// Return with a [Bytes][mdn]  by a limit representation of the request body.
+    ///
+    /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/arrayBuffer>
+    async fn bytes_with(&mut self, name: &str, max: u64) -> Result<Bytes, PayloadError>;
+
+    /// Return with a [Text][mdn] representation of the request body.
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/text>
     async fn text(&mut self) -> Result<String, PayloadError>;
 
     #[cfg(feature = "form")]
+    /// Return with a `application/x-www-form-urlencoded` [FormData][mdn] by the specified type
+    /// representation of the request body.
+    ///
+    /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/FormData>
     async fn form<T>(&mut self) -> Result<T, PayloadError>
     where
         T: serde::de::DeserializeOwned;
 
     #[cfg(feature = "json")]
-    /// Reads the request body, and returns with a JSON.
+    /// Return with a [JSON][mdn] by the specified type representation of the request body.
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/json>
     async fn json<T>(&mut self) -> Result<T, PayloadError>
@@ -85,41 +94,50 @@ pub trait RequestExt {
         T: serde::de::DeserializeOwned;
 
     #[cfg(feature = "multipart")]
+    /// Return with a `multipart/form-data` [FormData][mdn] by the specified type
+    /// representation of the request body.
+    ///
+    /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/FormData>
     async fn multipart(&mut self) -> Result<Multipart, PayloadError>;
 
     #[cfg(feature = "data")]
+    /// Return a shared data by the specified type.
     fn data<T>(&self) -> Option<T>
     where
         T: Clone + Send + Sync + 'static;
 
     #[cfg(feature = "data")]
+    /// Store a shared data.
     fn set_data<T>(&mut self, t: T) -> Option<T>
     where
         T: Clone + Send + Sync + 'static;
 
     #[cfg(feature = "cookie")]
+    /// Get a wrapper of `cookie-jar` for managing cookies.
     fn cookies(&self) -> Result<Cookies, CookiesError>;
 
     #[cfg(feature = "cookie")]
+    /// Get a cookie by the specified name.
     fn cookie<S>(&self, name: S) -> Option<Cookie<'_>>
     where
         S: AsRef<str>;
 
     #[cfg(feature = "limits")]
+    /// Get limits settings.
     fn limits(&self) -> Limits;
 
     #[cfg(feature = "session")]
-    /// Gets session
+    /// Get current session.
     fn session(&self) -> &Session;
 
     #[cfg(feature = "params")]
-    /// Gets all parameters.
+    /// Get all parameters.
     fn params<T>(&self) -> Result<T, ParamsError>
     where
         T: serde::de::DeserializeOwned;
 
     #[cfg(feature = "params")]
-    /// Gets single parameter by name.
+    /// Get single parameter by name.
     fn param<T>(&self, name: &str) -> Result<T, ParamsError>
     where
         T: std::str::FromStr,
@@ -134,6 +152,15 @@ impl RequestExt for Request<Body> {
 
     fn query_string(&self) -> Option<&str> {
         self.uri().query()
+    }
+
+    #[cfg(feature = "query")]
+    fn query<T>(&self) -> Result<T, PayloadError>
+    where
+        T: serde::de::DeserializeOwned,
+    {
+        serde_urlencoded::from_str(self.query_string().unwrap_or_default())
+            .map_err(PayloadError::UrlDecode)
     }
 
     fn header<K, T>(&self, key: K) -> Option<T>
@@ -162,24 +189,14 @@ impl RequestExt for Request<Body> {
         T::extract(self).await
     }
 
-    #[cfg(feature = "query")]
-    fn query<T>(&self) -> Result<T, PayloadError>
-    where
-        T: serde::de::DeserializeOwned,
-    {
-        serde_urlencoded::from_str(self.query_string().unwrap_or_default())
-            .map_err(PayloadError::UrlDecode)
-    }
-
-    /// Reads bytes
-    async fn read(&mut self) -> Result<Bytes, PayloadError> {
+    async fn bytes(&mut self) -> Result<Bytes, PayloadError> {
         hyper::body::to_bytes(replace(self.body_mut(), Body::empty()))
             .await
             .map_err(|_| PayloadError::Read)
     }
 
     #[cfg(feature = "limits")]
-    async fn read_with(&mut self, name: &str, max: u64) -> Result<Bytes, PayloadError> {
+    async fn bytes_with(&mut self, name: &str, max: u64) -> Result<Bytes, PayloadError> {
         let limit = self.limits().get(name).unwrap_or(max) as usize;
         let body = Limited::new(replace(self.body_mut(), Body::empty()), limit);
         hyper::body::to_bytes(body).await.map_err(|err| {
@@ -193,20 +210,11 @@ impl RequestExt for Request<Body> {
         })
     }
 
-    async fn bytes(&mut self) -> Result<Bytes, PayloadError> {
-        #[cfg(feature = "limits")]
-        let bytes = self.read_with("bytes", Limits::NORMAL).await;
-        #[cfg(not(feature = "limits"))]
-        let bytes = self.read().await;
-
-        bytes
-    }
-
     async fn text(&mut self) -> Result<String, PayloadError> {
         #[cfg(feature = "limits")]
-        let bytes = self.read_with("text", Limits::NORMAL).await?;
+        let bytes = self.bytes_with("text", Limits::NORMAL).await?;
         #[cfg(not(feature = "limits"))]
-        let bytes = self.read().await?;
+        let bytes = self.bytes().await?;
 
         String::from_utf8(bytes.to_vec()).map_err(PayloadError::Utf8)
     }
@@ -220,10 +228,10 @@ impl RequestExt for Request<Body> {
 
         #[cfg(feature = "limits")]
         let bytes = self
-            .read_with(<Form as Payload>::NAME, <Form as Payload>::LIMIT)
+            .bytes_with(<Form as Payload>::NAME, <Form as Payload>::LIMIT)
             .await?;
         #[cfg(not(feature = "limits"))]
-        let bytes = self.read().await?;
+        let bytes = self.bytes().await?;
 
         serde_urlencoded::from_reader(bytes::Buf::reader(bytes)).map_err(PayloadError::UrlDecode)
     }
@@ -237,10 +245,10 @@ impl RequestExt for Request<Body> {
 
         #[cfg(feature = "limits")]
         let bytes = self
-            .read_with(<Json as Payload>::NAME, <Json as Payload>::LIMIT)
+            .bytes_with(<Json as Payload>::NAME, <Json as Payload>::LIMIT)
             .await?;
         #[cfg(not(feature = "limits"))]
-        let bytes = self.read().await?;
+        let bytes = self.bytes().await?;
 
         serde_json::from_slice(&bytes).map_err(PayloadError::Json)
     }
@@ -313,7 +321,6 @@ impl RequestExt for Request<Body> {
     }
 
     #[cfg(feature = "params")]
-    /// Gets all parameters.
     fn params<T>(&self) -> Result<T, ParamsError>
     where
         T: serde::de::DeserializeOwned,
@@ -327,7 +334,6 @@ impl RequestExt for Request<Body> {
     }
 
     #[cfg(feature = "params")]
-    /// Gets single parameter by name.
     fn param<T>(&self, name: &str) -> Result<T, ParamsError>
     where
         T: std::str::FromStr,

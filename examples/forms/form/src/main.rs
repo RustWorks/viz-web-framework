@@ -3,8 +3,8 @@
 use serde::{Deserialize, Serialize};
 use std::net::SocketAddr;
 use viz::{
-    get, middleware::limits, types::Form, FnExt, Request, Response, ResponseExt, Result, Router,
-    Server, ServiceMaker,
+    get, middleware::limits, types::Form, IntoHandler, Request, Response, ResponseExt, Result,
+    Router, Server, ServiceMaker,
 };
 
 #[derive(Deserialize, Serialize)]
@@ -29,7 +29,7 @@ async fn main() -> Result<()> {
     println!("listening on {}", addr);
 
     let app = Router::new()
-        .route("/", get(new).post(create.to_handler()))
+        .route("/", get(new).post(create.into_handler()))
         // limit body size
         .with(limits::Config::default());
 

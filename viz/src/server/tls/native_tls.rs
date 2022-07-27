@@ -22,15 +22,18 @@ use super::{Listener, Stream};
 
 pub use tokio_native_tls::native_tls::{Identity, TlsAcceptor};
 
+/// `native-lts`'s config.
 pub struct Config {
     identity: Identity,
 }
 
 impl Config {
+    /// Creates a new config with the specified [Identity].
     pub fn new(identity: Identity) -> Self {
         Self { identity }
     }
 
+    /// Creates a new [TlsAcceptor] wrapper with the specified [Identity].
     pub fn build(self) -> Result<TlsAcceptorWrapper> {
         TlsAcceptor::new(self.identity)
             .map(Into::into)

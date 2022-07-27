@@ -7,8 +7,8 @@ authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 categories = ["asynchronous", "network-programming", "web-programming"]
 homepage = "https://viz.rs"
 repository = "https://github.com/viz-rs/viz"
-documentation = "https://docs.rs/viz-core"
-description = "Viz core components"
+documentation = "https://docs.rs/viz"
+description = "The core traits and types in for the `viz`."
 
 [features]
 default = [

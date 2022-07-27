@@ -1,8 +1,9 @@
-//! WebSocket
+//! WebSocket Extractor
 
 use std::{borrow::Cow, future::Future};
 
 use hyper::upgrade::{OnUpgrade, Upgraded};
+use tokio_tungstenite::tungstenite::protocol::Role;
 
 use crate::{
     async_trait,
@@ -17,9 +18,13 @@ use crate::{
 mod error;
 
 pub use error::WebSocketError;
-pub use tokio_tungstenite::tungstenite::protocol::{Message, Role, WebSocketConfig};
+pub use tokio_tungstenite::tungstenite::protocol::{Message, WebSocketConfig};
 pub type WebSocketStream<T = Upgraded> = tokio_tungstenite::WebSocketStream<T>;
 
+/// Then WebSocket provides the API for creating and managing a [WebSocket][mdn] connection,
+/// as well as for sending and receiving data on the connection.
+///
+/// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/WebSocket>
 pub struct WebSocket {
     key: SecWebsocketKey,
     on_upgrade: Option<OnUpgrade>,

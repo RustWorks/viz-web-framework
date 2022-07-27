@@ -7,7 +7,8 @@ use viz::{
     get,
     middleware::limits,
     types::{Multipart, PayloadError},
-    FnExt, IntoResponse, Request, Response, ResponseExt, Result, Router, Server, ServiceMaker,
+    IntoHandler, IntoResponse, Request, Response, ResponseExt, Result, Router, Server,
+    ServiceMaker,
 };
 
 // HTML form for uploading photos
@@ -47,7 +48,7 @@ async fn main() -> Result<()> {
     println!("listening on {}", addr);
 
     let app = Router::new()
-        .route("/", get(new).post(upload.to_handler()))
+        .route("/", get(new).post(upload.into_handler()))
         // limit body size
         .with(limits::Config::default());
 

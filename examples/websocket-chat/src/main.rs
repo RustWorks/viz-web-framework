@@ -6,8 +6,8 @@ use tokio::sync::broadcast::{channel, Sender};
 use viz::{
     get,
     types::{Data, Message, Params, WebSocket},
-    FnExt, HandlerExt, IntoResponse, Request, RequestExt, Response, ResponseExt, Result, Router,
-    Server, ServiceMaker,
+    HandlerExt, IntoHandler, IntoResponse, Request, RequestExt, Response, ResponseExt, Result,
+    Router, Server, ServiceMaker,
 };
 
 async fn index() -> Result<Response> {
@@ -56,7 +56,7 @@ async fn main() -> Result<()> {
     let channel = channel::<String>(32);
 
     let app = Router::new()
-        .route("/", get(index.to_handler()))
+        .route("/", get(index.into_handler()))
         .route("/ws/:name", get(ws.with(Data::new(channel.0))));
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {

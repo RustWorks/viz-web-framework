@@ -1,8 +1,12 @@
 use crate::{header, Body, Error, Response, Result, StatusCode};
 
+/// Trait implemented by types that can be converted to an HTTP [`Response`].
 pub trait IntoResponse: Sized {
+    /// Convert self to HTTP [`Response`].
+    #[must_use]
     fn into_response(self) -> Response;
 
+    /// Convert self to the [`Error`].
     fn into_error(self) -> Error {
         Error::Responder(self.into_response())
     }
