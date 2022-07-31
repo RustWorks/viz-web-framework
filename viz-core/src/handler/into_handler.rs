@@ -3,7 +3,7 @@ use crate::{FromRequest, IntoResponse, Request, Result};
 use super::{FnExt, Handler, ResponderExt};
 
 /// Trait implemented by types that can be converted to a [`Handler`].
-pub trait IntoHandler<E, I = Request> {
+pub trait IntoHandler<E, I> {
     /// The target handler.
     type Handler: Handler<I>;
 
@@ -12,7 +12,7 @@ pub trait IntoHandler<E, I = Request> {
     fn into_handler(self) -> Self::Handler;
 }
 
-impl<H, E, O> IntoHandler<E> for H
+impl<H, E, O> IntoHandler<E, Request> for H
 where
     E: FromRequest + Send + Sync + 'static,
     E::Error: IntoResponse + Send + Sync,
