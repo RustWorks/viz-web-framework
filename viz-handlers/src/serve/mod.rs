@@ -27,12 +27,13 @@ use directory::Directory;
 pub use error::Error;
 
 /// Serve a single file handler.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct File {
     path: PathBuf,
 }
 
 impl File {
+    /// Serve a new file by the specified path.
     pub fn new(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
 
@@ -54,7 +55,7 @@ impl Handler<Request> for File {
 }
 
 /// Serve a directory handler.
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct Dir {
     path: PathBuf,
     listing: bool,
@@ -62,6 +63,7 @@ pub struct Dir {
 }
 
 impl Dir {
+    /// Serve a new directory by the specified path.
     pub fn new(path: impl Into<PathBuf>) -> Self {
         let path = path.into();
 
@@ -76,11 +78,13 @@ impl Dir {
         }
     }
 
+    /// Enable directory listing, `disabled` by default.
     pub fn listing(mut self) -> Self {
         self.listing = true;
         self
     }
 
+    /// Exclude paths from the directory listing.
     pub fn unlisted(mut self, unlisted: Vec<&'static str>) -> Self {
         self.unlisted.replace(unlisted);
         self
