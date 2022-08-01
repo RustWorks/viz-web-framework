@@ -1,15 +1,15 @@
-//! Router
-
 use viz_core::{BoxHandler, Handler, HandlerExt, Next, Request, Response, Result, Transform};
 
 use crate::{Resources, Route};
 
+/// A routes collection.
 #[derive(Clone, Debug, Default)]
 pub struct Router {
     pub(crate) routes: Option<Vec<(String, Route)>>,
 }
 
 impl Router {
+    /// Creates an empty `Router`.
     pub fn new() -> Self {
         Self { routes: None }
     }
@@ -28,6 +28,7 @@ impl Router {
         }
     }
 
+    /// Inserts a path-route pair into the router.
     pub fn route<S>(mut self, path: S, route: Route) -> Self
     where
         S: AsRef<str>,
@@ -40,6 +41,7 @@ impl Router {
         self
     }
 
+    /// Nested resources with a path.
     pub fn resources<S>(self, path: S, resource: Resources) -> Self
     where
         S: AsRef<str>,
@@ -59,6 +61,7 @@ impl Router {
         })
     }
 
+    /// Nested sub-router with a path.
     pub fn nest<S>(self, path: S, router: Self) -> Self
     where
         S: AsRef<str>,
@@ -81,53 +84,7 @@ impl Router {
         }
     }
 
-    pub fn with<T>(self, t: T) -> Self
-    where
-        T: Transform<BoxHandler>,
-        T::Output: Handler<Request, Output = Result<Response>>,
-    {
-        Self {
-            routes: self.routes.map(|routes| {
-                routes
-                    .into_iter()
-                    .map(|(path, route)| {
-                        (
-                            path,
-                            route
-                                .into_iter()
-                                .map(|(method, handler)| (method, t.transform(handler).boxed()))
-                                .collect(),
-                        )
-                    })
-                    .collect()
-            }),
-        }
-    }
-
-    pub fn with_handler<F>(self, f: F) -> Self
-    where
-        F: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
-    {
-        Self {
-            routes: self.routes.map(|routes| {
-                routes
-                    .into_iter()
-                    .map(|(path, route)| {
-                        (
-                            path,
-                            route
-                                .into_iter()
-                                .map(|(method, handler)| {
-                                    (method, handler.around(f.clone()).boxed())
-                                })
-                                .collect(),
-                        )
-                    })
-                    .collect()
-            }),
-        }
-    }
-
+    /// Takes a closure and creates an iterator which calls that closure on each handler.
     pub fn map_handler<F>(self, f: F) -> Self
     where
         F: Fn(BoxHandler) -> BoxHandler,
@@ -148,6 +105,23 @@ impl Router {
                     .collect()
             }),
         }
+    }
+
+    /// Transforms the types to a middleware and adds it.
+    pub fn with<T>(self, t: T) -> Self
+    where
+        T: Transform<BoxHandler>,
+        T::Output: Handler<Request, Output = Result<Response>>,
+    {
+        self.map_handler(|handler| t.transform(handler).boxed())
+    }
+
+    /// Adds a middleware for the routes.
+    pub fn with_handler<F>(self, f: F) -> Self
+    where
+        F: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
+    {
+        self.map_handler(|handler| handler.around(f.clone()).boxed())
     }
 }
 

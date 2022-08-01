@@ -1,11 +1,17 @@
+use std::fmt::{Debug, Formatter, Result};
+
+use path_tree::PathTree;
+
 use viz_core::{BoxHandler, Method};
 
-use crate::{PathTree, Route, Router};
+use crate::{Route, Router};
 
+/// Store all final routes.
 #[derive(Default)]
 pub struct Tree(Vec<(Method, PathTree<BoxHandler>)>);
 
 impl Tree {
+    /// Find a handler by the HTTP method and the URI's path.
     pub fn find<'a>(
         &'a self,
         method: &'a Method,
@@ -17,6 +23,7 @@ impl Tree {
             .and_then(|t| t.find(path))
     }
 
+    /// Consumes the Tree, returning the wrapped value.
     pub fn into_inner(self) -> Vec<(Method, PathTree<BoxHandler>)> {
         self.0
     }
@@ -63,5 +70,11 @@ impl From<Router> for Tree {
             }
         }
         tree
+    }
+}
+
+impl Debug for Tree {
+    fn fmt(&self, f: &mut Formatter<'_>) -> Result {
+        f.debug_struct("Tree").finish()
     }
 }

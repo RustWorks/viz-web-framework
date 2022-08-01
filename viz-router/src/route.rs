@@ -17,7 +17,7 @@ macro_rules! repeat {
 
 macro_rules! export_internal_verb {
     ($name:ident $verb:tt) => {
-        #[doc = concat!(" Appends a route to handle HTTP `", stringify!($verb), "` verb.")]
+        #[doc = concat!(" Appends a route with a HTTP `", stringify!($verb), "` verb and handler.")]
         pub fn $name<H, O>(self, handler: H) -> Self
         where
             H: Handler<Request, Output = Result<O>> + Clone,
@@ -30,7 +30,7 @@ macro_rules! export_internal_verb {
 
 macro_rules! export_verb {
     ($name:ident $verb:ty) => {
-        #[doc = concat!(" Appends a route to handle HTTP `", stringify!($verb), "` verb.")]
+        #[doc = concat!(" Appends a route with a HTTP `", stringify!($verb), "` verb hand handler.")]
         pub fn $name<H, O>(handler: H) -> Route
         where
             H: Handler<Request, Output = Result<O>> + Clone,
@@ -41,18 +41,21 @@ macro_rules! export_verb {
     };
 }
 
+/// A collection of verb-handler pair.
 #[derive(Clone, Default)]
 pub struct Route {
     pub(crate) methods: Vec<(Method, BoxHandler)>,
 }
 
 impl Route {
+    /// Creates a new route.
     pub fn new() -> Self {
         Self {
             methods: Vec::new(),
         }
     }
 
+    /// Appends a route with a HTTP verb and boxed handler.
     pub fn push(mut self, method: Method, handler: BoxHandler) -> Self {
         match self
             .methods
@@ -67,7 +70,7 @@ impl Route {
         self
     }
 
-    /// Appends a route, with a HTTP verb and handler.
+    /// Appends a route with a HTTP verb and handler.
     pub fn on<H, O>(self, method: Method, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -76,7 +79,7 @@ impl Route {
         self.push(method, handler.to_responder().boxed())
     }
 
-    /// Appends a route, with a HTTP verb and handler.
+    /// Appends a route with any HTTP verbs and handler.
     pub fn any<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -110,25 +113,7 @@ impl Route {
         trace TRACE
     );
 
-    pub fn with<T>(self, t: T) -> Self
-    where
-        T: Transform<BoxHandler>,
-        T::Output: Handler<Request, Output = Result<Response>>,
-    {
-        self.into_iter()
-            .map(|(method, handler)| (method, t.transform(handler).boxed()))
-            .collect()
-    }
-
-    pub fn with_handler<F>(self, f: F) -> Self
-    where
-        F: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
-    {
-        self.into_iter()
-            .map(|(method, handler)| (method, handler.around(f.clone()).boxed()))
-            .collect()
-    }
-
+    /// Takes a closure and creates an iterator which calls that closure on each handler.
     pub fn map_handler<F>(self, f: F) -> Self
     where
         F: Fn(BoxHandler) -> BoxHandler,
@@ -136,6 +121,23 @@ impl Route {
         self.into_iter()
             .map(|(method, handler)| (method, f(handler)))
             .collect()
+    }
+
+    /// Transforms the types to a middleware and adds it.
+    pub fn with<T>(self, t: T) -> Self
+    where
+        T: Transform<BoxHandler>,
+        T::Output: Handler<Request, Output = Result<Response>>,
+    {
+        self.map_handler(|handler| t.transform(handler).boxed())
+    }
+
+    /// Adds a middleware for the routes.
+    pub fn with_handler<F>(self, f: F) -> Self
+    where
+        F: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
+    {
+        self.map_handler(|handler| handler.around(f.clone()).boxed())
     }
 }
 

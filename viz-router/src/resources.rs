@@ -30,6 +30,7 @@ pub struct Resources {
 }
 
 impl Resources {
+    /// Named for the resources.
     pub fn named<S>(mut self, name: S) -> Self
     where
         S: AsRef<str>,
@@ -44,6 +45,7 @@ impl Resources {
         self
     }
 
+    /// Inserts a path-route pair into the resources.
     pub fn route<S>(mut self, path: S, route: Route) -> Self
     where
         S: AsRef<str>,
@@ -84,6 +86,7 @@ impl Resources {
         self
     }
 
+    /// Displays a list of the resources.
     pub fn index<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -92,7 +95,7 @@ impl Resources {
         self.on(Kind::Empty, Method::GET, handler)
     }
 
-    /// `:{}_id/new` or `/new`
+    /// Returens an HTML form for creating the resources.
     pub fn new<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -101,6 +104,7 @@ impl Resources {
         self.on(Kind::New, Method::GET, handler)
     }
 
+    /// Creates the resources.
     pub fn create<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -109,6 +113,7 @@ impl Resources {
         self.on(Kind::Empty, Method::POST, handler)
     }
 
+    /// Displays the resources.
     pub fn show<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -117,6 +122,7 @@ impl Resources {
         self.on(Kind::Id, Method::GET, handler)
     }
 
+    /// Returens an HTML form for editing the resources.
     pub fn edit<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -125,6 +131,7 @@ impl Resources {
         self.on(Kind::Edit, Method::GET, handler)
     }
 
+    /// Updates the resources, by default the `PUT` verb.
     pub fn update<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -133,6 +140,7 @@ impl Resources {
         self.on(Kind::Id, Method::PUT, handler)
     }
 
+    /// Updates the resources, by the `PATCH` verb.
     pub fn update_with_patch<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -141,6 +149,7 @@ impl Resources {
         self.on(Kind::Id, Method::PATCH, handler)
     }
 
+    /// Deletes the resources.
     pub fn destroy<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -149,30 +158,7 @@ impl Resources {
         self.on(Kind::Id, Method::DELETE, handler)
     }
 
-    pub fn with<T>(self, t: T) -> Self
-    where
-        T: Transform<BoxHandler>,
-        T::Output: Handler<Request, Output = Result<Response>>,
-    {
-        Self {
-            name: self.name,
-            singular: self.singular,
-            routes: self
-                .routes
-                .into_iter()
-                .map(|(path, route)| {
-                    (
-                        path,
-                        route
-                            .into_iter()
-                            .map(|(method, handler)| (method, t.transform(handler).boxed()))
-                            .collect(),
-                    )
-                })
-                .collect(),
-        }
-    }
-
+    /// Takes a closure and creates an iterator which calls that closure on each handler.
     pub fn map_handler<F>(self, f: F) -> Self
     where
         F: Fn(BoxHandler) -> BoxHandler,
@@ -194,6 +180,15 @@ impl Resources {
                 })
                 .collect(),
         }
+    }
+
+    /// Transforms the types to a middleware and adds it.
+    pub fn with<T>(self, t: T) -> Self
+    where
+        T: Transform<BoxHandler>,
+        T::Output: Handler<Request, Output = Result<Response>>,
+    {
+        self.map_handler(|handler| t.transform(handler).boxed())
     }
 }
 
