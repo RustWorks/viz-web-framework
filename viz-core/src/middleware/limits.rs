@@ -1,10 +1,11 @@
-//! Limits Middleware
+//! Limits Middleware.
 
 #[cfg(feature = "multipart")]
 use std::sync::Arc;
 
 use crate::{async_trait, types, Handler, IntoResponse, Request, Response, Result, Transform};
 
+/// A limits configure.
 #[derive(Debug, Clone)]
 pub struct Config {
     limits: types::Limits,
@@ -13,16 +14,19 @@ pub struct Config {
 }
 
 impl Config {
+    /// Creates a new Config.
     pub fn new() -> Self {
         Self::default()
     }
 
+    /// Sets a limits for the Text/Bytes/Form.
     pub fn limits(mut self, limits: types::Limits) -> Self {
         self.limits = limits;
         self
     }
 
     #[cfg(feature = "multipart")]
+    /// Sets a limits for the Multipart Form.
     pub fn multipart(mut self, limits: types::MultipartLimits) -> Self {
         *Arc::make_mut(&mut self.multipart) = limits;
         self
@@ -53,7 +57,8 @@ where
     }
 }
 
-#[derive(Clone)]
+/// A middleware for the [Limits] settings.
+#[derive(Debug, Clone)]
 pub struct LimitsMiddleware<H> {
     h: H,
     config: Config,

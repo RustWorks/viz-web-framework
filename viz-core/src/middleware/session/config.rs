@@ -30,12 +30,12 @@ impl<S, G, V> Config<S, G, V> {
     }
 
     pub fn ttl(&self) -> Option<Duration> {
-        self.cookie().max_age
+        self.options().max_age
     }
 }
 
 impl<S, G, V> Cookieable for Config<S, G, V> {
-    fn cookie(&self) -> &CookieOptions {
+    fn options(&self) -> &CookieOptions {
         &self.0 .1
     }
 }

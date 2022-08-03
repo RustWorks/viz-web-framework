@@ -1,4 +1,4 @@
-//! Request Query Extractor
+//! Represents a query extractor.
 
 use std::{
     fmt,
@@ -9,7 +9,7 @@ use serde::de::DeserializeOwned;
 
 use crate::{async_trait, types::PayloadError, FromRequest, Request, RequestExt, Result};
 
-/// Query Extractor
+/// Extracts the data from the query string of a URL.
 pub struct Query<T = ()>(pub T);
 
 impl<T> Query<T> {
@@ -19,6 +19,7 @@ impl<T> Query<T> {
         Query(data)
     }
 
+    /// Consumes the Query, returning the wrapped value.
     #[inline]
     pub fn into_inner(self) -> T {
         self.0

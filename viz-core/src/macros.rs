@@ -29,14 +29,17 @@ macro_rules! tuple_impls {
             $($T::Error: IntoResponse + Send,)*
             Fun: Fn($($T,)*) -> Fut + Clone + Send + Sync + 'static,
             Fut: Future<Output = Result<Out>> + Send,
-            Out: IntoResponse + Send + Sync + 'static,
+            Out: Send + Sync + 'static,
+            // Out: IntoResponse + Send + Sync + 'static,
         {
-            type Output =  Result<Response>;
+            type Output =  Fut::Output;
+            // type Output =  Result<Response>;
 
             #[allow(unused, unused_mut)]
             async fn call(&self, mut req: Request) -> Self::Output {
                 (self)($($T::extract(&mut req).await.map_err(IntoResponse::into_error)?,)*)
-                    .await.map(IntoResponse::into_response)
+                    .await
+                    // .await.map(IntoResponse::into_response)
             }
         }
     };

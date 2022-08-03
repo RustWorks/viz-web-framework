@@ -1,4 +1,4 @@
-//! Request Session Extractor
+//! Represents a session extractor.
 
 use std::{
     convert::Infallible,
@@ -16,7 +16,7 @@ use sessions_core::{Data, State, CHANGED, PURGED, RENEWED, UNCHANGED};
 
 use crate::{async_trait, Error, FromRequest, IntoResponse, Request, RequestExt, StatusCode};
 
-/// Session
+/// A session for the current request.
 #[derive(Clone)]
 pub struct Session {
     state: Arc<State>,

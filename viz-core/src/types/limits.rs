@@ -1,5 +1,3 @@
-//! Request Limits Extractor
-
 use std::{convert::Infallible, sync::Arc};
 
 use crate::{async_trait, FromRequest, Request, RequestExt};
@@ -13,6 +11,7 @@ use super::Json;
 #[cfg(any(feature = "form", feature = "json"))]
 use super::Payload;
 
+/// A extractor for the limits settings.
 #[derive(Debug, Clone)]
 pub struct Limits {
     inner: Arc<Vec<(&'static str, u64)>>,

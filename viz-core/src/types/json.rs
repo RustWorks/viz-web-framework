@@ -1,4 +1,4 @@
-//! Request JSON Body Extractor
+//! Represents a JSON extractor/responder.
 
 use std::{
     fmt,
@@ -11,7 +11,7 @@ use crate::{
 
 use super::{Payload, PayloadError};
 
-/// JSON Extractor / Response
+/// Extracts JSON data from the body of a request, or responds a JSON data to response.
 pub struct Json<T = ()>(pub T);
 
 impl<T> Json<T> {
@@ -21,6 +21,7 @@ impl<T> Json<T> {
         Json(data)
     }
 
+    /// Consumes the JSON, returning the wrapped value.
     #[inline]
     pub fn into_inner(self) -> T {
         self.0

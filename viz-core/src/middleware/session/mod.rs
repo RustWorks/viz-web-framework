@@ -1,4 +1,4 @@
-//! Session Middleware
+//! Session Middleware.
 
 mod config;
 

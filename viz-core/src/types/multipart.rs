@@ -1,4 +1,4 @@
-//! Request Multipart Extractor
+//! Represents a Multipart extractor.
 
 use form_data::FormData;
 
@@ -10,7 +10,7 @@ use super::{Payload, PayloadError};
 
 pub use form_data::{Error as MultipartError, Limits as MultipartLimits};
 
-/// Multipart Form-data Extractor
+/// Extracts the data from the multipart body of a request.
 pub type Multipart<T = Body> = FormData<T>;
 
 impl<T> Payload for Multipart<T> {

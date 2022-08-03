@@ -17,7 +17,7 @@ macro_rules! repeat {
 
 macro_rules! export_internal_verb {
     ($name:ident $verb:tt) => {
-        #[doc = concat!(" Appends a route with a HTTP `", stringify!($verb), "` verb and handler.")]
+        #[doc = concat!(" Appends a handler buy the HTTP `", stringify!($verb), "` verb into the route.")]
         pub fn $name<H, O>(self, handler: H) -> Self
         where
             H: Handler<Request, Output = Result<O>> + Clone,
@@ -30,7 +30,7 @@ macro_rules! export_internal_verb {
 
 macro_rules! export_verb {
     ($name:ident $verb:ty) => {
-        #[doc = concat!(" Appends a route with a HTTP `", stringify!($verb), "` verb hand handler.")]
+        #[doc = concat!(" Creates a route with a handler and HTTP `", stringify!($verb), "` verb pair.")]
         pub fn $name<H, O>(handler: H) -> Route
         where
             H: Handler<Request, Output = Result<O>> + Clone,
@@ -55,7 +55,7 @@ impl Route {
         }
     }
 
-    /// Appends a route with a HTTP verb and boxed handler.
+    /// Appends a HTTP verb and handler pair into the route.
     pub fn push(mut self, method: Method, handler: BoxHandler) -> Self {
         match self
             .methods
@@ -70,7 +70,7 @@ impl Route {
         self
     }
 
-    /// Appends a route with a HTTP verb and handler.
+    /// Appends a handler by the specified HTTP verb into the route.
     pub fn on<H, O>(self, method: Method, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -79,7 +79,7 @@ impl Route {
         self.push(method, handler.to_responder().boxed())
     }
 
-    /// Appends a route with any HTTP verbs and handler.
+    /// Appends a handler by any HTTP verbs into the route.
     pub fn any<H, O>(self, handler: H) -> Self
     where
         H: Handler<Request, Output = Result<O>> + Clone,
@@ -162,7 +162,7 @@ impl FromIterator<(Method, BoxHandler)> for Route {
     }
 }
 
-/// Appends a route, with a HTTP verb and handler.
+/// Creates a route with a handler and HTTP verb pair.
 pub fn on<H, O>(method: Method, handler: H) -> Route
 where
     H: Handler<Request, Output = Result<O>> + Clone,
@@ -184,7 +184,7 @@ repeat!(
     trace TRACE
 );
 
-/// Appends a route to handle any HTTP verbs.
+/// Creates a route with a handler and any HTTP verbs.
 pub fn any<H, O>(handler: H) -> Route
 where
     H: Handler<Request, Output = Result<O>> + Clone,

@@ -1,4 +1,4 @@
-//! Request Header Extractor
+//! Represents a header extractor.
 
 use std::{
     fmt,
@@ -11,7 +11,7 @@ use crate::{
     FromRequest, IntoResponse, Request, Response, Result, StatusCode, ThisError,
 };
 
-/// Header Extractor
+/// Extracts a header from the headers of a request.
 pub struct Header<T: ?Sized>(pub T);
 
 impl<T> Header<T> {
@@ -21,6 +21,7 @@ impl<T> Header<T> {
         Self(t)
     }
 
+    /// Consumes the Header, returning the wrapped value.
     #[inline]
     pub fn into_inner(self) -> T {
         self.0

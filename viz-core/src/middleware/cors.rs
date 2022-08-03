@@ -1,4 +1,4 @@
-//! CORS Middleware
+//! CORS Middleware.
 
 use std::{collections::HashSet, sync::Arc};
 

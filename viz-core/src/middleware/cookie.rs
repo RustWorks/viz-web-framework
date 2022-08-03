@@ -1,4 +1,4 @@
-//! Cookie Middleware
+//! Cookie Middleware.
 
 use crate::{
     async_trait,

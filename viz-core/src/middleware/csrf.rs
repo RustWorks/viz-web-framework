@@ -1,4 +1,4 @@
-//! CSRF Middleware
+//! CSRF Middleware.
 
 use std::{collections::HashSet, sync::Arc};
 
@@ -111,7 +111,7 @@ impl<S, G, V> Config<S, G, V> {
 }
 
 impl<S, G, V> Cookieable for Config<S, G, V> {
-    fn cookie(&self) -> &CookieOptions {
+    fn options(&self) -> &CookieOptions {
         &self.0.cookie_options
     }
 }
