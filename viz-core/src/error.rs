@@ -5,15 +5,19 @@ use crate::{IntoResponse, Response, StatusCode, ThisError};
 /// Represents errors that can occur handling application.
 #[derive(ThisError, Debug)]
 pub enum Error {
-    #[error(transparent)]
-    Normal(Box<dyn StdError + Send + Sync>),
+    /// Receives a [`Response`] as error.
     #[error("response")]
     Responder(Response),
+    /// Receives a box std::error::[`Error`][StdError] as error.
+    #[error(transparent)]
+    Normal(Box<dyn StdError + Send + Sync>),
+    /// Receives a box std::error::[`Error`][StdError] and [`Response`] pair as error.
     #[error("report")]
     Report(Box<dyn StdError + Send + Sync>, Response),
 }
 
 impl Error {
+    /// Create a new error object from any error type.
     pub fn normal<T>(t: T) -> Self
     where
         T: StdError + Send + Sync + 'static,
@@ -21,22 +25,31 @@ impl Error {
         Self::Normal(Box::new(t))
     }
 
+    /// Forwards to the method defined on the type `dyn Error`.
     #[inline]
     pub fn is<T>(&self) -> bool
     where
         T: StdError + 'static,
     {
-        if let Self::Report(e, _) = self {
-            return e.is::<T>();
+        match self {
+            Self::Normal(e) => e.is::<T>(),
+            Self::Report(e, _) => e.is::<T>(),
+            Self::Responder(_) => false
         }
-        false
     }
 
+    /// Attempt to downcast the error object to a concrete type.
     #[inline]
     pub fn downcast<T>(self) -> Result<T, Self>
     where
         T: StdError + 'static,
     {
+        if let Self::Normal(e) = self {
+            return match e.downcast::<T>() {
+                Ok(e) => Ok(*e),
+                Err(e) => Err(Self::Normal(e)),
+            };
+        }
         if let Self::Report(e, r) = self {
             return match e.downcast::<T>() {
                 Ok(e) => Ok(*e),
@@ -46,22 +59,30 @@ impl Error {
         Err(self)
     }
 
+    /// Downcast this error object by reference.
     #[inline]
     pub fn downcast_ref<T>(&self) -> Option<&T>
     where
         T: StdError + 'static,
     {
+        if let Self::Normal(e) = self {
+            return e.downcast_ref::<T>();
+        }
         if let Self::Report(e, _) = self {
             return e.downcast_ref::<T>();
         }
         None
     }
 
+    /// Downcast this error object by mutable reference.
     #[inline]
     pub fn downcast_mut<T>(&mut self) -> Option<&mut T>
     where
         T: StdError + 'static,
     {
+        if let Self::Normal(e) = self {
+            return e.downcast_mut::<T>();
+        }
         if let Self::Report(e, _) = self {
             return e.downcast_mut::<T>();
         }
