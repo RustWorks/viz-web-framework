@@ -42,12 +42,7 @@ pub trait ResponseExt {
     {
         let mut buf = BytesMut::new().writer();
         serde_json::to_writer(&mut buf, &t)
-            .map(|_| {
-                Self::with(
-                    buf.into_inner().freeze(),
-                    mime::APPLICATION_JAVASCRIPT_UTF_8.as_ref(),
-                )
-            })
+            .map(|_| Self::with(buf.into_inner().freeze(), mime::APPLICATION_JSON.as_ref()))
             .map_err(crate::types::PayloadError::Json)
     }
 
