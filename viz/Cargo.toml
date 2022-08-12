@@ -8,14 +8,14 @@ authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 homepage = "https://viz.rs"
 documentation = "https://docs.rs/viz"
 repository = "https://github.com/viz-rs/viz"
-keywords = ["viz", "http", "web", "framework", "async"]
+keywords = ["async" "framework", "http", "viz", "web"]
 categories = [
   "asynchronous",
   "network-programming",
   "web-programming::http-server",
 ]
 description = "Fast, robust, flexible, lightweight web framework for Rust"
-publish = false
+publish = true
 
 [features]
 default = [

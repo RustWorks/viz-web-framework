@@ -8,7 +8,7 @@ homepage = "https://viz.rs"
 repository = "https://github.com/viz-rs/viz"
 documentation = "https://docs.rs/viz-handlers"
 description = "Viz handlers"
-publish = false
+publish = true
 
 [features]
 default = ["serve"]

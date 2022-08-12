@@ -9,7 +9,7 @@ homepage = "https://viz.rs"
 repository = "https://github.com/viz-rs/viz"
 documentation = "https://docs.rs/viz"
 description = "The core traits and types in for the `viz`."
-publish = false
+publish = true
 
 [features]
 default = [
