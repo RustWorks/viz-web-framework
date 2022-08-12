@@ -10,7 +10,7 @@
 //!
 //! * Simple + Flexible [`Handler`](#handler) & [`Middleware`](#middleware)
 //!
-//! * Handy `Extractors`
+//! * Handy [`Extractors`](#extractors)
 //!
 //! * Robust [`Routing`](#routing)
 //!
