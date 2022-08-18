@@ -1,4 +1,4 @@
-use crate::{header, Body, Error, Response, Result, StatusCode};
+use crate::{header::CONTENT_TYPE, Body, Error, Response, Result, StatusCode};
 
 /// Trait implemented by types that can be converted to an HTTP [`Response`].
 pub trait IntoResponse: Sized {
@@ -49,10 +49,7 @@ impl IntoResponse for std::convert::Infallible {
 impl IntoResponse for String {
     fn into_response(self) -> Response {
         Response::builder()
-            .header(
-                header::CONTENT_TYPE,
-                header::HeaderValue::from_static(mime::TEXT_PLAIN_UTF_8.as_ref()),
-            )
+            .header(CONTENT_TYPE, mime::TEXT_PLAIN_UTF_8.as_ref())
             .body(self.into())
             .unwrap()
     }
@@ -61,10 +58,7 @@ impl IntoResponse for String {
 impl IntoResponse for &'static str {
     fn into_response(self) -> Response {
         Response::builder()
-            .header(
-                header::CONTENT_TYPE,
-                header::HeaderValue::from_static(mime::TEXT_PLAIN_UTF_8.as_ref()),
-            )
+            .header(CONTENT_TYPE, mime::TEXT_PLAIN_UTF_8.as_ref())
             .body(self.into())
             .unwrap()
     }
@@ -73,10 +67,7 @@ impl IntoResponse for &'static str {
 impl IntoResponse for &'static [u8] {
     fn into_response(self) -> Response {
         Response::builder()
-            .header(
-                header::CONTENT_TYPE,
-                header::HeaderValue::from_static(mime::APPLICATION_OCTET_STREAM.as_ref()),
-            )
+            .header(CONTENT_TYPE, mime::APPLICATION_OCTET_STREAM.as_ref())
             .body(self.into())
             .unwrap()
     }
@@ -85,10 +76,7 @@ impl IntoResponse for &'static [u8] {
 impl IntoResponse for Vec<u8> {
     fn into_response(self) -> Response {
         Response::builder()
-            .header(
-                header::CONTENT_TYPE,
-                header::HeaderValue::from_static(mime::APPLICATION_OCTET_STREAM.as_ref()),
-            )
+            .header(CONTENT_TYPE, mime::APPLICATION_OCTET_STREAM.as_ref())
             .body(self.into())
             .unwrap()
     }
