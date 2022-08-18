@@ -2,7 +2,7 @@
 
 use std::{
     net::SocketAddr,
-    sync::{Arc, Mutex},
+    sync::{Arc, Mutex, PoisonError},
 };
 
 use serde::{Deserialize, Serialize};
@@ -16,6 +16,10 @@ use viz::{
 type DB = Arc<Mutex<Vec<Todo>>>;
 
 const LIMIT: usize = 10;
+
+fn into_error<T>(e: PoisonError<T>) -> Error {
+    e.to_string().into_error()
+}
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 struct Todo {
@@ -38,7 +42,7 @@ async fn list(mut req: Request) -> Result<Response> {
 
     let todos = db
         .lock()
-        .map_err(|e| Error::Responder(e.to_string().into_response()))?
+        .map_err(into_error)?
         .iter()
         .skip(offset.unwrap_or(0))
         .take(limit.unwrap_or(LIMIT))
@@ -52,9 +56,7 @@ async fn list(mut req: Request) -> Result<Response> {
 async fn create(mut req: Request) -> Result<StatusCode> {
     let (State(db), Json(todo)) = req.extract::<(State<DB>, Json<Todo>)>().await?;
 
-    let mut todos = db
-        .lock()
-        .map_err(|e| Error::Responder(e.to_string().into_response()))?;
+    let mut todos = db.lock().map_err(into_error)?;
 
     if todos.iter().any(|t| t.id == todo.id) {
         return Ok(StatusCode::BAD_REQUEST);
@@ -69,11 +71,9 @@ async fn create(mut req: Request) -> Result<StatusCode> {
 async fn show(mut req: Request) -> Result<Response> {
     let (State(db), Params(id)) = req.extract::<(State<DB>, Params<u64>)>().await?;
 
-    let todos = db
+    let todo = db
         .lock()
-        .map_err(|e| Error::Responder(e.to_string().into_response()))?;
-
-    let todo = todos
+        .map_err(into_error)?
         .iter()
         .find(|t| t.id == id)
         .cloned()
@@ -88,9 +88,7 @@ async fn update(mut req: Request) -> Result<StatusCode> {
         .extract::<(State<DB>, Params<u64>, Json<Todo>)>()
         .await?;
 
-    let mut todos = db
-        .lock()
-        .map_err(|e| Error::Responder(e.to_string().into_response()))?;
+    let mut todos = db.lock().map_err(into_error)?;
 
     for t in todos.iter_mut() {
         if t.id == id {
@@ -106,9 +104,7 @@ async fn update(mut req: Request) -> Result<StatusCode> {
 async fn delete(mut req: Request) -> Result<StatusCode> {
     let (State(db), Params(id)) = req.extract::<(State<DB>, Params<u64>)>().await?;
 
-    let mut todos = db
-        .lock()
-        .map_err(|e| Error::Responder(e.to_string().into_response()))?;
+    let mut todos = db.lock().map_err(into_error)?;
 
     let len = todos.len();
     todos.retain(|t| t.id != id);
