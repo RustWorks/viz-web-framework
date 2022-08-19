@@ -11,7 +11,7 @@ use crate::{
     Request, RequestExt, Response, Result,
 };
 
-/// Extracts State from the extensions of a request.
+/// Extracts state from the extensions of a request.
 pub struct State<T: ?Sized>(pub T);
 
 impl<T> State<T> {

@@ -1,4 +1,10 @@
-<h1 align="center">Víz Macros</h1>
+<p align="center">
+  <img src="https://raw.githubusercontent.com/viz-rs/viz.rs/main/static/logo.svg" height="200" />
+</p>
+
+<h1 align="center">
+  <a href="https://docs.rs/viz">Viz</a>
+</h1>
 
 <div align="center">
   <p><strong>Macros for Viz</strong></p>

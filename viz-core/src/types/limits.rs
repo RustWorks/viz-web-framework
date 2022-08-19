@@ -11,7 +11,7 @@ use super::Json;
 #[cfg(any(feature = "form", feature = "json"))]
 use super::Payload;
 
-/// A extractor for the limits settings.
+/// Extracts the limits settings.
 #[derive(Debug, Clone)]
 pub struct Limits {
     inner: Arc<Vec<(&'static str, u64)>>,
