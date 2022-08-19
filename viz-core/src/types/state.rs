@@ -1,4 +1,4 @@
-//! Represents a shared-    data extractor or handler/middleware.
+//! Represents a shared-state extractor or handler/middleware.
 
 use std::{
     any::type_name,
