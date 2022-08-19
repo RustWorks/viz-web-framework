@@ -12,27 +12,18 @@ use viz_core::{
 
 /// Serve a single embedded file.
 #[derive(Debug)]
-pub struct File<E> {
-    path: Cow<'static, str>,
-    _maker: PhantomData<E>,
-}
+pub struct File<E>(Cow<'static, str>, PhantomData<E>);
 
 impl<E> Clone for File<E> {
     fn clone(&self) -> Self {
-        Self {
-            path: self.path.to_owned(),
-            _maker: PhantomData,
-        }
+        Self(self.path.to_owned(), PhantomData)
     }
 }
 
 impl<E> File<E> {
     /// Serve a new file by the specified path.
     pub fn new(path: &'static str) -> Self {
-        Self {
-            path: path.into(),
-            _maker: PhantomData,
-        }
+        Self(path.nto(), PhantomData)
     }
 }
 
@@ -44,7 +35,7 @@ where
     type Output = Result<Response>;
 
     async fn call(&self, req: Request) -> Self::Output {
-        serve::<E>(&self.path, req.method(), req.headers()).await
+        serve::<E>(&self.0, req.method(), req.headers()).await
     }
 }
 
@@ -52,14 +43,14 @@ where
 #[derive(Debug)]
 pub struct Dir<E>(PhantomData<E>);
 
-impl<E> Default for Dir<E> {
-    fn default() -> Self {
+impl<E> Clone for Dir<E> {
+    fn clone(&self) -> Self {
         Self(PhantomData)
     }
 }
 
-impl<E> Clone for Dir<E> {
-    fn clone(&self) -> Self {
+impl<E> Default for Dir<E> {
+    fn default() -> Self {
         Self(PhantomData)
     }
 }
@@ -85,7 +76,6 @@ where
     }
 }
 
-#[inline]
 async fn serve<E>(path: &str, method: &Method, headers: &HeaderMap) -> Result<Response>
 where
     E: RustEmbed + Send + Sync + 'static,
