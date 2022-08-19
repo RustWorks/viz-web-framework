@@ -16,14 +16,14 @@ pub struct File<E>(Cow<'static, str>, PhantomData<E>);
 
 impl<E> Clone for File<E> {
     fn clone(&self) -> Self {
-        Self(self.path.to_owned(), PhantomData)
+        Self(self.0.to_owned(), PhantomData)
     }
 }
 
 impl<E> File<E> {
     /// Serve a new file by the specified path.
     pub fn new(path: &'static str) -> Self {
-        Self(path.nto(), PhantomData)
+        Self(path.into(), PhantomData)
     }
 }
 
