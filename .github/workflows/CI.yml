@@ -77,4 +77,4 @@ jobs:
           toolchain: nightly
       - name: Check documenting
         run: |
-          RUSTDOCFLAGS="-D warnings --cfg docsrs" cargo doc --workspace --no-deps
+          RUSTDOCFLAGS="-D warnings --cfg docsrs" cargo doc --workspace --all-features --no-deps
