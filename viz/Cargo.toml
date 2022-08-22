@@ -51,15 +51,15 @@ cors = ["viz-core/cors"]
 
 unix-socket = []
 
-macros = ["viz-macros"]
+macros = ["dep:viz-macros"]
 
-handlers = ["viz-handlers"]
-serve = ["handlers", "viz-handlers/serve"]
-embed = ["handlers", "viz-handlers/embed"]
-prometheus = ["handlers", "viz-handlers/prometheus"]
+handlers = ["dep:viz-handlers"]
+serve = ["handlers", "viz-handlers?/serve"]
+embed = ["handlers", "viz-handlers?/embed"]
+prometheus = ["handlers", "viz-handlers?/prometheus"]
 
-rustls = ["rustls-pemfile", "tokio-rustls", "futures-util"]
-native-tls = ["tokio-native-tls", "futures-util"]
+rustls = ["dep:rustls-pemfile", "dep:tokio-rustls", "dep:futures-util"]
+native-tls = ["dep:tokio-native-tls", "dep:futures-util"]
 
 [dependencies]
 viz-core = { path = "../viz-core", version = "0.3.1" }
