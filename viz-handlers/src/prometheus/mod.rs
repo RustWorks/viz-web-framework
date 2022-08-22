@@ -1,4 +1,4 @@
-//! [OpenTelemetry(OTEL) Prometheus Exporter][OTEL]
+//! [OpenTelemetry(OTEL) Prometheus Exporter][OTEL].
 //!
 //! [OTEL]: https://docs.rs/opentelemetry-prometheus
 
@@ -10,17 +10,20 @@ use viz_core::{
     Handler, IntoResponse, Request, Response, Result, StatusCode,
 };
 
+#[doc(inline)]
 pub use opentelemetry_prometheus::ExporterBuilder;
 
-/// Prometheus Exporter
+/// The [`PrometheusExporter`] wrapper.
+///
+/// [`PrometheusExporter`]: https://docs.rs/opentelemetry-prometheus/latest/opentelemetry_prometheus/struct.PrometheusExporter.html
 #[derive(Clone, Debug)]
 pub struct Exporter {
     inner: PrometheusExporter,
 }
 
-impl From<ExporterBuilder> for Exporter {
-    fn from(e: ExporterBuilder) -> Self {
-        Exporter { inner: e.init() }
+impl From<PrometheusExporter> for Exporter {
+    fn from(inner: PrometheusExporter) -> Self {
+        Self { inner }
     }
 }
 
