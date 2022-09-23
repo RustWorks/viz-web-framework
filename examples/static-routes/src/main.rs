@@ -4,8 +4,8 @@ use hyper::service::{make_service_fn, service_fn};
 use once_cell::sync::Lazy;
 use std::{convert::Infallible, net::SocketAddr};
 use viz::{
-    types::Params, IntoResponse, Method, Request, RequestExt, Response, Result, Router, Server,
-    StatusCode, Tree,
+    types::{Params, Route},
+    IntoResponse, Method, Request, RequestExt, Response, Result, Router, Server, StatusCode, Tree,
 };
 
 /// Static Lazy Routes
@@ -47,12 +47,16 @@ pub async fn serve(mut req: Request, mut addr: Option<SocketAddr>) -> Result<Res
                 None
             }
         }) {
-            Some((handler, params)) => {
+            Some(route) => {
                 if addr.is_some() {
                     req.extensions_mut().insert(addr.take());
                 }
-                req.extensions_mut().insert(Into::<Params>::into(params));
-                handler
+                req.extensions_mut()
+                    .insert(Route::new(*route.id, route.pattern()));
+                req.extensions_mut()
+                    .insert(Into::<Params>::into(route.params()));
+                route
+                    .value
                     .call(req)
                     .await
                     .unwrap_or_else(IntoResponse::into_response)
