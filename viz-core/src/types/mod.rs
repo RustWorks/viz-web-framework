@@ -61,8 +61,10 @@ pub use websocket::{Message, WebSocket, WebSocketConfig, WebSocketError, WebSock
 
 mod header;
 mod payload;
+mod realip;
 mod route;
 
 pub use header::{Header, HeaderError};
 pub use payload::{Payload, PayloadError};
+pub use realip::RealIp;
 pub use route::Route;
