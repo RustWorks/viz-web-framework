@@ -121,6 +121,8 @@ impl FromStr for ContentCoding {
             Ok(ContentCoding::Deflate)
         } else if s.eq_ignore_ascii_case("gzip") {
             Ok(ContentCoding::Gzip)
+        } else if s.eq_ignore_ascii_case("brotli") {
+            Ok(ContentCoding::Brotli)
         } else if s == "*" {
             Ok(ContentCoding::Any)
         } else {
