@@ -68,6 +68,6 @@ impl FromRequest for Limits {
     type Error = Infallible;
 
     async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
-        Ok(req.limits())
+        Ok(req.limits().clone())
     }
 }

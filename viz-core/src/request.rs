@@ -131,7 +131,7 @@ pub trait RequestExt: Sized {
 
     #[cfg(feature = "limits")]
     /// Get limits settings.
-    fn limits(&self) -> Limits;
+    fn limits(&self) -> &Limits;
 
     #[cfg(feature = "session")]
     /// Get current session.
@@ -325,10 +325,9 @@ impl RequestExt for Request<Body> {
     }
 
     #[cfg(feature = "limits")]
-    fn limits(&self) -> Limits {
+    fn limits(&self) -> &Limits {
         self.extensions()
             .get::<Limits>()
-            .cloned()
             .expect("Limits middleware is required")
     }
 
