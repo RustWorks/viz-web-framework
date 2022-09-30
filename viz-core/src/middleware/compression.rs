@@ -121,7 +121,7 @@ impl FromStr for ContentCoding {
             Ok(ContentCoding::Deflate)
         } else if s.eq_ignore_ascii_case("gzip") {
             Ok(ContentCoding::Gzip)
-        } else if s.eq_ignore_ascii_case("brotli") {
+        } else if s.eq_ignore_ascii_case("br") {
             Ok(ContentCoding::Brotli)
         } else if s == "*" {
             Ok(ContentCoding::Any)
@@ -136,7 +136,7 @@ impl From<ContentCoding> for &'static str {
         match cc {
             ContentCoding::Gzip => "gzip",
             ContentCoding::Deflate => "deflate",
-            ContentCoding::Brotli => "brotli",
+            ContentCoding::Brotli => "br",
             ContentCoding::Any => "*",
         }
     }
