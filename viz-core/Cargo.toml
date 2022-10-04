@@ -35,7 +35,7 @@ form = ["dep:serde", "dep:serde_urlencoded"]
 query = ["dep:serde", "dep:serde_urlencoded"]
 multipart = ["dep:form-data"]
 websocket = ["dep:tokio-tungstenite", "tokio/rt"]
-sse = ["dep:tokio-stream", "dep:tokio-util", "tokio/time"]
+sse = ["dep:tokio-stream", "tokio/time"]
 
 cookie = ["dep:cookie"]
 cookie-private = ["cookie", "cookie?/private"]
@@ -46,7 +46,7 @@ session = ["cookie", "json", "dep:sessions-core"]
 csrf = ["cookie", "dep:base64", "dep:getrandom"]
 cors = []
 
-compression = ["dep:tokio-util", "dep:async-compression"]
+compression = ["tokio-util/io", "dep:async-compression"]
 
 otel = ["dep:opentelemetry", "dep:opentelemetry-semantic-conventions"]
 otel-tracing = ["otel", "opentelemetry?/trace"]
