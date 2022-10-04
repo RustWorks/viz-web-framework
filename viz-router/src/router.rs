@@ -172,11 +172,15 @@ impl Router {
 
 #[cfg(test)]
 mod tests {
-    use crate::{any, get, Resources, Route, Router, Tree};
+    use std::sync::Arc;
     use viz_core::{
-        async_trait, types::Params, Body, Error, Handler, HandlerExt, IntoResponse, Method,
-        Request, RequestExt, Response, Result, StatusCode, Transform,
+        async_trait,
+        types::{Params, RouteInfo},
+        Body, Error, Handler, HandlerExt, IntoResponse, Method, Request, RequestExt, Response,
+        Result, StatusCode, Transform,
     };
+
+    use crate::{any, get, Resources, Route, Router, Tree};
 
     #[derive(Clone)]
     struct Logger;
@@ -319,9 +323,9 @@ mod tests {
         let (req, method, path) = client(Method::GET, "/posts");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
+        let (h, _) = node.unwrap();
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             ""
         );
 
@@ -329,9 +333,9 @@ mod tests {
         let (req, method, path) = client(Method::POST, "/posts");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
+        let (h, _) = node.unwrap();
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "posts: create"
         );
 
@@ -339,11 +343,14 @@ mod tests {
         let (mut req, method, path) = client(Method::GET, "/posts/foo");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
-        req.extensions_mut()
-            .insert(Into::<Params>::into(p.params()));
+        let (h, route) = node.unwrap();
+        req.extensions_mut().insert(Arc::from(RouteInfo {
+            id: *route.id,
+            pattern: route.pattern(),
+            params: Into::<Params>::into(route.params()),
+        }));
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "posts: show foo"
         );
 
@@ -351,11 +358,14 @@ mod tests {
         let (mut req, method, path) = client(Method::PUT, "/posts/foo");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
-        req.extensions_mut()
-            .insert(Into::<Params>::into(p.params()));
+        let (h, route) = node.unwrap();
+        req.extensions_mut().insert(Arc::from(RouteInfo {
+            id: *route.id,
+            pattern: route.pattern(),
+            params: Into::<Params>::into(route.params()),
+        }));
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "posts: update foo"
         );
 
@@ -363,11 +373,14 @@ mod tests {
         let (mut req, method, path) = client(Method::DELETE, "/posts/foo");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
-        req.extensions_mut()
-            .insert(Into::<Params>::into(p.params()));
+        let (h, route) = node.unwrap();
+        req.extensions_mut().insert(Arc::from(RouteInfo {
+            id: *route.id,
+            pattern: route.pattern(),
+            params: Into::<Params>::into(route.params()),
+        }));
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "posts: delete foo"
         );
 
@@ -375,9 +388,9 @@ mod tests {
         let (req, method, path) = client(Method::GET, "/posts/foo/users");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
+        let (h, _) = node.unwrap();
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "users: index"
         );
 
@@ -385,9 +398,9 @@ mod tests {
         let (req, method, path) = client(Method::POST, "/posts/foo/users");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
+        let (h, _) = node.unwrap();
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "users: create"
         );
 
@@ -395,11 +408,14 @@ mod tests {
         let (mut req, method, path) = client(Method::GET, "/posts/foo/users/bar");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
-        req.extensions_mut()
-            .insert(Into::<Params>::into(p.params()));
+        let (h, route) = node.unwrap();
+        req.extensions_mut().insert(Arc::from(RouteInfo {
+            id: *route.id,
+            pattern: route.pattern(),
+            params: Into::<Params>::into(route.params()),
+        }));
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "users: show foo bar"
         );
 
@@ -407,24 +423,32 @@ mod tests {
         let (mut req, method, path) = client(Method::PUT, "/posts/foo/users/bar");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
-        req.extensions_mut()
-            .insert(Into::<Params>::into(p.params()));
+        let (h, route) = node.unwrap();
+        let route_info = Arc::from(RouteInfo {
+            id: *route.id,
+            pattern: route.pattern(),
+            params: Into::<Params>::into(route.params()),
+        });
+        assert_eq!(route.pattern(), "/posts/:post_id/users/:user_id");
+        assert_eq!(route_info.pattern, "/posts/:post_id/users/:user_id");
+        req.extensions_mut().insert(route_info);
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "users: update foo bar"
         );
-        assert_eq!(p.pattern(), "/posts/:post_id/users/:user_id");
 
         // DELETE /posts/foo/users/bar
         let (mut req, method, path) = client(Method::DELETE, "/posts/foo/users/bar");
         let node = tree.find(&method, &path);
         assert!(node.is_some());
-        let p = node.unwrap();
-        req.extensions_mut()
-            .insert(Into::<Params>::into(p.params()));
+        let (h, route) = node.unwrap();
+        req.extensions_mut().insert(Arc::from(RouteInfo {
+            id: *route.id,
+            pattern: route.pattern(),
+            params: Into::<Params>::into(route.params()),
+        }));
         assert_eq!(
-            hyper::body::to_bytes(p.value.call(req).await?.into_body()).await?,
+            hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "users: delete foo bar"
         );
 

@@ -12,11 +12,11 @@ pub struct Tree(Vec<(Method, PathTree<BoxHandler>)>);
 
 impl Tree {
     /// Find a handler by the HTTP method and the URI's path.
-    pub fn find<'a>(
+    pub fn find<'a, 'b>(
         &'a self,
-        method: &'a Method,
-        path: &'a str,
-    ) -> Option<Path<'_, 'a, BoxHandler>> {
+        method: &'b Method,
+        path: &'b str,
+    ) -> Option<(&'a BoxHandler, Path<'a, 'b>)> {
         self.0
             .iter()
             .find_map(|(m, t)| if m == method { t.find(path) } else { None })

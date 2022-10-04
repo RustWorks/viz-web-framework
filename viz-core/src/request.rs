@@ -1,8 +1,8 @@
-use std::mem::replace;
+use std::{mem::replace, sync::Arc};
 
 use crate::{
     async_trait, header,
-    types::{PayloadError, Route},
+    types::{PayloadError, RouteInfo},
     Body, Bytes, FromRequest, Request, Result,
 };
 
@@ -30,7 +30,7 @@ use crate::types::{Cookie, Cookies, CookiesError};
 use crate::types::Session;
 
 #[cfg(feature = "params")]
-use crate::types::{Params, ParamsError, PathDeserializer};
+use crate::types::{ParamsError, PathDeserializer};
 
 /// The [Request] Extension.
 #[async_trait]
@@ -151,7 +151,7 @@ pub trait RequestExt: Sized {
         T::Err: std::fmt::Display;
 
     /// Get current route.
-    fn route(&self) -> &Route;
+    fn route_info(&self) -> &Arc<RouteInfo>;
 
     /// Get remote addr.
     fn remote_addr(&self) -> Option<&std::net::SocketAddr>;
@@ -341,12 +341,7 @@ impl RequestExt for Request<Body> {
     where
         T: serde::de::DeserializeOwned,
     {
-        match self.extensions().get::<Params>() {
-            None => Err(ParamsError::Empty),
-            Some(params) => {
-                T::deserialize(PathDeserializer::new(params)).map_err(ParamsError::Parse)
-            }
-        }
+        T::deserialize(PathDeserializer::new(&self.route_info().params)).map_err(ParamsError::Parse)
     }
 
     #[cfg(feature = "params")]
@@ -355,17 +350,14 @@ impl RequestExt for Request<Body> {
         T: std::str::FromStr,
         T::Err: std::fmt::Display,
     {
-        self.extensions()
-            .get::<Params>()
-            .ok_or(ParamsError::Empty)?
-            .find(name)
+        self.route_info().params.find(name)
     }
 
     fn remote_addr(&self) -> Option<&std::net::SocketAddr> {
         self.extensions().get()
     }
 
-    fn route(&self) -> &Route {
+    fn route_info(&self) -> &Arc<RouteInfo> {
         self.extensions().get().expect("should get current route")
     }
 }

@@ -91,7 +91,7 @@ where
     async fn call(&self, req: Request) -> Self::Output {
         let timer = SystemTime::now();
         let cx = Context::current();
-        let mut attributes = build_attributes(&req, &req.route().path);
+        let mut attributes = build_attributes(&req, &req.route_info().pattern);
 
         self.active_requests.add(&cx, 1, &attributes);
 

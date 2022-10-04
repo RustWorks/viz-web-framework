@@ -8,7 +8,7 @@ use std::{
 };
 
 use crate::{
-    types::{Params, Route},
+    types::{Params, RouteInfo},
     Handler, IntoResponse, Method, Request, RequestExt, Response, StatusCode, Tree,
 };
 
@@ -41,15 +41,15 @@ impl Responder {
                     None
                 }
             }) {
-                Some(route) => {
+                Some((handler, route)) => {
                     req.extensions_mut().insert(addr);
-                    req.extensions_mut()
-                        .insert(Into::<Params>::into(route.params()));
-                    req.extensions_mut()
-                        .insert(Route::new(*route.id, route.pattern()));
-                    req.set_state(tree.clone());
-                    route
-                        .value
+                    req.extensions_mut().insert(Arc::from(RouteInfo {
+                        id: *route.id,
+                        pattern: route.pattern(),
+                        params: Into::<Params>::into(route.params()),
+                    }));
+                    // req.set_state(tree.clone());
+                    handler
                         .call(req)
                         .await
                         .unwrap_or_else(IntoResponse::into_response)

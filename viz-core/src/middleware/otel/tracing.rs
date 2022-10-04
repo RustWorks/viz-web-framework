@@ -86,7 +86,7 @@ where
             propagator.extract(&RequestHeaderCarrier::new(req.headers()))
         });
 
-        let http_route = &req.route().path;
+        let http_route = &req.route_info().pattern;
         let attributes = build_attributes(&req, http_route);
 
         let mut span = self
