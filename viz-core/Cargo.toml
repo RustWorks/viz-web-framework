@@ -77,7 +77,7 @@ getrandom = { version = "0.2.7", optional = true }
 base64 = { version = "0.13.0", optional = true }
 
 # Compression
-async-compression = { version = "0.3.14", features = ["tokio", "gzip", "brotli", "deflate"], optional = true }
+async-compression = { version = "0.3.15", features = ["tokio", "gzip", "brotli", "deflate"], optional = true }
 
 # OpenTelemetry
 opentelemetry = { version = "0.18.0", default-features = false, optional = true }
