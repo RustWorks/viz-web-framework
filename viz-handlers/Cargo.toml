@@ -44,7 +44,7 @@ tokio-util = { version = "0.7.4", optional = true }
 
 # embed
 hex = { version = "0.4", optional = true }
-rust-embed = { version = "6.4.1", features = ["compression"], optional = true }
+rust-embed = { version = "6.4.2", features = ["compression"], optional = true }
 
 # OpenTelemetry
 opentelemetry = { version = "0.18.0", default-features = false, optional = true }
