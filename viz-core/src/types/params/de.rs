@@ -682,7 +682,7 @@ mod tests {
         let i: Result<Test3, de::value::Error> =
             de::Deserialize::deserialize(PathDeserializer::new(&params));
         assert!(i.is_err());
-        assert!(format!("{:?}", i).contains("unknown variant"));
+        assert!(format!("{i:?}").contains("unknown variant"));
     }
 
     #[test]
@@ -692,22 +692,22 @@ mod tests {
         let s: Result<Test1, de::value::Error> =
             de::Deserialize::deserialize(PathDeserializer::new(&params));
         assert!(s.is_err());
-        assert!(format!("{:?}", s).contains("wrong number of parameters"));
+        assert!(format!("{s:?}").contains("wrong number of parameters"));
 
         let s: Result<Test2, de::value::Error> =
             de::Deserialize::deserialize(PathDeserializer::new(&params));
         assert!(s.is_err());
-        assert!(format!("{:?}", s).contains("can not parse"));
+        assert!(format!("{s:?}").contains("can not parse"));
 
         let s: Result<(String, String), de::value::Error> =
             de::Deserialize::deserialize(PathDeserializer::new(&params));
         assert!(s.is_err());
-        assert!(format!("{:?}", s).contains("wrong number of parameters"));
+        assert!(format!("{s:?}").contains("wrong number of parameters"));
 
         let s: Result<u32, de::value::Error> =
             de::Deserialize::deserialize(PathDeserializer::new(&params));
         assert!(s.is_err());
-        assert!(format!("{:?}", s).contains("can not parse"));
+        assert!(format!("{s:?}").contains("can not parse"));
 
         #[derive(Debug, Deserialize)]
         struct S {
@@ -716,17 +716,17 @@ mod tests {
         let s: Result<S, de::value::Error> =
             de::Deserialize::deserialize(PathDeserializer::new(&params));
         assert!(s.is_err());
-        assert!(format!("{:?}", s).contains("missing field `_inner`"));
+        assert!(format!("{s:?}").contains("missing field `_inner`"));
 
         let params: Params = vec![].into();
         let s: Result<&str, de::value::Error> =
             de::Deserialize::deserialize(PathDeserializer::new(&params));
         assert!(s.is_err());
-        assert!(format!("{:?}", s).contains("wrong number of parameters: 0 expected 1"));
+        assert!(format!("{s:?}").contains("wrong number of parameters: 0 expected 1"));
 
         let s: Result<TestEnum, de::value::Error> =
             de::Deserialize::deserialize(PathDeserializer::new(&params));
         assert!(s.is_err());
-        assert!(format!("{:?}", s).contains("expeceted at least one parameters"));
+        assert!(format!("{s:?}").contains("expeceted at least one parameters"));
     }
 }
