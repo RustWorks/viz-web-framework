@@ -17,7 +17,7 @@ async fn main() -> viz::Result<()> {
     }
 
     let path = "/tmp/viz.sock";
-    println!("listening on {}", &path);
+    println!("listening on {path}");
 
     let listener = UnixListener::bind(path).unwrap();
     let incoming = UnixListenerStream::new(listener);
@@ -28,7 +28,7 @@ async fn main() -> viz::Result<()> {
         .serve(ServiceMaker::from(app))
         .await
     {
-        println!("{}", err);
+        println!("{err}");
     }
 
     Ok(())

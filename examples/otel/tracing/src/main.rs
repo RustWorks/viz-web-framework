@@ -23,7 +23,7 @@ async fn index(_: Request) -> Result<&'static str> {
 #[tokio::main]
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("listening on {}", addr);
+    println!("listening on {addr}");
 
     let tracer = init_tracer();
 
@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
         .with(otel::tracing::Config::new(tracer));
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {
-        println!("{}", err);
+        println!("{err}");
     }
 
     Ok(())

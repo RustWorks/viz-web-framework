@@ -22,13 +22,13 @@ async fn me(_: Request) -> Result<&'static str> {
 #[tokio::main]
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("listening on {}", addr);
+    println!("listening on {addr}");
 
     let make_svc =
         make_service_fn(|_conn| async { Ok::<_, Infallible>(service_fn(|req| serve(req, None))) });
 
     if let Err(err) = Server::bind(&addr).serve(make_svc).await {
-        println!("{}", err);
+        println!("{err}");
     }
 
     Ok(())

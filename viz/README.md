@@ -35,15 +35,15 @@
 
 ## Features
 
-* **Safety** `#![forbid(unsafe_code)]`
+- **Safety** `#![forbid(unsafe_code)]`
 
-* Lightweight
+- Lightweight
 
-* Robust `Routing`
+- Robust `Routing`
 
-* Handy `Extractors`
+- Handy `Extractors`
 
-* Simple + Flexible `Handler` & `Middleware`
+- Simple + Flexible `Handler` & `Middleware`
 
 ## Hello Viz
 
@@ -58,7 +58,7 @@ async fn index(_: Request) -> Result<&'static str> {
 #[tokio::main]
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("listening on {}", addr);
+    println!("listening on {addr}");
 
     let app = Router::new().get("/", index);
 
@@ -66,14 +66,15 @@ async fn main() -> Result<()> {
         .serve(ServiceMaker::from(app))
         .await
     {
-        println!("{}", err);
+        println!("{err}");
     }
 
     Ok(())
 }
 ```
 
-More examples can be found [here](https://github.com/viz-rs/viz/tree/main/examples).
+More examples can be found
+[here](https://github.com/viz-rs/viz/tree/main/examples).
 
 ## License
 
@@ -82,6 +83,6 @@ Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
 
 ### Contribution
 
-Unless you explicitly state otherwise, any contribution intentionally submitted 
-for inclusion in Viz by you, as defined in the Apache-2.0 license, shall
-be dual licensed as above, without any additional terms or conditions.
+Unless you explicitly state otherwise, any contribution intentionally submitted
+for inclusion in Viz by you, as defined in the Apache-2.0 license, shall be dual
+licensed as above, without any additional terms or conditions.

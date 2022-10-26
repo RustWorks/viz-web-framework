@@ -10,7 +10,7 @@ struct Asset;
 #[tokio::main]
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("listening on {}", addr);
+    println!("listening on {addr}");
 
     let app = Router::new()
         .get("/", embed::File::<Asset>::new("index.html"))
@@ -18,7 +18,7 @@ async fn main() -> Result<()> {
         .any("/*", |_| async { Ok(StatusCode::NOT_FOUND) });
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {
-        println!("{}", err);
+        println!("{err}");
     }
 
     Ok(())

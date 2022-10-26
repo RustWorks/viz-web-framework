@@ -41,7 +41,7 @@ async fn stats(req: Request) -> Result<impl IntoResponse> {
             {
                 Ok(loadavg) => Event::default().data(loadavg),
                 Err(err) => {
-                    println!("{}", err);
+                    println!("{err}");
                     Event::default().retry(30)
                 }
             }
@@ -53,7 +53,7 @@ async fn stats(req: Request) -> Result<impl IntoResponse> {
 #[tokio::main]
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("listening on {}", addr);
+    println!("listening on {addr}");
 
     let sys = Arc::new(System::new());
 
@@ -62,7 +62,7 @@ async fn main() -> Result<()> {
         .route("/stats", get(stats.with(State::new(sys))));
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {
-        println!("{}", err);
+        println!("{err}");
     }
 
     Ok(())

@@ -38,7 +38,7 @@ async fn ws(mut req: Request) -> Result<impl IntoResponse> {
         while let Some(Ok(msg)) = ws_rx.next().await {
             if let Message::Text(text) = msg {
                 // Maybe should check user name, dont send to current user.
-                if tx.send(format!("{}: {}", name, text)).is_err() {
+                if tx.send(format!("{name}: {text}")).is_err() {
                     break;
                 }
             }
@@ -51,7 +51,7 @@ async fn ws(mut req: Request) -> Result<impl IntoResponse> {
 #[tokio::main]
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("listening on {}", addr);
+    println!("listening on {addr}");
 
     let channel = channel::<String>(32);
 
@@ -60,7 +60,7 @@ async fn main() -> Result<()> {
         .route("/ws/:name", get(ws.with(State::new(channel.0))));
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {
-        println!("{}", err);
+        println!("{err}");
     }
 
     Ok(())

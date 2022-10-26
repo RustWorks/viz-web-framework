@@ -26,7 +26,7 @@ async fn create(Form(post): Form<Post>) -> Result<Response> {
 #[tokio::main]
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
-    println!("listening on {}", addr);
+    println!("listening on {addr}");
 
     let app = Router::new()
         .route("/", get(new).post(create.into_handler()))
@@ -34,7 +34,7 @@ async fn main() -> Result<()> {
         .with(limits::Config::default());
 
     if let Err(err) = Server::bind(&addr).serve(ServiceMaker::from(app)).await {
-        println!("{}", err);
+        println!("{err}");
     }
 
     Ok(())
