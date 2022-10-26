@@ -77,7 +77,6 @@ pub trait HandlerExt<I>: Handler<I> {
     where
         Self: Sized,
     {
-        // box_into_inner
         Box::new(self)
     }
 
