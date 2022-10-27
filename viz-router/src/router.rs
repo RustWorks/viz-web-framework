@@ -177,7 +177,7 @@ mod tests {
         async_trait,
         types::{Params, RouteInfo},
         Body, Error, Handler, HandlerExt, IntoResponse, Method, Request, RequestExt, Response,
-        Result, StatusCode, Transform,
+        ResponseExt, Result, StatusCode, Transform,
     };
 
     use crate::{any, get, Resources, Route, Router, Tree};
@@ -451,6 +451,56 @@ mod tests {
             hyper::body::to_bytes(h.call(req).await?.into_body()).await?,
             "users: delete foo bar"
         );
+
+        Ok(())
+    }
+
+    #[test]
+    fn debug() -> Result<()> {
+        let search = Route::new().get(|_: Request| async { Ok(Response::text("search")) });
+
+        let orgs = Resources::default()
+            .index(|_: Request| async { Ok(Response::text("list posts")) })
+            .create(|_: Request| async { Ok(Response::text("create post")) })
+            .show(|_: Request| async { Ok(Response::text("show post")) });
+
+        let settings = Router::new()
+            .get("/", |_: Request| async { Ok(Response::text("settings")) })
+            .get("/:page", |_: Request| async {
+                Ok(Response::text("setting page"))
+            });
+
+        let api = Router::new().route("/search", search.clone());
+
+        let app = Router::new()
+            .get("/", |_: Request| async { Ok(Response::text("index")) })
+            .route("search", search)
+            .resources(":org", orgs)
+            .nest("settings", settings)
+            .nest("api", api);
+
+        let tree: Tree = app.into();
+
+        assert_eq!(format!("{:#?}", tree), "Tree {
+    method: GET,
+    paths: 
+    / •0
+    ├── api/search •6
+    ├── se
+    │   ├── arch •1
+    │   └── ttings •4
+    │       └── /
+    │           └── : •5
+    └── : •2
+        └── /
+            └── : •3
+    ,
+    method: POST,
+    paths: 
+    /
+    └── : •0
+    ,
+}");
 
         Ok(())
     }

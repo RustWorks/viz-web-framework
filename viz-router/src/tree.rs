@@ -74,6 +74,12 @@ impl From<Router> for Tree {
 
 impl Debug for Tree {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result {
-        f.debug_struct("Tree").finish()
+        self.as_ref()
+            .iter()
+            .fold(f.debug_struct("Tree"), |mut d, (m, t)| {
+                d.field("method", m).field("paths", &t.node);
+                d
+            })
+            .finish()
     }
 }
