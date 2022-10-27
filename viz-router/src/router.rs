@@ -481,7 +481,9 @@ mod tests {
 
         let tree: Tree = app.into();
 
-        assert_eq!(format!("{:#?}", tree), "Tree {
+        assert_eq!(
+            format!("{tree:#?}"),
+            "Tree {
     method: GET,
     paths: 
     / •0
@@ -500,7 +502,8 @@ mod tests {
     /
     └── : •0
     ,
-}");
+}"
+        );
 
         Ok(())
     }
