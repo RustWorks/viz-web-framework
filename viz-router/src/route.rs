@@ -204,12 +204,14 @@ impl fmt::Debug for Route {
 #[allow(dead_code)]
 mod tests {
     use super::Route;
+    use serde::Deserialize;
     use std::sync::Arc;
     use viz_core::{
         async_trait,
         handler::Transform,
         types::{Query, State},
-        Handler, HandlerExt, IntoHandler, IntoResponse, Method, Next, Request, Response, Result,
+        Handler, HandlerExt, IntoHandler, IntoResponse, Method, Next, Request, RequestExt,
+        Response, Result,
     };
 
     #[tokio::test]
@@ -333,8 +335,15 @@ mod tests {
             }
         }
 
-        async fn ext(_: Query<usize>, _: State<Arc<String>>) -> Result<impl IntoResponse> {
-            Ok(vec![233])
+        #[derive(Deserialize)]
+        struct Counter {
+            c: u8,
+        }
+
+        async fn ext(q: Query<Counter>, s: State<Arc<String>>) -> Result<impl IntoResponse> {
+            let mut a = s.to_string().as_bytes().to_vec();
+            a.push(q.c);
+            Ok(a)
         }
 
         let route = Route::new()
@@ -347,6 +356,10 @@ mod tests {
             .with(Logger::new())
             .map_handler(|handler| {
                 handler
+                    .before(|mut req: Request| async {
+                        req.set_state(Arc::new("before".to_string()));
+                        Ok(req)
+                    })
                     .before(before)
                     .around(around_2)
                     .after(after)
@@ -395,6 +408,24 @@ mod tests {
             Err(e) => e.into_response(),
         };
         assert_eq!(hyper::body::to_bytes(res.into_body()).await?, "");
+
+        let (_, h) = route
+            .methods
+            .iter()
+            .find(|(m, _)| m == Method::DELETE)
+            .unwrap();
+
+        let mut req = Request::default();
+        *req.uri_mut() = "/?c=1".parse().unwrap();
+
+        let res = match h.call(req).await {
+            Ok(r) => r,
+            Err(e) => e.into_response(),
+        };
+        assert_eq!(
+            hyper::body::to_bytes(res.into_body()).await?.to_vec(),
+            vec![98, 101, 102, 111, 114, 101, 1]
+        );
 
         Ok(())
     }
