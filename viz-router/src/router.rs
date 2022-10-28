@@ -176,8 +176,8 @@ mod tests {
     use viz_core::{
         async_trait,
         types::{Params, RouteInfo},
-        Body, Error, Handler, HandlerExt, IntoResponse, Method, Request, RequestExt, Response,
-        ResponseExt, Result, StatusCode, Transform,
+        Body, Error, Handler, HandlerExt, IntoResponse, Method, Next, Request, RequestExt,
+        Response, ResponseExt, Result, StatusCode, Transform,
     };
 
     use crate::{any, get, Resources, Route, Router, Tree};
@@ -266,10 +266,17 @@ mod tests {
             Ok(Response::new(("delete".to_string() + &items).into()))
         }
 
+        async fn middle<H>((req, h): Next<Request, H>) -> Result<Response>
+        where
+            H: Handler<Request, Output = Result<Response>> + Clone,
+        {
+            h.call(req).await
+        }
+
         let users = Resources::default()
             .named("user")
             .index(index)
-            .create(create.before(|r: Request| async { Ok(r) }))
+            .create(create.before(|r: Request| async { Ok(r) }).around(middle))
             .show(show)
             .update(update)
             .destroy(delete)

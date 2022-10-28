@@ -1,7 +1,8 @@
 //! Resource
 
 use viz_core::{
-    BoxHandler, Handler, HandlerExt, IntoResponse, Method, Request, Response, Result, Transform,
+    BoxHandler, Handler, HandlerExt, IntoResponse, Method, Next, Request, Response, Result,
+    Transform,
 };
 
 use crate::Route;
@@ -189,6 +190,14 @@ impl Resources {
         T::Output: Handler<Request, Output = Result<Response>>,
     {
         self.map_handler(|handler| t.transform(handler).boxed())
+    }
+
+    /// Adds a middleware for the resources.
+    pub fn with_handler<F>(self, f: F) -> Self
+    where
+        F: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
+    {
+        self.map_handler(|handler| handler.around(f.clone()).boxed())
     }
 }
 
