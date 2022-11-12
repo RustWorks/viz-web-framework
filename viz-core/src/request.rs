@@ -69,6 +69,9 @@ pub trait RequestExt: Sized {
         T: FromRequest;
 
     /// Get Incoming body.
+    fn incoming_body(&mut self) -> IncomingBody;
+
+    /// Get Incoming.
     fn incoming(&mut self) -> Option<Incoming>;
 
     /// Return with a [Bytes][mdn] representation of the request body.
@@ -210,8 +213,12 @@ impl RequestExt for Request {
         T::extract(self).await
     }
 
+    fn incoming_body(&mut self) -> IncomingBody {
+        replace(self.body_mut(), IncomingBody::used())
+    }
+
     fn incoming(&mut self) -> Option<Incoming> {
-        replace(self.body_mut(), IncomingBody::used()).into_incoming()
+        self.incoming_body().into_incoming()
     }
 
     async fn bytes(&mut self) -> Result<Bytes, PayloadError> {
@@ -298,7 +305,7 @@ impl RequestExt for Request {
             .as_str();
 
         Ok(Multipart::with_limits(
-            self.incoming().ok_or(PayloadError::Used)?,
+            self.incoming_body(),
             boundary,
             self.extensions()
                 .get::<std::sync::Arc<MultipartLimits>>()

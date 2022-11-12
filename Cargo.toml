@@ -11,7 +11,7 @@ members = [
   "examples/static-files/embed",
   "examples/static-files/serve",
   "examples/forms/form",
-  # "examples/forms/multipart",
+  "examples/forms/multipart",
   "examples/websocket-chat",
   "examples/sse",
   "examples/session",
@@ -21,7 +21,7 @@ members = [
   "examples/static-routes",
   "examples/routing/todos",
   "examples/otel/*",
-  "examples/compression"
+  "examples/compression",
 ]
 
 [workspace.package]
@@ -47,7 +47,7 @@ pin-project-lite = "0.2"
 path-tree = "0.7"
 
 futures-util = "0.3.25"
-hyper = { version = "1.0.0-rc.1", features = ["server"]}
+hyper = { version = "1.0.0-rc.1", features = ["server"] }
 headers = "0.3.8"
 http = "0.2.8"
 http-body = "1.0.0-rc.1"
@@ -71,7 +71,9 @@ rust-embed = { version = "6.4.2", features = ["compression"] }
 
 # OpenTelemetry
 opentelemetry = { version = "0.18.0", default-features = false }
-opentelemetry-prometheus = { version = "0.11.0",  features = ["prometheus-encoding"] }
+opentelemetry-prometheus = { version = "0.11.0", features = [
+  "prometheus-encoding",
+] }
 opentelemetry-semantic-conventions = { version = "0.10.0" }
 
 [profile.release]

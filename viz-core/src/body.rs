@@ -11,7 +11,6 @@ use hyper::body::{Body, Frame, Incoming, SizeHint};
 use crate::{Bytes, Error};
 
 /// Incoming Body from request.
-#[allow(missing_docs)]
 pub enum IncomingBody {
     /// A empty body.
     Empty,
@@ -92,11 +91,21 @@ impl Body for IncomingBody {
 }
 
 impl Stream for IncomingBody {
-    type Item = Result<Frame<Bytes>, Error>;
+    type Item = Result<Bytes, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match self.get_mut() {
-            Self::Incoming(Some(inner)) => Pin::new(inner).poll_frame(cx).map_err(Into::into),
+            Self::Incoming(Some(inner)) => {
+                match Pin::new(inner).poll_frame(cx).map_err(Into::into) {
+                    Poll::Ready(Some(Ok(f))) => match f.into_data() {
+                        Some(d) => Poll::Ready(Some(Ok(d))),
+                        None => Poll::Ready(None),
+                    },
+                    Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(e))),
+                    Poll::Ready(None) => Poll::Ready(None),
+                    Poll::Pending => Poll::Pending,
+                }
+            }
             _ => Poll::Ready(None),
         }
     }
