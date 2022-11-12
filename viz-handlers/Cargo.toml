@@ -1,6 +1,6 @@
 [package]
 name = "viz-handlers"
-version = "0.3.3"
+version = "0.5.0-rc.1"
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
@@ -16,14 +16,26 @@ publish = true
 [features]
 default = ["serve"]
 
-serve = ["dep:mime_guess", "dep:http-body", "dep:percent-encoding", "dep:tokio-stream", "tokio-util/io", "tokio/fs", "tokio/io-util"]
+serve = [
+  "dep:mime_guess",
+  "dep:http-body",
+  "dep:percent-encoding",
+  "dep:tokio-stream",
+  "tokio-util/io",
+  "tokio/fs",
+  "tokio/io-util",
+]
 
 embed = ["dep:hex", "dep:mime_guess", "dep:http-body-util", "dep:rust-embed"]
 
-prometheus = ["dep:http-body-util", "opentelemetry/metrics", "dep:opentelemetry-prometheus"]
+prometheus = [
+  "dep:http-body-util",
+  "opentelemetry/metrics",
+  "dep:opentelemetry-prometheus",
+]
 
 [dependencies]
-viz-core = { path = "../viz-core", version = '0.4.3' }
+viz-core = { path = "../viz-core", version = '0.5.0-rc.1' }
 
 # required!
 thiserror.workspace = true
