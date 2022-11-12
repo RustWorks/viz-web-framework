@@ -41,7 +41,6 @@ serde_derive = "1.0"
 serde_json = "1.0"
 serde_urlencoded = "0.7"
 thiserror = "1.0"
-pin-project-lite = "0.2"
 
 # router
 path-tree = "0.7"
