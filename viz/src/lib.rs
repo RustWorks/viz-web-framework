@@ -540,6 +540,8 @@
 
 mod responder;
 
+/// TLS
+pub mod tls;
 pub use responder::Responder;
 pub use viz_core::*;
 pub use viz_router::*;

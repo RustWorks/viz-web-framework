@@ -1,7 +1,8 @@
 #![deny(warnings)]
 
 use std::{net::SocketAddr, sync::Arc};
-use viz::{get, Error, Request, Result, Router, Server, ServiceMaker};
+use tokio::net::TcpListener;
+use viz::{get, server::conn::http1, tls, Error, Request, Responder, Result, Router, Tree};
 
 async fn index(_: Request) -> Result<&'static str> {
     Ok("Hello, World!")
@@ -10,16 +11,15 @@ async fn index(_: Request) -> Result<&'static str> {
 #[tokio::main]
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
+    let listener = TcpListener::bind(addr).await?;
     println!("listening on {addr}");
 
     let app = Router::new().route("/", get(index));
+    let tree = Arc::new(Tree::from(app));
 
-    let mut incoming = viz::tls::AddrIncoming::bind(&addr).map_err(Error::normal)?;
-    incoming.set_nodelay(true);
-
-    let listener = viz::tls::Listener::new(
-        incoming,
-        viz::tls::rustls::Config::new()
+    let listener = tls::Listener::new(
+        listener,
+        tls::rustls::Config::new()
             .cert(include_bytes!("../../tls/cert.pem").to_vec())
             .key(include_bytes!("../../tls/key.pem").to_vec())
             .build()
@@ -28,12 +28,16 @@ async fn main() -> Result<()> {
             .into(),
     );
 
-    if let Err(err) = Server::builder(listener)
-        .serve(ServiceMaker::from(app))
-        .await
-    {
-        println!("{err}");
+    loop {
+        let (stream, addr) = listener.accept().await?;
+        let tree = tree.clone();
+        tokio::task::spawn(async move {
+            if let Err(err) = http1::Builder::new()
+                .serve_connection(stream, Responder::new(tree, Some(addr)))
+                .await
+            {
+                eprintln!("Error while serving HTTP connection: {}", err);
+            }
+        });
     }
-
-    Ok(())
 }

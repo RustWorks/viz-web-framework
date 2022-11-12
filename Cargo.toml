@@ -17,7 +17,7 @@ members = [
   "examples/session",
   "examples/csrf",
   "examples/cors",
-  # "examples/rustls",
+  "examples/rustls",
   "examples/static-routes",
   "examples/routing/todos",
   "examples/otel/*",

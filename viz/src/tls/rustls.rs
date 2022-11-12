@@ -1,35 +1,18 @@
 use std::{
-    convert::Infallible,
-    future::{self, Ready},
     io::{Error as IoError, ErrorKind},
-    pin::Pin,
-    task::{Context, Poll},
+    net::SocketAddr,
 };
 
-use futures_util::ready;
-use hyper::{
-    server::{
-        accept::Accept,
-        conn::{AddrIncoming, AddrStream},
-    },
-    service::Service,
-};
-use tokio_rustls::{
-    rustls::{
-        server::{
-            AllowAnyAnonymousOrAuthenticatedClient, AllowAnyAuthenticatedClient, NoClientAuth,
-        },
-        Certificate, PrivateKey, RootCertStore, ServerConfig,
-    },
-    server::TlsStream,
-    Accept as TlsAccept,
+use tokio::net::{TcpListener, TcpStream};
+use tokio_rustls::rustls::{
+    server::{AllowAnyAnonymousOrAuthenticatedClient, AllowAnyAuthenticatedClient, NoClientAuth},
+    Certificate, PrivateKey, RootCertStore, ServerConfig,
 };
 
-use crate::{Error, Responder, Result, ServiceMaker};
+use super::Listener;
+use crate::{Error, Result};
 
-use super::{Listener, Stream};
-
-pub use tokio_rustls::TlsAcceptor;
+pub use tokio_rustls::{server::TlsStream, TlsAcceptor};
 
 /// Tls client authentication configuration.
 #[derive(Debug)]
@@ -152,35 +135,11 @@ impl Config {
     }
 }
 
-impl Accept for Listener<AddrIncoming, TlsAcceptor, AddrStream> {
-    type Conn = Stream<TlsAccept<AddrStream>, TlsStream<AddrStream>>;
-    type Error = IoError;
-
-    fn poll_accept(
-        mut self: Pin<&mut Self>,
-        cx: &mut Context<'_>,
-    ) -> Poll<Option<Result<Self::Conn, Self::Error>>> {
-        match ready!(Pin::new(&mut self.inner).poll_accept(cx)) {
-            Some(Ok(sock)) => Poll::Ready(Some(Ok({
-                let remote_addr = sock.remote_addr();
-                Stream::new(self.acceptor.accept(sock), Some(remote_addr))
-            }))),
-            Some(Err(e)) => Poll::Ready(Some(Err(e))),
-            None => Poll::Ready(None),
-        }
-    }
-}
-
-impl Service<&Stream<TlsAccept<AddrStream>, TlsStream<AddrStream>>> for ServiceMaker {
-    type Response = Responder;
-    type Error = Infallible;
-    type Future = Ready<Result<Self::Response, Self::Error>>;
-
-    fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        Poll::Ready(Ok(()))
-    }
-
-    fn call(&mut self, t: &Stream<TlsAccept<AddrStream>, TlsStream<AddrStream>>) -> Self::Future {
-        future::ready(Ok(Responder::new(self.tree.clone(), t.remote_addr)))
+impl Listener<TcpListener, TlsAcceptor> {
+    /// A [`TlsStream`] and [`SocketAddr] part for accepting TLS.
+    pub async fn accept(&self) -> Result<(TlsStream<TcpStream>, SocketAddr)> {
+        let (stream, addr) = self.inner.accept().await?;
+        let tls_stream = self.acceptor.accept(stream).await?;
+        Ok((tls_stream, addr))
     }
 }
