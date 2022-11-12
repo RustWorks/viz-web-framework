@@ -4,15 +4,18 @@ use std::{
 };
 
 use tokio::net::{TcpListener, TcpStream};
-use tokio_rustls::rustls::{
-    server::{AllowAnyAnonymousOrAuthenticatedClient, AllowAnyAuthenticatedClient, NoClientAuth},
-    Certificate, PrivateKey, RootCertStore, ServerConfig,
+use tokio_rustls::{
+    rustls::{
+        server::{
+            AllowAnyAnonymousOrAuthenticatedClient, AllowAnyAuthenticatedClient, NoClientAuth,
+        },
+        Certificate, PrivateKey, RootCertStore, ServerConfig,
+    },
+    {server::TlsStream, TlsAcceptor},
 };
 
 use super::Listener;
 use crate::{Error, Result};
-
-pub use tokio_rustls::{server::TlsStream, TlsAcceptor};
 
 /// Tls client authentication configuration.
 #[derive(Debug)]
