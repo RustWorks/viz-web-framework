@@ -58,8 +58,6 @@ pub use bytes::{Bytes, BytesMut};
 pub use headers;
 pub use http::{header, Method, StatusCode};
 pub use hyper::body::{Body, Incoming};
-/// Response Outcoming Body
-pub type OutcomingBody<T = Bytes> = http_body_util::combinators::BoxBody<T, Error>;
 pub use std::future::Future;
 pub use thiserror::Error as ThisError;
 

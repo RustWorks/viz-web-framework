@@ -8,9 +8,10 @@
 #[cfg(unix)]
 #[tokio::main]
 async fn main() -> viz::Result<()> {
+    use std::sync::Arc;
+
     use tokio::net::UnixListener;
-    use tokio_stream::wrappers::UnixListenerStream;
-    use viz::{get, IntoHandler, Result, Router, Server, ServiceMaker};
+    use viz::{get, server::conn::http1, IntoHandler, Responder, Result, Router, Tree};
 
     async fn index() -> Result<&'static str> {
         Ok("Hello world!")
@@ -19,19 +20,23 @@ async fn main() -> viz::Result<()> {
     let path = "/tmp/viz.sock";
     println!("listening on {path}");
 
-    let listener = UnixListener::bind(path).unwrap();
-    let incoming = UnixListenerStream::new(listener);
+    let listener = UnixListener::bind(path)?;
 
     let app = Router::new().route("/", get(index.into_handler()));
+    let tree = Arc::new(Tree::from(app));
 
-    if let Err(err) = Server::builder(viz::accept_from_stream(incoming))
-        .serve(ServiceMaker::from(app))
-        .await
-    {
-        println!("{err}");
+    loop {
+        let (stream, _) = listener.accept().await?;
+        let tree = tree.clone();
+        tokio::task::spawn(async move {
+            if let Err(err) = http1::Builder::new()
+                .serve_connection(stream, Responder::new(tree, None))
+                .await
+            {
+                eprintln!("Error while serving HTTP connection: {}", err);
+            }
+        });
     }
-
-    Ok(())
 }
 
 #[cfg(not(unix))]

@@ -7,7 +7,7 @@ members = [
   "viz-router",
 
   "examples/hello-world",
-  # "examples/unix-socket",
+  "examples/unix-socket",
   "examples/static-files/embed",
   "examples/static-files/serve",
   "examples/forms/form",
