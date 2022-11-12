@@ -4,9 +4,8 @@ use tokio::net::{TcpListener, TcpStream};
 pub use tokio_native_tls::native_tls::Identity;
 use tokio_native_tls::{native_tls::TlsAcceptor as TlsAcceptorWrapper, TlsAcceptor, TlsStream};
 
-use crate::{Error, Result};
-
 use super::Listener;
+use crate::{Error, Result};
 
 /// `native-tls`'s config.
 pub struct Config {
