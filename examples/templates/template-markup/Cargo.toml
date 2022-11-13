@@ -1,0 +1,12 @@
+[package]
+name = "template-markup"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+viz = { path = "../../../viz" }
+
+tokio = { workspace = true, features = [ "rt-multi-thread", "macros" ] }
+
+markup = "0.13"
+v_htmlescape = "0.15"
