@@ -64,7 +64,7 @@ markup::define! {
                     @for item in items {
                         tr {
                             td { {item.id} }
-                            td { {markup::raw(v_htmlescape::escape(&item.content).to_string())} }
+                            td { {markup::raw(v_htmlescape::escape(item.content).to_string())} }
                         }
                     }
                 }
