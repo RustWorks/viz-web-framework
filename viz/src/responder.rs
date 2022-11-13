@@ -43,7 +43,7 @@ impl Responder {
                     }));
                     // req.set_state(tree.clone());
                     handler
-                        .call(req.map(|body| IncomingBody::new(Some(body))))
+                        .call(req.map(Some).map(IncomingBody::new))
                         .await
                         .unwrap_or_else(IntoResponse::into_response)
                 }
