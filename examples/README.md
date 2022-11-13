@@ -22,7 +22,7 @@ Here you can find a lot of small crabs 🦀.
 * [Integration Opentelemetry(OTEL)](https://github.com/open-telemetry/opentelemetry-rust)
   * [Tracing](otel/tracing)
   * [Metrics & Prometheus](otel/metrics)
-* [Template]
+* [Template](templates)
   * [markup](templates/markup)
 
 ### Usage
