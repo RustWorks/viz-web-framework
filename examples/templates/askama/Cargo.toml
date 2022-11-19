@@ -1,0 +1,10 @@
+[package]
+name = "template-askama"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+viz = { path = "../../../viz" }
+
+tokio = { workspace = true, features = [ "rt-multi-thread", "macros" ] }
+askama = "0.11.1"
