@@ -1,6 +1,8 @@
 # Templates
 
-[Here] is the Template engine benchmarks.
+[Here] is the template engine benchmarks.
+
+## Examples
 
 * [askama](askama)
 * [markup](markup)
