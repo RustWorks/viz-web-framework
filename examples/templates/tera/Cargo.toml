@@ -1,10 +1,12 @@
 [package]
-name = "template-askama"
+name = "template-tera"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
 viz = { path = "../../../viz" }
 
+serde.workspace = true
 tokio = { workspace = true, features = [ "rt-multi-thread", "macros" ] }
-askama = "0.11"
+tera = "1.17"
+once_cell = "1.16"
