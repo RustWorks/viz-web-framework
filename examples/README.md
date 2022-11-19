@@ -1,8 +1,8 @@
-## Examples for Viz
+# Examples for Viz
 
 Here you can find a lot of small crabs 🦀.
 
-### Table of contents
+## Table of contents
 
 * [Hello world](hello-world)
 * [Unix socket domain](unix-socket)
@@ -27,15 +27,15 @@ Here you can find a lot of small crabs 🦀.
   * [markup](templates/markup)
   * [tera](templates/tera)
 
-### Usage
+## Usage
 
-#### Run it
+### Run it
 
 ```console
 $ cargo run --bin hello-world -- --nocapture
 ```
 
-#### Fetch data
+### Fetch data
 
 ```console
 $ curl http://127.0.0.1:3000
