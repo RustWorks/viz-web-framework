@@ -23,7 +23,9 @@ Here you can find a lot of small crabs 🦀.
   * [Tracing](otel/tracing)
   * [Metrics & Prometheus](otel/metrics)
 * [Template](templates)
+  * [askama](templates/askama)
   * [markup](templates/markup)
+  * [tera](templates/tera)
 
 ### Usage
 
