@@ -15,7 +15,7 @@ Here you can find a lot of small crabs 🦀.
 * [Session](session)
 * [CSRF](csrf)
 * [CORS](cors)
-* [Compression response body](compresssion)
+* [Compression response body](compression)
 * [HTTPS/TLS - rustls](rustls)
 * [Defined a static router](static-routes)
 * [Todos](routing/todos)
