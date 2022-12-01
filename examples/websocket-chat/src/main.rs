@@ -69,6 +69,7 @@ async fn main() -> Result<()> {
         tokio::task::spawn(async move {
             if let Err(err) = http1::Builder::new()
                 .serve_connection(stream, Responder::new(tree, Some(addr)))
+                .with_upgrades()
                 .await
             {
                 eprintln!("Error while serving HTTP connection: {}", err);

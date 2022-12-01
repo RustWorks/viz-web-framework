@@ -54,7 +54,7 @@ http-body = "1.0.0-rc.1"
 http-body-util = "0.1.0-rc.1"
 
 tokio = { version = "1.22", features = ["net"] }
-tokio-tungstenite = "0.17.2"
+tokio-tungstenite = "0.18"
 tokio-stream = "0.1.11"
 tokio-util = "0.7.4"
 rustls-pemfile = "1.0.0"
