@@ -85,11 +85,8 @@ More examples can be found
 
 ## License
 
-Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
-[MIT license](LICENSE-MIT) at your option.
+This project is licensed under the [MIT license](LICENSE).
 
-### Contribution
+## Author
 
-Unless you explicitly state otherwise, any contribution intentionally submitted
-for inclusion in Viz by you, as defined in the Apache-2.0 license, shall be dual
-licensed as above, without any additional terms or conditions.
+- [@\_fundon](https://twitter.com/_fundon)

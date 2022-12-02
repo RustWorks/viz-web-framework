@@ -29,47 +29,46 @@
       alt="Download" /></a>
 </div>
 
-
 ## Built-in Extractors
 
-Extractor   | Description
------------ | ------------
-[Cookies]   | Extracts the `cookies` from the request.
-[Form]      | Extracts `from-data` from the body of a request.
-[Header]    | Extracts a `header` from the headers of a request.
-[Json]      | Extracts `JSON` data from the body of a request, or responds a JSON data to response.
-[Limits]    | Extracts the `limits` settings.
-[Multipart] | Extracts the data from the `multipart` body of a request.
-[Params]    | Extracts `params` from the path of a URL.
-[Query]     | Extracts the data from the `query string` of a URL.
-[Session]   | A `session` for the current request.
-[State]     | Extracts `state` from the extensions of a request.
-[Websocket] | A `WebSocket` connection.
+| Extractor   | Description                                                                           |
+| ----------- | ------------------------------------------------------------------------------------- |
+| [Cookies]   | Extracts the `cookies` from the request.                                              |
+| [Form]      | Extracts `from-data` from the body of a request.                                      |
+| [Header]    | Extracts a `header` from the headers of a request.                                    |
+| [Json]      | Extracts `JSON` data from the body of a request, or responds a JSON data to response. |
+| [Limits]    | Extracts the `limits` settings.                                                       |
+| [Multipart] | Extracts the data from the `multipart` body of a request.                             |
+| [Params]    | Extracts `params` from the path of a URL.                                             |
+| [Query]     | Extracts the data from the `query string` of a URL.                                   |
+| [Session]   | A `session` for the current request.                                                  |
+| [State]     | Extracts `state` from the extensions of a request.                                    |
+| [Websocket] | A `WebSocket` connection.                                                             |
 
-[Query]: https://docs.rs/viz-core/latest/viz_core/types/struct.Query.html
-[Params]: https://docs.rs/viz-core/latest/viz_core/types/struct.Params.html
-[Header]: https://docs.rs/viz-core/latest/viz_core/types/struct.Header.html
-[Cookies]: https://docs.rs/viz-core/latest/viz_core/types/struct.Cookies.html
-[Form]: https://docs.rs/viz-core/latest/viz_core/types/struct.Form.html
-[Json]: https://docs.rs/viz-core/latest/viz_core/types/struct.Json.html
-[Multipart]: https://docs.rs/viz-core/latest/viz_core/types/type.Multipart.html
-[Session]: https://docs.rs/viz-core/latest/viz_core/types/struct.Session.html
-[State]: https://docs.rs/viz-core/latest/viz_core/types/struct.State.html
-[Websocket]: https://docs.rs/viz-core/latest/viz_core/types/struct.WebSocket.html
-[Limits]: https://docs.rs/viz-core/latest/viz_core/types/struct.Limits.html
+[query]: https://docs.rs/viz-core/latest/viz_core/types/struct.Query.html
+[params]: https://docs.rs/viz-core/latest/viz_core/types/struct.Params.html
+[header]: https://docs.rs/viz-core/latest/viz_core/types/struct.Header.html
+[cookies]: https://docs.rs/viz-core/latest/viz_core/types/struct.Cookies.html
+[form]: https://docs.rs/viz-core/latest/viz_core/types/struct.Form.html
+[json]: https://docs.rs/viz-core/latest/viz_core/types/struct.Json.html
+[multipart]: https://docs.rs/viz-core/latest/viz_core/types/type.Multipart.html
+[session]: https://docs.rs/viz-core/latest/viz_core/types/struct.Session.html
+[state]: https://docs.rs/viz-core/latest/viz_core/types/struct.State.html
+[websocket]: https://docs.rs/viz-core/latest/viz_core/types/struct.WebSocket.html
+[limits]: https://docs.rs/viz-core/latest/viz_core/types/struct.Limits.html
 
 ## Built-in Middleware
 
-Middleware                       | Description
--------------------------------- | ------------
-[cookie][m:cookie]               | Cookie
-[cors][m:cors]                   | CORS
-[csrf][m:csrf]                   | CSRF
-[limits][m:limits]               | Limits
-[session][m:session]             | Session
-[compression][m:compression]     | Compression
-[otel::tracing][m:otel::tracing] | OpenTelemetry Tracing
-[otel::metrics][m:otel::metrics] | OpenTelemetry Metrics
+| Middleware                       | Description           |
+| -------------------------------- | --------------------- |
+| [cookie][m:cookie]               | Cookie                |
+| [cors][m:cors]                   | CORS                  |
+| [csrf][m:csrf]                   | CSRF                  |
+| [limits][m:limits]               | Limits                |
+| [session][m:session]             | Session               |
+| [compression][m:compression]     | Compression           |
+| [otel::tracing][m:otel::tracing] | OpenTelemetry Tracing |
+| [otel::metrics][m:otel::metrics] | OpenTelemetry Metrics |
 
 [m:cookie]: https://docs.rs/viz-core/latest/viz_core/middleware/cookie
 [m:cors]: https://docs.rs/viz-core/latest/viz_core/middleware/cors
@@ -80,14 +79,10 @@ Middleware                       | Description
 [m:otel::tracing]: https://docs.rs/viz-core/latest/viz_core/middleware/otel/tracing
 [m:otel::metrics]: https://docs.rs/viz-core/latest/viz_core/middleware/otel/metrics
 
-
 ## License
 
-Licensed under either of [Apache License, Version 2.0](LICENSE-APACHE) or
-[MIT license](LICENSE-MIT) at your option.
+This project is licensed under the [MIT license](LICENSE).
 
-### Contribution
+## Author
 
-Unless you explicitly state otherwise, any contribution intentionally submitted 
-for inclusion in Viz by you, as defined in the Apache-2.0 license, shall
-be dual licensed as above, without any additional terms or conditions.
+- [@\_fundon](https://twitter.com/_fundon)
