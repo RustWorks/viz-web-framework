@@ -26,6 +26,7 @@ members = [
 ]
 
 [workspace.package]
+version = "0.5.0-rc.1"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 edition = "2021"
 homepage = "https://viz.rs"
@@ -34,6 +35,12 @@ repository = "https://github.com/viz-rs/viz"
 license = "MIT"
 
 [workspace.dependencies]
+viz = { path = "./viz" }
+viz-core = { path = "./viz-core" }
+viz-router = { path = "./viz-router" }
+viz-handlers = { path = "./viz-handlers" }
+viz-macros = { path = "./viz-macros" }
+
 async-trait = "0.1.58"
 dyn-clone = "1.0.8"
 bytes = "1.0"
