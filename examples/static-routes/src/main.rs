@@ -40,7 +40,7 @@ async fn main() -> Result<()> {
                 )
                 .await
             {
-                eprintln!("Error while serving HTTP connection: {}", err);
+                eprintln!("Error while serving HTTP connection: {err}");
             }
         });
     }

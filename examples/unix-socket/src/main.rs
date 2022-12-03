@@ -33,7 +33,7 @@ async fn main() -> viz::Result<()> {
                 .serve_connection(stream, Responder::new(tree, None))
                 .await
             {
-                eprintln!("Error while serving HTTP connection: {}", err);
+                eprintln!("Error while serving HTTP connection: {err}");
             }
         });
     }

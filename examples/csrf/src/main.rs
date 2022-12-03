@@ -49,7 +49,7 @@ async fn main() -> Result<()> {
                 .serve_connection(stream, Responder::new(tree, Some(addr)))
                 .await
             {
-                eprintln!("Error while serving HTTP connection: {}", err);
+                eprintln!("Error while serving HTTP connection: {err}");
             }
         });
     }

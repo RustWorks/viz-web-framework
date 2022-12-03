@@ -72,7 +72,7 @@ async fn main() -> Result<()> {
                 .with_upgrades()
                 .await
             {
-                eprintln!("Error while serving HTTP connection: {}", err);
+                eprintln!("Error while serving HTTP connection: {err}");
             }
         });
     }
