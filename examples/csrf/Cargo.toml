@@ -1,10 +1,10 @@
 [package]
 name = "csrf"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 publish = false
 
 [dependencies]
-viz = { path = "../../viz", features = ["csrf"] }
+viz = { workspace = true, features = ["csrf"] }
 
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

@@ -1,12 +1,13 @@
 [package]
 name = "session"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 publish = false
 
 [dependencies]
-viz = { path = "../../viz", features = ["session"] }
-sessions = { version = "0.3.4", features = ["memory"] }
+viz = { workspace = true, features = ["session"] }
 
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
+
+sessions = { version = "0.3.4", features = ["memory"] }
 nano-id = "0.2"

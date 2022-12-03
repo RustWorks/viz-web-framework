@@ -1,10 +1,10 @@
 [package]
 name = "cors"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 publish = false
 
 [dependencies]
-viz = { path = "../../viz", features = ["cors"] }
+viz = { workspace = true, features = ["cors"] }
 
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

@@ -1,11 +1,11 @@
 [package]
 name = "embed"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 publish = false
 
 [dependencies]
-viz = { path = "../../../viz", features = ["embed"] }
+viz = { workspace = true, features = ["embed"] }
 
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 rust-embed.workspace = true

@@ -1,11 +1,11 @@
 [package]
 name = "static-routes"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 publish = false
 
 [dependencies]
-viz = { path = "../../viz" }
+viz.workspace = true
 
 hyper.workspace = true 
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }

@@ -1,17 +1,18 @@
 [package]
 name = "multipart"
 version = "0.1.0"
-edition = "2021"
+edition.workspace = true
 publish = false
 
 [dependencies]
-viz = { path = "../../../viz" }
+viz.workspace = true
 
-tempfile = "3.3"
-futures-util = "0.3"
-tokio = { version = "1.0", features = [
+futures-util.workspace = true
+tokio = { workspace = true, features = [
   "fs",
   "io-util",
   "macros",
   "rt-multi-thread",
 ] }
+
+tempfile = "3.3"
