@@ -33,7 +33,7 @@ impl Responder {
     ) -> Result<Response, Infallible> {
         let method = req.method().to_owned();
         let path = req.path().to_owned();
-        let responed = Ok(
+        let responded = Ok(
             match tree.find(&method, &path).or_else(|| {
                 if method == Method::HEAD {
                     tree.find(&Method::GET, &path)
@@ -57,7 +57,7 @@ impl Responder {
                 None => StatusCode::NOT_FOUND.into_response(),
             },
         );
-        responed
+        responded
     }
 }
 
