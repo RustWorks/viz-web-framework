@@ -53,32 +53,60 @@ impl Config {
     /// Allowed HTTP methods. [MDN]
     ///
     /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Methods
-    pub fn allow_methods(mut self, allow_methods: HashSet<Method>) -> Self {
-        self.allow_methods = allow_methods;
+    pub fn allow_methods<H>(mut self, allow_methods: H) -> Self
+    where
+        H: IntoIterator,
+        H::Item: TryInto<Method>,
+    {
+        self.allow_methods = allow_methods
+            .into_iter()
+            .filter_map(|m| m.try_into().ok())
+            .collect();
         self
     }
 
     /// Allowed HTTP headers. [MDN]
     ///
     /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Headers
-    pub fn allow_headers(mut self, allow_headers: HashSet<HeaderName>) -> Self {
-        self.allow_headers = allow_headers;
+    pub fn allow_headers<H>(mut self, allow_headers: H) -> Self
+    where
+        H: IntoIterator,
+        H::Item: TryInto<HeaderName>,
+    {
+        self.allow_headers = allow_headers
+            .into_iter()
+            .flat_map(|h| h.try_into().ok())
+            .collect();
         self
     }
 
     /// Allowed origins. [MDN]
     ///
     /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Allow-Origin
-    pub fn allow_origins(mut self, allow_origins: HashSet<HeaderValue>) -> Self {
-        self.allow_origins = allow_origins;
+    pub fn allow_origins<H>(mut self, allow_origins: H) -> Self
+    where
+        H: IntoIterator,
+        H::Item: TryInto<HeaderValue>,
+    {
+        self.allow_origins = allow_origins
+            .into_iter()
+            .flat_map(|h| h.try_into().ok())
+            .collect();
         self
     }
 
     /// Exposed HTTP headers. [MDN]
     ///
     /// [MDN]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Access-Control-Expose-Headers
-    pub fn expose_headers(mut self, expose_headers: HashSet<HeaderName>) -> Self {
-        self.expose_headers = expose_headers;
+    pub fn expose_headers<H>(mut self, expose_headers: H) -> Self
+    where
+        H: IntoIterator,
+        H::Item: TryInto<HeaderName>,
+    {
+        self.expose_headers = expose_headers
+            .into_iter()
+            .flat_map(|h| h.try_into().ok())
+            .collect();
         self
     }
 
