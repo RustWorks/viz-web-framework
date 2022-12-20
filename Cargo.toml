@@ -83,14 +83,12 @@ opentelemetry-prometheus = { version = "0.11.0", features = [
 ] }
 opentelemetry-semantic-conventions = { version = "0.10.0" }
 
-[profile.release]
-opt-level = 3
-debug = false
-rpath = false
-lto = true
-debug-assertions = false
-codegen-units = 1
-panic = 'unwind'
-incremental = false
-overflow-checks = false
-strip = true
+[workspace.metadata.docs.rs]
+all-features = true
+rustdoc-args = ["--cfg", "docsrs"]
+
+[profile.dev]
+split-debuginfo = "unpacked"
+
+[profile.dev.package."*"]
+opt-level = 2
