@@ -413,7 +413,7 @@ async fn main() -> Result<()> {
 
         assert!(!v.is_empty());
 
-        let y = v.clone();
+        let y = v.to_owned();
 
         assert!(!y.is_empty());
 
