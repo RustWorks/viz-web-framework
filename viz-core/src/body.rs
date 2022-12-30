@@ -98,8 +98,8 @@ impl Stream for IncomingBody {
             Self::Incoming(Some(inner)) => {
                 match Pin::new(inner).poll_frame(cx).map_err(Into::into) {
                     Poll::Ready(Some(Ok(f))) => match f.into_data() {
-                        Some(d) => Poll::Ready(Some(Ok(d))),
-                        None => Poll::Ready(None),
+                        Ok(d) => Poll::Ready(Some(Ok(d))),
+                        Err(_) => Poll::Ready(None),
                     },
                     Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(e))),
                     Poll::Ready(None) => Poll::Ready(None),
@@ -200,9 +200,9 @@ impl Stream for OutgoingBody {
         match self.get_mut() {
             Self::Empty => Poll::Ready(None),
             Self::Full(f) => match Pin::new(f).poll_frame(cx) {
-                Poll::Ready(Some(Ok(t))) => match t.into_data() {
-                    Some(d) => Poll::Ready(Some(Ok(d))),
-                    None => Poll::Ready(None),
+                Poll::Ready(Some(Ok(f))) => match f.into_data() {
+                    Ok(d) => Poll::Ready(Some(Ok(d))),
+                    Err(_) => Poll::Ready(None),
                 },
                 Poll::Ready(Some(Err(e))) => {
                     Poll::Ready(Some(Err(std::io::Error::new(std::io::ErrorKind::Other, e))))
@@ -212,8 +212,8 @@ impl Stream for OutgoingBody {
             },
             Self::Boxed(b) => match Pin::new(b).poll_frame(cx) {
                 Poll::Ready(Some(Ok(t))) => match t.into_data() {
-                    Some(d) => Poll::Ready(Some(Ok(d))),
-                    None => Poll::Ready(None),
+                    Ok(d) => Poll::Ready(Some(Ok(d))),
+                    Err(_) => Poll::Ready(None),
                 },
                 Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(std::io::Error::new(
                     std::io::ErrorKind::Other,
