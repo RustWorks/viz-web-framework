@@ -87,6 +87,12 @@ async fn main() -> Result<()> {
 More examples can be found
 [here](https://github.com/viz-rs/viz/tree/main/examples).
 
+## Get started
+
+* [English](https://viz.rs)
+
+* [简体中文](https://zh-cn.viz.rs)
+
 ## License
 
 This project is licensed under the [MIT license](LICENSE).
