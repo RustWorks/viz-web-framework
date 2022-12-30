@@ -411,6 +411,8 @@ async fn main() -> Result<()> {
             brha, brhb, brhc, brhd, brhe, brhf, brhg, brhh, brhi, brhj, brhk, brhl, brhm,
         ];
 
+        assert!(!v.is_empty());
+
         let y = v.clone();
 
         assert!(!y.is_empty());
