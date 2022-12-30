@@ -106,7 +106,6 @@ where
             .map(|mut res| {
                 if let Ok(c) = cookies.jar().lock() {
                     c.delta()
-                        .into_iter()
                         .filter_map(|cookie| {
                             HeaderValue::from_str(&cookie.encoded().to_string()).ok()
                         })
