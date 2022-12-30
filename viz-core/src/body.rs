@@ -60,17 +60,17 @@ impl Body for IncomingBody {
         cx: &mut Context<'_>,
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         match self.get_mut() {
-            Self::Incoming(s) if s.is_some() => match Pin::new(s.as_mut().unwrap())
-                .poll_frame(cx)
-                .map_err(Into::into)
-            {
-                Poll::Ready(None) => {
-                    // the body was used.
-                    *s = None;
-                    Poll::Ready(None)
+            Self::Incoming(s) if s.is_some() => {
+                match Pin::new(s.as_mut().unwrap()).poll_frame(cx)? {
+                    Poll::Ready(Some(f)) => Poll::Ready(Some(Ok(f))),
+                    Poll::Ready(None) => {
+                        // the body was used.
+                        *s = None;
+                        Poll::Ready(None)
+                    }
+                    Poll::Pending => Poll::Pending,
                 }
-                t => t,
-            },
+            }
             _ => Poll::Ready(None),
         }
     }
@@ -95,17 +95,11 @@ impl Stream for IncomingBody {
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match self.get_mut() {
-            Self::Incoming(Some(inner)) => {
-                match Pin::new(inner).poll_frame(cx).map_err(Into::into) {
-                    Poll::Ready(Some(Ok(f))) => match f.into_data() {
-                        Ok(d) => Poll::Ready(Some(Ok(d))),
-                        Err(_) => Poll::Ready(None),
-                    },
-                    Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(e))),
-                    Poll::Ready(None) => Poll::Ready(None),
-                    Poll::Pending => Poll::Pending,
-                }
-            }
+            Self::Incoming(Some(inner)) => match Pin::new(inner).poll_frame(cx)? {
+                Poll::Ready(Some(f)) => Poll::Ready(f.into_data().map(Ok).ok()),
+                Poll::Ready(None) => Poll::Ready(None),
+                Poll::Pending => Poll::Pending,
+            },
             _ => Poll::Ready(None),
         }
     }
@@ -199,26 +193,19 @@ impl Stream for OutgoingBody {
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match self.get_mut() {
             Self::Empty => Poll::Ready(None),
-            Self::Full(f) => match Pin::new(f).poll_frame(cx) {
-                Poll::Ready(Some(Ok(f))) => match f.into_data() {
-                    Ok(d) => Poll::Ready(Some(Ok(d))),
-                    Err(_) => Poll::Ready(None),
-                },
-                Poll::Ready(Some(Err(e))) => {
-                    Poll::Ready(Some(Err(std::io::Error::new(std::io::ErrorKind::Other, e))))
-                }
+            Self::Full(f) => match Pin::new(f)
+                .poll_frame(cx)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
+            {
+                Poll::Ready(Some(f)) => Poll::Ready(f.into_data().map(Ok).ok()),
                 Poll::Ready(None) => Poll::Ready(None),
                 Poll::Pending => Poll::Pending,
             },
-            Self::Boxed(b) => match Pin::new(b).poll_frame(cx) {
-                Poll::Ready(Some(Ok(t))) => match t.into_data() {
-                    Ok(d) => Poll::Ready(Some(Ok(d))),
-                    Err(_) => Poll::Ready(None),
-                },
-                Poll::Ready(Some(Err(e))) => Poll::Ready(Some(Err(std::io::Error::new(
-                    std::io::ErrorKind::Other,
-                    e.to_string(),
-                )))),
+            Self::Boxed(b) => match Pin::new(b)
+                .poll_frame(cx)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
+            {
+                Poll::Ready(Some(f)) => Poll::Ready(f.into_data().map(Ok).ok()),
                 Poll::Ready(None) => Poll::Ready(None),
                 Poll::Pending => Poll::Pending,
             },
