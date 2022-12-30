@@ -40,7 +40,7 @@
 //!         let tree = tree.clone();
 //!         tokio::task::spawn(async move {
 //!             if let Err(err) = http1::Builder::new()
-//!                     .http1_keep_alive(true)
+//!                     .keep_alive(true)
 //!                     .serve_connection(stream, Responder::new(tree, Some(addr)))
 //!                     .await {
 //!                 eprintln!("Error while serving HTTP connection: {err}");
