@@ -64,7 +64,7 @@ impl Body for IncomingBody {
                 match Pin::new(s.as_mut().unwrap()).poll_frame(cx)? {
                     Poll::Ready(Some(f)) => Poll::Ready(Some(Ok(f))),
                     Poll::Ready(None) => {
-                        // the body was used.
+                        // the body has been used.
                         *s = None;
                         Poll::Ready(None)
                     }

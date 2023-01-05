@@ -9,7 +9,11 @@
 //! ```
 //! # use viz::{IntoResponse, Result};
 //! # use viz_macros::handler;
-//! #
+//!
+//! #[handler]
+//! fn about() -> impl IntoResponse {
+//! }
+//!
 //! #[handler]
 //! async fn index() -> impl IntoResponse {
 //!     ()

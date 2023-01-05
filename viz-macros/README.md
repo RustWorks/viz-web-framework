@@ -42,6 +42,10 @@ use viz::{IntoResponse, Result, types::{Params}};
 use viz_macros::handler;
 
 #[handler]
+fn about() -> impl IntoResponse {
+}
+
+#[handler]
 async fn index() -> impl IntoResponse {
     ()
 }
@@ -57,5 +61,7 @@ async fn get_user(Params(name): Params<String>) -> Result<impl IntoResponse> {
 This project is licensed under the [MIT license](LICENSE).
 
 ## Author
+
+- [@fundon@fosstodon.org](https://fosstodon.org/@fundon)
 
 - [@\_fundon](https://twitter.com/_fundon)
