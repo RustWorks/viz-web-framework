@@ -3,7 +3,7 @@
 </p>
 
 <h1 align="center">
-  <a href="https://docs.rs/viz">Viz</a>
+  <a href="https://viz.rs">Viz</a>
 </h1>
 
 <div align="center">
