@@ -28,7 +28,7 @@
     <img src="https://img.shields.io/crates/d/viz.svg?style=flat-square"
       alt="Download" /></a>
   <!-- Discord -->
-  <a href="https://discord.gg/cjX2KX">
+  <a href="https://discord.gg/m9yAsf6jg6">
      <img src="https://img.shields.io/discord/699908392105541722?logo=discord&style=flat-square"
      alt="Discord"></a>
 </div>
