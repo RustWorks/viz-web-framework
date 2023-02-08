@@ -121,10 +121,8 @@ where
 
 #[inline]
 fn add_cookie(mut jar: types::CookieJar, value: &str) -> types::CookieJar {
-    value
-        .split(types::Cookies::SPLITER)
-        .map(str::trim)
-        .filter_map(|v| types::Cookie::parse_encoded(v).ok())
+    types::Cookie::split_parse_encoded(value)
+        .filter_map(Result::ok)
         .for_each(|cookie| jar.add_original(cookie.into_owned()));
     jar
 }
