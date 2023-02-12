@@ -44,7 +44,7 @@ viz-macros = { version = "0.1.0", path = "viz-macros" }
 
 async-trait = "0.1.64"
 dyn-clone = "1.0.10"
-bytes = "1.4"
+bytes = "1.4.0"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
@@ -52,7 +52,7 @@ serde_urlencoded = "0.7"
 thiserror = "1.0"
 
 # router
-path-tree = "0.7"
+path-tree = "0.7.1"
 
 futures-util = "0.3.26"
 hyper = { version = "1.0.0-rc.2", features = ["server"] }
@@ -62,19 +62,19 @@ http-body = "1.0.0-rc.2"
 http-body-util = "0.1.0-rc.2"
 
 tokio = { version = "1.25", features = ["net"] }
-tokio-tungstenite = "0.18"
+tokio-tungstenite = "0.18.0"
 tokio-stream = "0.1.11"
-tokio-util = "0.7.4"
-rustls-pemfile = "1.0.0"
+tokio-util = "0.7.6"
+rustls-pemfile = "1.0.2"
 tokio-rustls = "0.23.4"
-tokio-native-tls = "0.3.0"
+tokio-native-tls = "0.3.1"
 
 anyhow = "1.0"
 mime = "0.3.16"
-mime_guess = "2.0"
+mime_guess = "2.0.4"
 percent-encoding = "2.2.0"
 
-hex = "0.4"
+hex = "0.4.3"
 rust-embed = { version = "6.4.2", features = ["compression"] }
 
 # OpenTelemetry
