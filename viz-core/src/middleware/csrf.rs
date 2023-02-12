@@ -2,6 +2,8 @@
 
 use std::{collections::HashSet, fmt, sync::Arc};
 
+use base64::Engine as _;
+
 use crate::{
     async_trait,
     header::{HeaderName, HeaderValue, VARY},
@@ -84,7 +86,7 @@ impl<S, G, V> Config<S, G, V> {
                 {
                     None => Ok(None),
                     Some(raw_token) => {
-                        match base64::decode_config(raw_token, base64::URL_SAFE_NO_PAD) {
+                        match base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(raw_token) {
                             Ok(masked_token) if is_64(&masked_token) => {
                                 Ok(Some(unmask::<32>(masked_token)))
                             }
@@ -201,7 +203,8 @@ where
 
         let otp = (config.secret)()?;
         let secret = (config.secret)()?;
-        let token = base64::encode_config((config.generate)(&secret, otp), base64::URL_SAFE_NO_PAD);
+        let token = base64::engine::general_purpose::URL_SAFE_NO_PAD
+            .encode((config.generate)(&secret, otp));
         req.extensions_mut().insert(CsrfToken(token.to_string()));
         self.config.set(&req, token, secret)?;
 
@@ -232,7 +235,7 @@ pub fn generate(secret: &[u8], otp: Vec<u8>) -> Vec<u8> {
 
 /// Verifys Token with a secret
 pub fn verify(secret: Vec<u8>, raw_token: String) -> bool {
-    if let Ok(token) = base64::decode_config(raw_token, base64::URL_SAFE_NO_PAD) {
+    if let Ok(token) = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(raw_token) {
         return is_64(&token) && secret == unmask::<32>(token);
     }
     false
