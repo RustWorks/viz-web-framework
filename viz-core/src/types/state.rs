@@ -7,8 +7,8 @@ use std::{
 };
 
 use crate::{
-    async_trait, handler::Transform, types::PayloadError, FromRequest, Handler, IntoResponse,
-    Request, RequestExt, Response, Result,
+    async_trait, handler::Transform, Error, FromRequest, Handler, IntoResponse, Request,
+    RequestExt, Response, Result, StatusCode, ThisError,
 };
 
 /// Extracts state from the extensions of a request.
@@ -71,7 +71,7 @@ impl<T> FromRequest for State<T>
 where
     T: Clone + Send + Sync + 'static,
 {
-    type Error = PayloadError;
+    type Error = StateError;
 
     async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         req.state().map(Self).ok_or_else(error::<T>)
@@ -106,6 +106,23 @@ where
     }
 }
 
-fn error<T>() -> PayloadError {
-    PayloadError::State(type_name::<T>())
+/// A [`State`] error.
+#[derive(ThisError, Debug)]
+#[error("missing state type `{0}`")]
+pub struct StateError(pub &'static str);
+
+impl IntoResponse for StateError {
+    fn into_response(self) -> Response {
+        (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
+    }
+}
+
+impl From<StateError> for Error {
+    fn from(e: StateError) -> Self {
+        e.into_error()
+    }
+}
+
+fn error<T>() -> StateError {
+    StateError(type_name::<T>())
 }

@@ -10,7 +10,7 @@ pub use self::cookie::{Cookie, CookieJar, Cookies, CookiesError, SameSite};
 #[cfg(feature = "state")]
 mod state;
 #[cfg(feature = "state")]
-pub use state::State;
+pub use state::{State, StateError};
 
 #[cfg(feature = "form")]
 mod form;

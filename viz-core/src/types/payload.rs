@@ -48,10 +48,6 @@ pub enum PayloadError {
     UnsupportedMediaType(mime::Mime),
 
     /// 500
-    #[error("missing state type `{0}`")]
-    State(&'static str),
-
-    /// 500
     #[error("payload has been used")]
     Used,
 }
@@ -72,7 +68,7 @@ impl IntoResponse for PayloadError {
                 PayloadError::LengthRequired => StatusCode::LENGTH_REQUIRED,
                 PayloadError::TooLarge => StatusCode::PAYLOAD_TOO_LARGE,
                 PayloadError::UnsupportedMediaType(_) => StatusCode::UNSUPPORTED_MEDIA_TYPE,
-                PayloadError::State(_) | PayloadError::Used => StatusCode::INTERNAL_SERVER_ERROR,
+                PayloadError::Used => StatusCode::INTERNAL_SERVER_ERROR,
             },
             self.to_string(),
         )
