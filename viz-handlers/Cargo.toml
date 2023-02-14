@@ -58,6 +58,9 @@ rust-embed = { workspace = true, optional = true }
 opentelemetry = { workspace = true, default-features = false, optional = true }
 opentelemetry-prometheus = { workspace = true, optional = true }
 
+[dev-dependencies]
+tokio = { version = "1", features = ["rt", "macros"] }
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = ["--cfg", "docsrs"]
