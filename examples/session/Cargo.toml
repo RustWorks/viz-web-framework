@@ -9,5 +9,5 @@ viz = { workspace = true, features = ["session"] }
 
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 
-sessions = { version = "0.3.4", features = ["memory"] }
-nano-id = "0.2"
+sessions = { version = "0.4.0", features = ["memory"] }
+nano-id = "0.3"
