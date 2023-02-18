@@ -39,7 +39,7 @@ license = "MIT"
 viz = { version = "0.5.0-rc.2", path = "viz" }
 viz-core = { version = "0.5.0-rc.2", path = "viz-core" }
 viz-router = { version = "0.5.0-rc.2", path = "viz-router" }
-viz-handlers = { version = "0.5.0-rc.2", path = "viz-handlers" }
+viz-handlers = { version = "0.5.0-rc.2", path = "viz-handlers", default-features = false }
 viz-macros = { version = "0.1.0", path = "viz-macros" }
 
 async-trait = "0.1.64"
