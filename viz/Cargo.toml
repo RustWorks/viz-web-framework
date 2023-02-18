@@ -68,7 +68,7 @@ native-tls = ["dep:tokio-native-tls", "dep:futures-util"]
 [dependencies]
 viz-core.workspace = true
 viz-router.workspace = true
-viz-handlers = { workspace = true, default-features = false, optional = true }
+viz-handlers = { workspace = true, optional = true }
 viz-macros = { workspace = true, optional = true }
 
 hyper.workspace = true
