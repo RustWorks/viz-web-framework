@@ -51,10 +51,10 @@ use syn::{parse_macro_input, AttributeArgs, FnArg, ItemFn, Result, ReturnType};
 #[proc_macro_attribute]
 pub fn handler(args: TokenStream, input: TokenStream) -> TokenStream {
     let args = parse_macro_input!(args as syn::AttributeArgs);
-    generate_handler(args, input).unwrap_or_else(|e| e.to_compile_error().into())
+    generate_handler(&args, input).unwrap_or_else(|e| e.to_compile_error().into())
 }
 
-fn generate_handler(_args: AttributeArgs, input: TokenStream) -> Result<TokenStream> {
+fn generate_handler(_args: &AttributeArgs, input: TokenStream) -> Result<TokenStream> {
     let ast = syn::parse::<ItemFn>(input)?;
     let vis = &ast.vis;
     let docs = ast
