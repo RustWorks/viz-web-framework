@@ -17,7 +17,6 @@ use opentelemetry_semantic_conventions::trace::{
     EXCEPTION_MESSAGE,
     HTTP_CLIENT_IP,
     HTTP_FLAVOR,
-    HTTP_HOST,
     HTTP_METHOD,
     HTTP_RESPONSE_CONTENT_LENGTH,
     HTTP_ROUTE,
@@ -27,8 +26,10 @@ use opentelemetry_semantic_conventions::trace::{
     HTTP_TARGET,
     HTTP_USER_AGENT,
     NET_HOST_PORT,
-    NET_PEER_IP,
+    NET_SOCK_PEER_ADDR,
 };
+
+use super::HTTP_HOST;
 
 use crate::{
     async_trait,
@@ -191,7 +192,7 @@ fn build_attributes(req: &Request, http_route: &String) -> OrderMap<Key, Value> 
     if let Some(remote_ip) = req.remote_addr().map(|add| add.ip()) {
         if realip.map(|realip| realip.0 != remote_ip).unwrap_or(true) {
             // Client is going through a proxy
-            attributes.insert(NET_PEER_IP, remote_ip.to_string().into());
+            attributes.insert(NET_SOCK_PEER_ADDR, remote_ip.to_string().into());
         }
     }
     if let Some(port) = req

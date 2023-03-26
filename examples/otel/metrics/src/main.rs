@@ -29,13 +29,10 @@ async fn main() -> Result<()> {
     println!("listening on {addr}");
 
     let exporter = {
-        let controller = controllers::basic(
-            processors::factory(
-                selectors::simple::histogram([1.0, 2.0, 5.0, 10.0, 20.0, 50.0]),
-                aggregation::cumulative_temporality_selector(),
-            )
-            .with_memory(true),
-        )
+        let controller = controllers::basic(processors::factory(
+            selectors::simple::histogram([1.0, 2.0, 5.0, 10.0, 20.0, 50.0]),
+            aggregation::cumulative_temporality_selector(),
+        ))
         .build();
         ExporterBuilder::new(controller).init()
     };

@@ -45,22 +45,21 @@
 
 use proc_macro::TokenStream;
 use quote::quote;
-use syn::{parse_macro_input, AttributeArgs, FnArg, ItemFn, Result, ReturnType};
+use syn::{FnArg, ItemFn, Result, ReturnType};
 
 /// Transforms `extract-handler` to a Handler instance.
 #[proc_macro_attribute]
-pub fn handler(args: TokenStream, input: TokenStream) -> TokenStream {
-    let args = parse_macro_input!(args as syn::AttributeArgs);
-    generate_handler(&args, input).unwrap_or_else(|e| e.to_compile_error().into())
+pub fn handler(_args: TokenStream, input: TokenStream) -> TokenStream {
+    generate_handler(input).unwrap_or_else(|e| e.to_compile_error().into())
 }
 
-fn generate_handler(_args: &AttributeArgs, input: TokenStream) -> Result<TokenStream> {
+fn generate_handler(input: TokenStream) -> Result<TokenStream> {
     let ast = syn::parse::<ItemFn>(input)?;
     let vis = &ast.vis;
     let docs = ast
         .attrs
         .iter()
-        .filter(|attr| attr.path.is_ident("doc"))
+        .filter(|attr| attr.path().is_ident("doc"))
         .cloned()
         .collect::<Vec<_>>();
     let name = ast.sig.ident.clone();
