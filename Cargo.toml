@@ -44,8 +44,8 @@ viz-router = { version = "0.5.0-rc.2", path = "viz-router" }
 viz-handlers = { version = "0.5.0-rc.2", path = "viz-handlers", default-features = false }
 viz-macros = { version = "0.1.0", path = "viz-macros" }
 
-async-trait = "0.1.64"
-dyn-clone = "1.0.10"
+async-trait = "0.1.68"
+dyn-clone = "1.0.11"
 bytes = "1.4.0"
 serde = "1.0"
 serde_derive = "1.0"
@@ -63,8 +63,8 @@ http = "0.2.9"
 http-body = "1.0.0-rc.2"
 http-body-util = "0.1.0-rc.2"
 
-futures-util = "0.3.26"
-tokio = { version = "1.25", features = ["net"] }
+futures-util = "0.3.27"
+tokio = { version = "1.26", features = ["net"] }
 tokio-tungstenite = "0.18.0"
 tokio-stream = "0.1.12"
 tokio-util = "0.7.7"
@@ -73,12 +73,12 @@ tokio-rustls = "0.23.4"
 tokio-native-tls = "0.3.1"
 
 anyhow = "1.0"
-mime = "0.3.16"
+mime = "0.3.17"
 mime_guess = "2.0.4"
 percent-encoding = "2.2.0"
 
 hex = "0.4.3"
-rust-embed = { version = "6.4.2", features = ["compression"] }
+rust-embed = { version = "6.6.1", features = ["compression"] }
 
 # OpenTelemetry
 opentelemetry = { version = "0.18.0", default-features = false }
