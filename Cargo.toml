@@ -64,7 +64,7 @@ http-body = "1.0.0-rc.2"
 http-body-util = "0.1.0-rc.2"
 
 futures-util = "0.3.27"
-tokio = { version = "1.26", features = ["net"] }
+tokio = { version = "1.27", features = ["net"] }
 tokio-tungstenite = "0.18.0"
 tokio-stream = "0.1.12"
 tokio-util = "0.7.7"
