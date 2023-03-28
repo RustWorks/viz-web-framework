@@ -29,6 +29,15 @@ impl<T> State<T> {
     }
 }
 
+impl<T> Default for State<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        Self(T::default())
+    }
+}
+
 impl<T> Clone for State<T>
 where
     T: Clone,
