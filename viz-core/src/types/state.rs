@@ -29,12 +29,9 @@ impl<T> State<T> {
     }
 }
 
-impl<T> Default for State<T>
-where
-    T: Default,
-{
-    fn default() -> Self {
-        Self(T::default())
+impl<T> AsRef<T> for State<T> {
+    fn as_ref(&self) -> &T {
+        &self.0
     }
 }
 
@@ -47,9 +44,12 @@ where
     }
 }
 
-impl<T> AsRef<T> for State<T> {
-    fn as_ref(&self) -> &T {
-        &self.0
+impl<T> Default for State<T>
+where
+    T: Default,
+{
+    fn default() -> Self {
+        Self(T::default())
     }
 }
 
