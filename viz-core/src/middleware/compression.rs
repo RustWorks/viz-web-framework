@@ -101,9 +101,9 @@ impl<T: IntoResponse> IntoResponse for Compress<T> {
     }
 }
 
-/// [ContentCoding]
+/// [`ContentCoding`]
 ///
-/// [ContentCoding]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
+/// [`ContentCoding`]: https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Accept-Encoding
 #[derive(Debug, PartialEq)]
 pub enum ContentCoding {
     /// gzip
@@ -145,18 +145,21 @@ impl From<ContentCoding> for &'static str {
     }
 }
 
+#[allow(clippy::cast_sign_loss)]
+#[allow(clippy::cast_possible_truncation)]
 fn parse_accept_encoding(s: &str) -> Option<ContentCoding> {
     s.split(',')
         .map(str::trim)
-        .filter_map(|v| {
-            Some(match v.split_once(";q=") {
-                Some((c, q)) => (
-                    c.parse::<ContentCoding>().ok()?,
-                    q.parse::<f32>().ok()? * 1000.,
-                ),
-                None => (v.parse::<ContentCoding>().ok()?, 1000.),
-            })
+        .filter_map(|v| match v.split_once(";q=") {
+            None => v.parse::<ContentCoding>().ok().map(|c| (c, 100)),
+            Some((c, q)) => Some((
+                c.parse::<ContentCoding>().ok()?,
+                q.parse::<f32>()
+                    .ok()
+                    .filter(|v| *v >= 0. && *v <= 1.)
+                    .map(|v| (v * 100.) as u8)?,
+            )),
         })
-        .max_by_key(|(_, q)| *q as u16)
+        .max_by_key(|(_, q)| *q)
         .map(|(c, _)| c)
 }

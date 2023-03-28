@@ -1,3 +1,5 @@
+#![allow(clippy::module_name_repetitions)]
+
 use std::{
     fmt,
     pin::Pin,
@@ -20,20 +22,23 @@ pub enum IncomingBody {
 
 impl IncomingBody {
     /// Creates new Incoming Body
+    #[must_use]
     pub fn new(inner: Option<Incoming>) -> Self {
         Self::Incoming(inner)
     }
 
     /// Incoming body has been used
+    #[must_use]
     pub fn used() -> Self {
         Self::Incoming(None)
     }
 
     /// Into incoming
+    #[must_use]
     pub fn into_incoming(self) -> Option<Incoming> {
         match self {
+            Self::Empty => None,
             Self::Incoming(inner) => inner,
-            _ => None,
         }
     }
 }
@@ -109,7 +114,10 @@ impl Stream for IncomingBody {
         match self {
             Self::Incoming(Some(inner)) => {
                 let sh = inner.size_hint();
-                (sh.lower() as usize, sh.upper().map(|s| s as usize))
+                (
+                    usize::try_from(sh.lower()).unwrap_or(usize::MAX),
+                    sh.upper().map(|v| usize::try_from(v).unwrap_or(usize::MAX)),
+                )
             }
             _ => (0, None),
         }
@@ -191,40 +199,32 @@ impl Stream for OutgoingBody {
     type Item = Result<Bytes, std::io::Error>;
 
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
-        match self.get_mut() {
-            Self::Empty => Poll::Ready(None),
-            Self::Full(f) => match Pin::new(f)
+        match match self.get_mut() {
+            Self::Empty => return Poll::Ready(None),
+            Self::Full(f) => Pin::new(f)
                 .poll_frame(cx)
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
-            {
-                Poll::Ready(Some(f)) => Poll::Ready(f.into_data().map(Ok).ok()),
-                Poll::Ready(None) => Poll::Ready(None),
-                Poll::Pending => Poll::Pending,
-            },
-            Self::Boxed(b) => match Pin::new(b)
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?,
+            Self::Boxed(b) => Pin::new(b)
                 .poll_frame(cx)
-                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?
-            {
-                Poll::Ready(Some(f)) => Poll::Ready(f.into_data().map(Ok).ok()),
-                Poll::Ready(None) => Poll::Ready(None),
-                Poll::Pending => Poll::Pending,
-            },
+                .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?,
+        } {
+            Poll::Ready(Some(f)) => Poll::Ready(f.into_data().map(Ok).ok()),
+            Poll::Ready(None) => Poll::Ready(None),
+            Poll::Pending => Poll::Pending,
         }
     }
 
     #[inline]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        match self {
-            Self::Empty => (0, None),
-            Self::Full(f) => {
-                let sh = f.size_hint();
-                (sh.lower() as usize, sh.upper().map(|s| s as usize))
-            }
-            Self::Boxed(b) => {
-                let sh = b.size_hint();
-                (sh.lower() as usize, sh.upper().map(|s| s as usize))
-            }
-        }
+        let sh = match self {
+            Self::Empty => return (0, None),
+            Self::Full(f) => f.size_hint(),
+            Self::Boxed(b) => b.size_hint(),
+        };
+        (
+            usize::try_from(sh.lower()).unwrap_or(usize::MAX),
+            sh.upper().map(|v| usize::try_from(v).unwrap_or(usize::MAX)),
+        )
     }
 }
 

@@ -97,12 +97,19 @@ pub trait Payload {
     fn detect(m: &mime::Mime) -> bool;
 
     /// Sets the limit size.
+    #[must_use]
     #[inline]
     fn limit(limit: Option<u64>) -> u64 {
         limit.unwrap_or(Self::LIMIT)
     }
 
     /// Checks `Content-Type` & `Content-Length`
+    ///
+    /// # Errors
+    ///
+    /// 1. unsupported media type
+    /// 2. content-length is required
+    /// 3. payload is too large
     #[inline]
     fn check_header(
         m: Option<mime::Mime>,

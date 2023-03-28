@@ -32,13 +32,16 @@ impl Error {
         T: StdError + 'static,
     {
         match self {
-            Self::Normal(e) => e.is::<T>(),
-            Self::Report(e, _) => e.is::<T>(),
+            Self::Normal(e) | Self::Report(e, _) => e.is::<T>(),
             Self::Responder(_) => false,
         }
     }
 
     /// Attempt to downcast the error object to a concrete type.
+    ///
+    /// # Errors
+    ///
+    /// Throws an `Error` if downcast fails.
     #[inline]
     pub fn downcast<T>(self) -> Result<T, Self>
     where

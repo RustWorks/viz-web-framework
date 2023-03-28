@@ -7,27 +7,30 @@ use std::{
 use crate::{
     async_trait,
     middleware::helper::{CookieOptions, Cookieable},
-    types::{Cookie, Session},
+    types::Session,
     Error, Handler, IntoResponse, Request, RequestExt, Response, Result, StatusCode, Transform,
 };
 
 use super::{Error as SessionError, Storage, Store, PURGED, RENEWED, UNCHANGED};
 
-/// A configuration for [SessionMiddleware].
+/// A configuration for [`SessionMiddleware`].
 pub struct Config<S, G, V>(Arc<(Store<S, G, V>, CookieOptions)>);
 
 impl<S, G, V> Config<S, G, V> {
     /// Creates a new configuration with the [`Store`] and [`CookieOptions`].
+    #[must_use]
     pub fn new(store: Store<S, G, V>, cookie: CookieOptions) -> Self {
         Self(Arc::new((store, cookie)))
     }
 
     /// Gets the store.
+    #[must_use]
     pub fn store(&self) -> &Store<S, G, V> {
         &self.0 .0
     }
 
     /// Gets the TTL.
+    #[must_use]
     pub fn ttl(&self) -> Option<Duration> {
         self.options().max_age
     }
@@ -96,7 +99,7 @@ where
         let cookies = req.cookies().map_err(Into::<Error>::into)?;
         let cookie = self.config.get_cookie(&cookies);
 
-        let mut session_id = cookie.map(get_cookie_value);
+        let mut session_id = cookie.map(|cookie| cookie.value().to_string());
         let data = match &session_id {
             Some(sid) if (self.config.store().verify)(sid) => self.config.store().get(sid).await?,
             _ => None,
@@ -138,14 +141,11 @@ where
             }
         }
 
-        let sid = match session_id {
-            Some(sid) => sid,
-            None => {
-                let sid = (self.config.store().generate)();
-                self.config.set_cookie(&cookies, &sid);
-                sid
-            }
-        };
+        let sid = session_id.unwrap_or_else(|| {
+            let sid = (self.config.store().generate)();
+            self.config.set_cookie(&cookies, &sid);
+            sid
+        });
 
         self.config
             .store()
@@ -163,10 +163,6 @@ where
 
 fn max_age() -> Duration {
     Duration::from_secs(CookieOptions::MAX_AGE)
-}
-
-fn get_cookie_value(c: Cookie<'_>) -> String {
-    c.value().to_string()
 }
 
 impl From<SessionError> for Error {

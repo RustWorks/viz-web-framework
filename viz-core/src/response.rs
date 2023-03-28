@@ -1,3 +1,5 @@
+#![allow(clippy::module_name_repetitions)]
+
 #[cfg(feature = "json")]
 use bytes::{BufMut, BytesMut};
 use http_body_util::Full;
@@ -37,6 +39,10 @@ pub trait ResponseExt: Sized {
 
     #[cfg(feature = "json")]
     /// The response with `application/javascript; charset=utf-8` media type.
+    ///
+    /// # Errors
+    ///
+    /// Throws an error if serialization fails.
     fn json<T>(t: T) -> Result<Response, crate::types::PayloadError>
     where
         T: serde::Serialize,

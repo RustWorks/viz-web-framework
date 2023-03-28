@@ -48,7 +48,7 @@ impl FromRequest for CsrfToken {
     }
 }
 
-/// A configuration for [CsrfMiddleware].
+/// A configuration for [`CsrfMiddleware`].
 pub struct Config<S, G, V>(Arc<Inner<S, G, V>>);
 
 impl<S, G, V> Config<S, G, V> {
@@ -76,6 +76,9 @@ impl<S, G, V> Config<S, G, V> {
     }
 
     /// Gets the CSRF token from cookies or session.
+    ///
+    /// # Errors
+    ///
     pub fn get(&self, req: &Request) -> Result<Option<Vec<u8>>> {
         let inner = self.as_ref();
         match inner.store {
@@ -85,15 +88,15 @@ impl<S, G, V> Config<S, G, V> {
                     .map(|c| c.value().to_string())
                 {
                     None => Ok(None),
-                    Some(raw_token) => {
-                        match base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(raw_token) {
-                            Ok(masked_token) if is_64(&masked_token) => {
-                                Ok(Some(unmask::<32>(masked_token)))
-                            }
-                            _ => Err((StatusCode::INTERNAL_SERVER_ERROR, "Invalid csrf token")
-                                .into_error()),
-                        }
-                    }
+                    Some(raw_token) => base64::engine::general_purpose::URL_SAFE_NO_PAD
+                        .decode(raw_token)
+                        .ok()
+                        .filter(is_64)
+                        .map(unmask::<32>)
+                        .map(Option::Some)
+                        .ok_or_else(|| {
+                            (StatusCode::INTERNAL_SERVER_ERROR, "Invalid csrf token").into_error()
+                        }),
                 }
             }
             #[cfg(feature = "session")]
@@ -102,6 +105,9 @@ impl<S, G, V> Config<S, G, V> {
     }
 
     /// Sets the CSRF token to cookies or session.
+    ///
+    /// # Errors
+    /// TODO
     #[allow(unused)]
     pub fn set(&self, req: &Request, token: String, secret: Vec<u8>) -> Result<()> {
         let inner = self.as_ref();
@@ -181,7 +187,7 @@ where
     H: Handler<Request, Output = Result<O>> + Clone,
     S: Fn() -> Result<Vec<u8>> + Send + Sync + 'static,
     G: Fn(&[u8], Vec<u8>) -> Vec<u8> + Send + Sync + 'static,
-    V: Fn(Vec<u8>, String) -> bool + Send + Sync + 'static,
+    V: Fn(&[u8], String) -> bool + Send + Sync + 'static,
 {
     type Output = Result<Response>;
 
@@ -193,7 +199,7 @@ where
             let mut forbidden = true;
             if let Some(secret) = secret.take() {
                 if let Some(raw_token) = req.header(&config.header) {
-                    forbidden = !(config.verify)(secret, raw_token);
+                    forbidden = !(config.verify)(&secret, raw_token);
                 }
             }
             if forbidden {
@@ -221,6 +227,9 @@ where
 }
 
 /// Gets random secret
+///
+/// # Errors
+/// TODO
 pub fn secret() -> Result<Vec<u8>> {
     let mut buf = [0u8; 32];
     getrandom::getrandom(&mut buf)
@@ -229,12 +238,14 @@ pub fn secret() -> Result<Vec<u8>> {
 }
 
 /// Generates Token
+#[must_use]
 pub fn generate(secret: &[u8], otp: Vec<u8>) -> Vec<u8> {
-    mask(secret.to_vec(), otp)
+    mask(secret, otp)
 }
 
 /// Verifys Token with a secret
-pub fn verify(secret: Vec<u8>, raw_token: String) -> bool {
+#[must_use]
+pub fn verify(secret: &[u8], raw_token: String) -> bool {
     if let Ok(token) = base64::engine::general_purpose::URL_SAFE_NO_PAD.decode(raw_token) {
         return is_64(&token) && secret == unmask::<32>(token);
     }
@@ -242,7 +253,7 @@ pub fn verify(secret: Vec<u8>, raw_token: String) -> bool {
 }
 
 /// Retures masked token
-fn mask(secret: Vec<u8>, mut otp: Vec<u8>) -> Vec<u8> {
+fn mask(secret: &[u8], mut otp: Vec<u8>) -> Vec<u8> {
     otp.extend::<Vec<u8>>(
         secret
             .iter()
