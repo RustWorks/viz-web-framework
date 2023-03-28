@@ -3,10 +3,12 @@
 //! <https://github.com/vercel/serve-handler> MIT
 
 use std::{
+    ffi::OsStr,
     fmt::{Display, Formatter, Result},
     fs::read_dir,
     path::PathBuf,
     str::FromStr,
+    string::ToString,
 };
 
 use viz_core::{IntoResponse, Response, ResponseExt};
@@ -44,8 +46,8 @@ impl Directory {
             let path = entry.path();
             let ext = path
                 .extension()
-                .and_then(|e| e.to_str())
-                .map(|e| e.to_string());
+                .and_then(OsStr::to_str)
+                .map(ToString::to_string);
 
             let mut url = base.trim_matches('/').to_owned();
             url.push('/');
@@ -64,7 +66,7 @@ impl Directory {
                 0,
                 (
                     parent.join("").to_str()?.strip_prefix('/')?.to_string(),
-                    parent.file_name().and_then(|n| n.to_str())?.to_string(),
+                    parent.file_name().and_then(OsStr::to_str)?.to_string(),
                     false,
                     None,
                     "..".to_string(),
@@ -75,10 +77,9 @@ impl Directory {
         let mut paths = Vec::new();
 
         for a in curr.ancestors() {
-            if let (Some(u), Some(n)) =
-                (a.join("").to_str(), a.file_name().and_then(|n| n.to_str()))
+            if let (Some(u), Some(n)) = (a.join("").to_str(), a.file_name().and_then(OsStr::to_str))
             {
-                paths.push((u.to_string(), n.to_owned() + "/"))
+                paths.push((u.to_string(), n.to_owned() + "/"));
             }
         }
 
