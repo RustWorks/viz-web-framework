@@ -63,7 +63,7 @@ http = "0.2.9"
 http-body = "1.0.0-rc.2"
 http-body-util = "0.1.0-rc.2"
 
-futures-util = "0.3.27"
+futures-util = "0.3.28"
 tokio = { version = "1.27", features = ["net"] }
 tokio-tungstenite = "0.18.0"
 tokio-stream = "0.1.12"
