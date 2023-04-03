@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 #![allow(clippy::unused_async)]
 #![allow(clippy::similar_names)]
 #![allow(clippy::too_many_lines)]
@@ -7,8 +8,8 @@ use http_body_util::Full;
 use std::marker::PhantomData;
 use viz_core::*;
 
-#[tokio::main]
-async fn main() -> Result<()> {
+#[tokio::test]
+async fn handler() -> Result<()> {
     pub struct CatchError<H, F, R, E> {
         h: H,
         f: F,
@@ -355,7 +356,7 @@ async fn main() -> Result<()> {
             .map(map)
             .and_then(and_then)
             .or_else(or_else)
-            .with(viz_core::middleware::cookie::Config::new());
+            .with(viz_core::middleware::cookie::Config::default());
         let rhe = e.map_into_response().after(after);
         let rhf = f.map_into_response();
         let rhg = g.map_into_response();
