@@ -116,3 +116,9 @@ async fn response_ext() -> Result<()> {
 
     Ok(())
 }
+
+#[test]
+#[should_panic(expected = "not a redirection status code")]
+fn response_ext_panic() {
+    let _ = Response::redirect_with_status("/oauth", StatusCode::OK);
+}
