@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, BTreeMap};
 
 use headers::{authorization::Bearer, Authorization, ContentType, HeaderValue};
 use http::uri::Scheme;
@@ -77,6 +77,10 @@ async fn request_body() -> Result<()> {
             let header: types::Header<Authorization<Bearer>> = req.extract().await?;
             Ok(header.into_inner().token().to_string())
         })
+        .post("/extract-body", |mut req: Request| async move {
+            let form: types::Form<BTreeMap<String, String>> = req.extract().await?;
+            Ok(Response::json(form.into_inner()))
+        })
         .get("/cookies", |req: Request| async move {
             let cookies = req.cookies()?;
             let jar = cookies
@@ -95,6 +99,11 @@ async fn request_body() -> Result<()> {
         })
         .post("/bytes-with-limit", |mut req: Request| async move {
             let data = req.bytes_with("text", 4).await?;
+            Ok(data)
+        })
+        .post("/bytes-used", |mut req: Request| async move {
+            let _ = req.bytes().await?;
+            let data = req.bytes().await?;
             Ok(data)
         })
         .post("/text", |mut req: Request| async move {
@@ -142,6 +151,17 @@ async fn request_body() -> Result<()> {
         .map_err(Error::normal)?;
     assert_eq!(resp.text().await.map_err(Error::normal)?, "viz.rs");
 
+    let mut form = BTreeMap::new();
+    form.insert("password", "rs");
+    form.insert("username", "viz");
+    let resp = client
+        .post("/extract-body")
+        .form(&form)
+        .send()
+        .await
+        .map_err(Error::normal)?;
+    assert_eq!(resp.text().await.map_err(Error::normal)?, r#"{"password":"rs","username":"viz"}"#);
+
     let resp = client
         .get("/cookie")
         .header(COOKIE, "viz=crate")
@@ -185,6 +205,18 @@ async fn request_body() -> Result<()> {
     assert_eq!(
         resp.text().await.map_err(Error::normal)?,
         "payload is too large"
+    );
+
+    let resp = client
+        .post("/bytes-used")
+        .body("used")
+        .send()
+        .await
+        .map_err(Error::normal)?;
+    assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
+    assert_eq!(
+        resp.text().await.map_err(Error::normal)?,
+        "payload has been used"
     );
 
     let resp = client
