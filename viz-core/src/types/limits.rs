@@ -63,6 +63,8 @@ impl Limits {
             .and_then(|i| Arc::make_mut(&mut self.inner).get_mut(i))
         {
             val.1 = limit;
+        } else {
+            Arc::make_mut(&mut self.inner).push((name, limit));
         }
         self
     }

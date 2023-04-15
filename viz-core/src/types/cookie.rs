@@ -116,7 +116,7 @@ impl Cookies {
     /// Adds `cookie` to the parent jar.
     pub fn private_add(&self, cookie: Cookie<'_>) {
         if let Ok(mut c) = self.jar().lock() {
-            c.private_mut(self.key()).add(cookie.into_owned())
+            c.private_mut(self.key()).add(cookie.into_owned());
         }
     }
 
@@ -124,18 +124,19 @@ impl Cookies {
     pub fn private_remove(&self, name: impl AsRef<str>) {
         if let Ok(mut c) = self.jar().lock() {
             c.private_mut(self.key())
-                .remove(Cookie::named(name.as_ref().to_string()))
+                .remove(Cookie::named(name.as_ref().to_string()));
         }
     }
 
     /// Adds an "original" `cookie` to parent jar.
     pub fn private_add_original(&self, cookie: Cookie<'_>) {
         if let Ok(mut c) = self.jar().lock() {
-            c.private_mut(self.key()).add_original(cookie.into_owned())
+            c.private_mut(self.key()).add_original(cookie.into_owned());
         }
     }
 
     /// Authenticates and decrypts `cookie` and returning the plain `cookie`.
+    #[must_use]
     pub fn private_decrypt(&self, cookie: Cookie<'_>) -> Option<Cookie<'_>> {
         self.jar()
             .lock()

@@ -41,9 +41,9 @@ cookie = ["dep:cookie"]
 cookie-private = ["cookie", "cookie?/private"]
 cookie-signed = ["cookie", "cookie?/signed"]
 
-session = ["cookie", "json", "dep:sessions-core"]
+session = ["cookie-private", "json", "dep:sessions-core"]
 
-csrf = ["cookie", "dep:base64", "dep:getrandom"]
+csrf = ["cookie-private", "dep:base64", "dep:getrandom"]
 cors = []
 
 compression = ["tokio-util/io", "dep:async-compression"]
@@ -97,7 +97,7 @@ tokio-stream = { workspace = true, optional = true }
 tokio-util = { workspace = true, optional = true }
 
 [dev-dependencies]
-viz.workspace = true
+viz = { workspace = true, features = ["session"] }
 viz-test.workspace = true
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
 

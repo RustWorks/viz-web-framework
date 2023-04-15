@@ -119,7 +119,7 @@ impl Default for CookieOptions {
     }
 }
 
-#[cfg(not(any(feature = "cookie-signed", feature = "cookie-private")))]
+#[cfg(not(feature = "cookie-private"))]
 /// An interface for managing the cookies.
 pub trait Cookieable {
     /// Gets the options of the cookie.
@@ -127,7 +127,7 @@ pub trait Cookieable {
 
     /// Gets a cookie from the cookies.
     fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.get(self.options().name)
+        cookies.get(self.options().name);
     }
 
     /// Deletes a cookie from the cookies.
@@ -141,68 +141,24 @@ pub trait Cookieable {
     }
 }
 
-#[cfg(all(feature = "cookie-signed", not(feature = "cookie-private")))]
-/// An interface for managing the `signed` cookies.
-pub trait Cookieable {
-    /// Gets the options of the cookie.
-    fn options(&self) -> &CookieOptions;
-
-    /// Gets a cookie from the cookies.
-    fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.signed_get(self.options().name)
-    }
-
-    /// Deletes a cookie from the cookies.
-    fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
-        cookies.signed_remove(self.options().name);
-    }
-
-    /// Sets a cookie from the cookies.
-    fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: impl Into<String>) {
-        cookies.signed_add(self.options().into_cookie(value));
-    }
-}
-
-#[cfg(all(feature = "cookie-private", not(feature = "cookie-signed")))]
+#[cfg(feature = "cookie-private")]
 /// An interface for managing the `private` cookies.
 pub trait Cookieable {
     /// Gets the options of the cookie.
     fn options(&self) -> &CookieOptions;
 
     /// Gets a cookie from the cookies.
-    fn get_cookie<'a>(&self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
+    fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
         cookies.private_get(self.options().name)
     }
 
     /// Deletes a cookie from the cookies.
-    fn remove_cookie<'a>(&self, cookies: &'a Cookies) {
+    fn remove_cookie<'a>(&'a self, cookies: &'a Cookies) {
         cookies.private_remove(self.options().name);
     }
 
     /// Sets a cookie from the cookies.
     fn set_cookie<'a>(&'a self, cookies: &'a Cookies, value: impl Into<String>) {
         cookies.private_add(self.options().into_cookie(value));
-    }
-}
-
-#[cfg(all(feature = "cookie-private", feature = "cookie-signed"))]
-/// An interface for managing the cookies.
-pub trait Cookieable {
-    /// Gets the options of the cookie.
-    fn options(&self) -> &CookieOptions;
-
-    /// Gets a cookie from the cookies.
-    fn get_cookie<'a>(&'a self, _: &'a Cookies) -> Option<Cookie<'a>> {
-        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
-    }
-
-    /// Deletes a cookie from the cookies.
-    fn remove_cookie<'a>(&'a self, _: &'a Cookies) {
-        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
-    }
-
-    /// Sets a cookie from the cookies.
-    fn set_cookie<'a>(&'a self, _: &'a Cookies, _: impl Into<String>) {
-        panic!("Please choose a secure option, `cookie-signed` or `cookie-private`")
     }
 }
