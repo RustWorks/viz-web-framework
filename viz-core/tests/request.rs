@@ -1,4 +1,4 @@
-use std::collections::{HashMap, BTreeMap};
+use std::collections::{BTreeMap, HashMap};
 
 use headers::{authorization::Bearer, Authorization, ContentType, HeaderValue};
 use http::uri::Scheme;
@@ -160,7 +160,10 @@ async fn request_body() -> Result<()> {
         .send()
         .await
         .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, r#"{"password":"rs","username":"viz"}"#);
+    assert_eq!(
+        resp.text().await.map_err(Error::normal)?,
+        r#"{"password":"rs","username":"viz"}"#
+    );
 
     let resp = client
         .get("/cookie")
