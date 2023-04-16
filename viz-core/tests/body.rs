@@ -1,8 +1,137 @@
 use http_body_util::{combinators::BoxBody, BodyExt, Full};
-use viz_core::{Bytes, OutgoingBody, Result};
+use viz_core::{Bytes, Error, IncomingBody, OutgoingBody, Request, RequestExt, Result};
 
 #[tokio::test]
 async fn incoming_body() -> Result<()> {
+    use bytes::Buf;
+    use viz::Router;
+    use viz_core::Body;
+    use viz_test::TestServer;
+
+    let mut empty = IncomingBody::Empty;
+    assert!(empty.is_end_stream());
+    let size_hint = empty.size_hint();
+    assert_eq!(size_hint.lower(), 0);
+    assert_eq!(size_hint.upper(), Some(0));
+    assert_eq!(&format!("{empty:?}"), "Empty");
+    assert!(empty.frame().await.is_none());
+    assert!(empty.frame().await.is_none());
+
+    let mut used = IncomingBody::used();
+    assert!(used.is_end_stream());
+    let size_hint = used.size_hint();
+    assert_eq!(size_hint.lower(), 0);
+    assert_eq!(size_hint.upper(), Some(0));
+    assert_eq!(&format!("{used:?}"), "Incoming(None)");
+    assert!(used.frame().await.is_none());
+    assert!(used.frame().await.is_none());
+
+    let router = Router::new()
+        .post("/login-empty", |mut req: Request| async move {
+            let body = req.incoming_body();
+            assert!(body.is_end_stream());
+            let size_hint = body.size_hint();
+            assert_eq!(size_hint.lower(), 0);
+            assert_eq!(size_hint.upper(), Some(0));
+            Ok(())
+        })
+        .post("/login", |mut req: Request| async move {
+            let body = req.incoming_body();
+            assert!(!body.is_end_stream());
+            let size_hint = body.size_hint();
+            assert_eq!(size_hint.lower(), 12);
+            assert_eq!(size_hint.upper(), Some(12));
+            let buffered = body.collect().await.unwrap();
+            let mut buf = buffered.to_bytes();
+            assert_eq!(&buf.copy_to_bytes(buf.remaining())[..], b"hello world!");
+            Ok(())
+        });
+
+    let client = TestServer::new(router).await?;
+
+    let resp = client
+        .post("/login-empty")
+        .send()
+        .await
+        .map_err(Error::normal)?;
+    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+
+    let resp = client
+        .post("/login")
+        .body("hello world!")
+        .send()
+        .await
+        .map_err(Error::normal)?;
+    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn incoming_stream() -> Result<()> {
+    use futures_util::{AsyncReadExt, Stream, StreamExt, TryStreamExt};
+    use viz::Router;
+    use viz_test::TestServer;
+
+    let empty = IncomingBody::Empty;
+    assert_eq!(empty.size_hint(), (0, Some(0)));
+    let mut reader = TryStreamExt::map_err(empty, |e| {
+        std::io::Error::new(std::io::ErrorKind::Other, e.to_string())
+    })
+    .into_async_read();
+    let mut buf = Vec::new();
+    reader.read_to_end(&mut buf).await?;
+    assert!(buf.is_empty());
+
+    let used = IncomingBody::used();
+    assert_eq!(used.size_hint(), (0, Some(0)));
+    let mut reader = TryStreamExt::map_err(used, |e| {
+        std::io::Error::new(std::io::ErrorKind::Other, e.to_string())
+    })
+    .into_async_read();
+    let mut buf = Vec::new();
+    reader.read_to_end(&mut buf).await?;
+    assert!(buf.is_empty());
+
+    let router = Router::new()
+        .post("/login-empty", |mut req: Request| async move {
+            let mut body = req.incoming_body();
+            let size_hint = body.size_hint();
+            assert_eq!(size_hint.0, 0);
+            assert_eq!(size_hint.1, Some(0));
+            assert!(body.next().await.is_none());
+            Ok(())
+        })
+        .post("/login", |mut req: Request| async move {
+            let mut body = req.incoming_body();
+            let size_hint = body.size_hint();
+            assert_eq!(size_hint.0, 12);
+            assert_eq!(size_hint.1, Some(12));
+            assert_eq!(
+                body.next().await.unwrap().unwrap().to_vec(),
+                b"hello world!"
+            );
+            assert!(body.next().await.is_none());
+            Ok(())
+        });
+
+    let client = TestServer::new(router).await?;
+
+    let resp = client
+        .post("/login-empty")
+        .send()
+        .await
+        .map_err(Error::normal)?;
+    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+
+    let resp = client
+        .post("/login")
+        .body("hello world!")
+        .send()
+        .await
+        .map_err(Error::normal)?;
+    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+
     Ok(())
 }
 

@@ -1,7 +1,6 @@
 #![allow(clippy::module_name_repetitions)]
 
 use std::{
-    fmt,
     pin::Pin,
     task::{Context, Poll},
 };
@@ -12,6 +11,7 @@ use hyper::body::{Body, Frame, Incoming, SizeHint};
 
 use crate::{Bytes, Error};
 
+#[derive(Debug)]
 /// Incoming Body from request.
 pub enum IncomingBody {
     /// A empty body.
@@ -46,12 +46,6 @@ impl IncomingBody {
 impl Default for IncomingBody {
     fn default() -> Self {
         Self::Empty
-    }
-}
-
-impl fmt::Debug for IncomingBody {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        f.debug_struct("IncomingBody").finish()
     }
 }
 
