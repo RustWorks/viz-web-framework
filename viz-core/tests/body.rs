@@ -75,20 +75,18 @@ async fn incoming_stream() -> Result<()> {
 
     let empty = IncomingBody::Empty;
     assert_eq!(empty.size_hint(), (0, Some(0)));
-    let mut reader = TryStreamExt::map_err(empty, |e| {
-        std::io::Error::new(std::io::ErrorKind::Other, e.to_string())
-    })
-    .into_async_read();
+    let mut reader =
+        TryStreamExt::map_err(empty, |e| std::io::Error::new(std::io::ErrorKind::Other, e))
+            .into_async_read();
     let mut buf = Vec::new();
     reader.read_to_end(&mut buf).await?;
     assert!(buf.is_empty());
 
     let used = IncomingBody::used();
     assert_eq!(used.size_hint(), (0, Some(0)));
-    let mut reader = TryStreamExt::map_err(used, |e| {
-        std::io::Error::new(std::io::ErrorKind::Other, e.to_string())
-    })
-    .into_async_read();
+    let mut reader =
+        TryStreamExt::map_err(used, |e| std::io::Error::new(std::io::ErrorKind::Other, e))
+            .into_async_read();
     let mut buf = Vec::new();
     reader.read_to_end(&mut buf).await?;
     assert!(buf.is_empty());

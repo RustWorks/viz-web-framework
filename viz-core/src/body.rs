@@ -162,7 +162,7 @@ impl Body for OutgoingBody {
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         match self.get_mut() {
             Self::Empty => Poll::Ready(None),
-            Self::Full(f) => Pin::new(f).poll_frame(cx).map_err(Error::normal),
+            Self::Full(f) => Pin::new(f).poll_frame(cx).map_err(Error::from),
             Self::Boxed(b) => Pin::new(b).poll_frame(cx),
         }
     }
