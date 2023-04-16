@@ -28,7 +28,7 @@
     <img src="https://img.shields.io/crates/d/viz.svg?style=flat-square"
       alt="Download" /></a>
   <!-- Codecov -->
-  <a href="/">
+  <a href="https://app.codecov.io/gh/viz-rs/viz">
     <img src="https://img.shields.io/codecov/c/github/viz-rs/viz?style=flat-square"
       alt="Codecov" /></a>
   <!-- Discord -->
