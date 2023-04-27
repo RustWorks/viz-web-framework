@@ -4,6 +4,7 @@ use viz_core::{Error, OutgoingBody, Response, StatusCode};
 #[test]
 fn error() {
     let e: Error = std::io::Error::last_os_error().into();
+    assert_eq!("Undefined error: 0 (os error 0)", e.to_string());
     assert!(e.is::<std::io::Error>());
     assert!(e.downcast::<std::io::Error>().is_ok());
     let e: Error = Error::normal(std::io::Error::last_os_error());
