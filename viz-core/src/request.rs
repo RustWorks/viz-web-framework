@@ -206,7 +206,6 @@ impl RequestExt for Request {
             .and_then(|v| v.parse::<T>().ok())
     }
 
-    /// Get a header with the specified type.
     fn header_typed<H>(&self) -> Option<H>
     where
         H: headers::Header,
