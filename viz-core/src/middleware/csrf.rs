@@ -12,6 +12,7 @@ use crate::{
     StatusCode, Transform,
 };
 
+#[derive(Debug)]
 struct Inner<S, G, V> {
     store: Store,
     ignored_methods: HashSet<Method>,
