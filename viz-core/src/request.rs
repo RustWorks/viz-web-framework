@@ -283,7 +283,7 @@ impl RequestExt for Request {
     where
         T: serde::de::DeserializeOwned,
     {
-        let _ = <Form as Payload>::check_header(self.content_type(), self.content_length(), None)?;
+        <Form as Payload>::check_header(self.content_type(), self.content_length(), None)?;
 
         #[cfg(feature = "limits")]
         let bytes = self
@@ -300,7 +300,7 @@ impl RequestExt for Request {
     where
         T: serde::de::DeserializeOwned,
     {
-        let _ = <Json as Payload>::check_header(self.content_type(), self.content_length(), None)?;
+        <Json as Payload>::check_header(self.content_type(), self.content_length(), None)?;
 
         #[cfg(feature = "limits")]
         let bytes = self

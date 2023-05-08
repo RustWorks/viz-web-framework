@@ -110,7 +110,7 @@ async fn request_body() -> Result<()> {
             Ok(data)
         })
         .post("/bytes-used", |mut req: Request| async move {
-            let _ = req.bytes().await?;
+            req.bytes().await?;
             let data = req.bytes().await?;
             Ok(data)
         })
