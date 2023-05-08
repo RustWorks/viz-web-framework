@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
 
     let app = Router::new()
         .route("/", get(index))
-        .with(compression::Config::default());
+        .with(compression::Config);
     let tree = Arc::new(Tree::from(app));
 
     loop {

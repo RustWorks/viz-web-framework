@@ -12,7 +12,7 @@ use crate::{
 };
 
 /// Compress response body.
-#[derive(Debug, Default)]
+#[derive(Debug)]
 pub struct Config;
 
 impl<H> Transform<H> for Config
