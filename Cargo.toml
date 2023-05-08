@@ -66,10 +66,10 @@ http-body = "1.0.0-rc.2"
 http-body-util = "0.1.0-rc.2"
 
 futures-util = "0.3.28"
-tokio = { version = "1.27", features = ["net"] }
+tokio = { version = "1.28", features = ["net"] }
 tokio-tungstenite = "0.18.0"
-tokio-stream = "0.1.12"
-tokio-util = "0.7.7"
+tokio-stream = "0.1.14"
+tokio-util = "0.7.8"
 rustls-pemfile = "1.0.2"
 tokio-rustls = "0.24.0"
 tokio-native-tls = "0.3.1"
@@ -91,7 +91,7 @@ opentelemetry-semantic-conventions = { version = "0.11.0" }
 
 # Tracing
 tracing = "0.1.37"
-tracing-subscriber = { version = "0.3.16", features = ["env-filter"] }
+tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 
 [workspace.metadata.docs.rs]
 all-features = true
