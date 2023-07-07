@@ -121,20 +121,14 @@ pub trait Payload {
         len: Option<u64>,
         limit: Option<u64>,
     ) -> Result<mime::Mime, PayloadError> {
-        let m = m.ok_or_else(|| PayloadError::UnsupportedMediaType(Self::mime()))?;
+        let m = m
+            .filter(Self::detect)
+            .ok_or_else(|| PayloadError::UnsupportedMediaType(Self::mime()))?;
 
-        if !Self::detect(&m) {
-            return Err(PayloadError::UnsupportedMediaType(Self::mime()));
+        match len {
+            None => Err(PayloadError::LengthRequired),
+            Some(len) if len > Self::limit(limit) => Err(PayloadError::TooLarge),
+            Some(_) => Ok(m),
         }
-
-        if len.is_none() {
-            return Err(PayloadError::LengthRequired);
-        }
-
-        if matches!(len, Some(len) if len  > Self::limit(limit)) {
-            return Err(PayloadError::TooLarge);
-        }
-
-        Ok(m)
     }
 }

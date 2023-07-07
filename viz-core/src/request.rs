@@ -91,7 +91,7 @@ pub trait RequestExt: Sized {
     /// Return with a [Bytes][mdn]  by a limit representation of the request body.
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/arrayBuffer>
-    async fn bytes_with(&mut self, name: &str, max: u64) -> Result<Bytes, PayloadError>;
+    async fn bytes_with(&mut self, limit: Option<u64>, max: u64) -> Result<Bytes, PayloadError>;
 
     /// Return with a [Text][mdn] representation of the request body.
     ///
@@ -250,10 +250,10 @@ impl RequestExt for Request {
     }
 
     #[cfg(feature = "limits")]
-    async fn bytes_with(&mut self, name: &str, max: u64) -> Result<Bytes, PayloadError> {
+    async fn bytes_with(&mut self, limit: Option<u64>, max: u64) -> Result<Bytes, PayloadError> {
         Limited::new(
             self.incoming()?,
-            usize::try_from(self.limits().get(name).unwrap_or(max)).unwrap_or(usize::MAX),
+            usize::try_from(limit.unwrap_or(max)).unwrap_or(usize::MAX),
         )
         .collect()
         .await
@@ -271,7 +271,9 @@ impl RequestExt for Request {
 
     async fn text(&mut self) -> Result<String, PayloadError> {
         #[cfg(feature = "limits")]
-        let bytes = self.bytes_with("text", Limits::NORMAL).await?;
+        let bytes = self
+            .bytes_with(self.limits().get("text"), Limits::NORMAL)
+            .await?;
         #[cfg(not(feature = "limits"))]
         let bytes = self.bytes().await?;
 
@@ -283,12 +285,15 @@ impl RequestExt for Request {
     where
         T: serde::de::DeserializeOwned,
     {
-        <Form as Payload>::check_header(self.content_type(), self.content_length(), None)?;
+        #[cfg(feature = "limits")]
+        let limit = self.limits().get(<Form as Payload>::NAME);
+        #[cfg(not(feature = "limits"))]
+        let limit = None;
+
+        <Form as Payload>::check_header(self.content_type(), self.content_length(), limit)?;
 
         #[cfg(feature = "limits")]
-        let bytes = self
-            .bytes_with(<Form as Payload>::NAME, <Form as Payload>::LIMIT)
-            .await?;
+        let bytes = self.bytes_with(limit, <Form as Payload>::LIMIT).await?;
         #[cfg(not(feature = "limits"))]
         let bytes = self.bytes().await?;
 
@@ -300,12 +305,15 @@ impl RequestExt for Request {
     where
         T: serde::de::DeserializeOwned,
     {
-        <Json as Payload>::check_header(self.content_type(), self.content_length(), None)?;
+        #[cfg(feature = "limits")]
+        let limit = self.limits().get(<Json as Payload>::NAME);
+        #[cfg(not(feature = "limits"))]
+        let limit = None;
+
+        <Json as Payload>::check_header(self.content_type(), self.content_length(), limit)?;
 
         #[cfg(feature = "limits")]
-        let bytes = self
-            .bytes_with(<Json as Payload>::NAME, <Json as Payload>::LIMIT)
-            .await?;
+        let bytes = self.bytes_with(limit, <Json as Payload>::LIMIT).await?;
         #[cfg(not(feature = "limits"))]
         let bytes = self.bytes().await?;
 
@@ -314,8 +322,16 @@ impl RequestExt for Request {
 
     #[cfg(feature = "multipart")]
     async fn multipart(&mut self) -> Result<Multipart, PayloadError> {
-        let m =
-            <Multipart as Payload>::check_header(self.content_type(), self.content_length(), None)?;
+        #[cfg(feature = "limits")]
+        let limit = self.limits().get(<Multipart as Payload>::NAME);
+        #[cfg(not(feature = "limits"))]
+        let limit = None;
+
+        let m = <Multipart as Payload>::check_header(
+            self.content_type(),
+            self.content_length(),
+            limit,
+        )?;
 
         let boundary = m
             .get_param(mime::BOUNDARY)

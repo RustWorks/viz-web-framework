@@ -1,4 +1,4 @@
-use reqwest::{Client, RequestBuilder};
+use reqwest::Client;
 use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
 use viz::{server::conn::http1, Error, Responder, Result, Router, Tree};
@@ -6,7 +6,7 @@ use viz::{server::conn::http1, Error, Responder, Result, Router, Tree};
 pub use nano_id;
 pub use sessions;
 
-pub use reqwest::multipart;
+pub use reqwest::{multipart, RequestBuilder};
 
 pub struct TestServer {
     addr: SocketAddr,

@@ -106,7 +106,7 @@ async fn request_body() -> Result<()> {
             Ok(data)
         })
         .post("/bytes-with-limit", |mut req: Request| async move {
-            let data = req.bytes_with("text", 4).await?;
+            let data = req.bytes_with(Some(1024), 4).await?;
             Ok(data)
         })
         .post("/bytes-used", |mut req: Request| async move {
