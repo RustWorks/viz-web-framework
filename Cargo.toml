@@ -28,6 +28,7 @@ members = [
   "examples/templates/*",
   "examples/tracing",
 ]
+resolver = "2"
 
 [workspace.package]
 version = "0.5.0-rc.2"
