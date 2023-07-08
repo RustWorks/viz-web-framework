@@ -97,6 +97,10 @@ impl Cookies {
     }
 
     /// Retures the cryptographic master [`Key`][CookieKey].
+    ///
+    /// # Panics
+    ///
+    /// Will panic if missing a key
     #[must_use]
     pub fn key(&self) -> &CookieKey {
         self.key.as_ref().expect("the `CookieKey` is required")

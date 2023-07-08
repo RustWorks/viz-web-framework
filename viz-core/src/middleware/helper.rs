@@ -83,6 +83,10 @@ impl CookieOptions {
     }
 
     /// Converts self into a [Cookie].
+    ///
+    /// # Panics
+    ///
+    /// Will panic if `std::time::Duration` cannot be converted to `cookie::ime::Duration`
     pub fn into_cookie(&self, value: impl Into<String>) -> Cookie<'_> {
         let mut cookie = Cookie::new(self.name, value.into());
 
@@ -95,10 +99,10 @@ impl CookieOptions {
             cookie.set_domain(domain);
         }
         if let Some(max_age) = self.max_age {
-            cookie.set_max_age(
-                ::cookie::time::Duration::try_from(max_age)
-                    .expect("cant convert std Duration into time::Duration"),
-            );
+            cookie
+                .set_max_age(::cookie::time::Duration::try_from(max_age).expect(
+                    "`std::time::Duration` cannot be converted to `cookie::ime::Duration`",
+                ));
         }
 
         cookie

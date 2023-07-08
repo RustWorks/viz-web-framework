@@ -173,7 +173,7 @@ impl fmt::Debug for Config {
             .field("allow_headers", &self.allow_headers)
             .field("allow_origins", &self.allow_origins)
             .field("expose_headers", &self.expose_headers)
-            .finish()
+            .finish_non_exhaustive()
     }
 }
 
