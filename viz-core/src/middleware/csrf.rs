@@ -52,7 +52,12 @@ impl FromRequest for CsrfToken {
 /// A configuration for [`CsrfMiddleware`].
 pub struct Config<S, G, V>(Arc<Inner<S, G, V>>);
 
-impl<S, G, V> Config<S, G, V> {
+impl<S, G, V> Config<S, G, V>
+where
+    S: Send + Sync,
+    G: Send + Sync,
+    V: Send + Sync,
+{
     /// The name of CSRF header.
     pub const CSRF_TOKEN: &'static str = "x-csrf-token";
 

@@ -16,7 +16,12 @@ use super::{Error as SessionError, Storage, Store, PURGED, RENEWED, UNCHANGED};
 /// A configuration for [`SessionMiddleware`].
 pub struct Config<S, G, V>(Arc<(Store<S, G, V>, CookieOptions)>);
 
-impl<S, G, V> Config<S, G, V> {
+impl<S, G, V> Config<S, G, V>
+where
+    S: Send + Sync,
+    G: Send + Sync,
+    V: Send + Sync,
+{
     /// Creates a new configuration with the [`Store`] and [`CookieOptions`].
     #[must_use]
     pub fn new(store: Store<S, G, V>, cookie: CookieOptions) -> Self {
