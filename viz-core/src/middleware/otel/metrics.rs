@@ -26,8 +26,8 @@ use opentelemetry_semantic_conventions::trace::{
 use super::HTTP_HOST;
 
 use crate::{
-    async_trait, headers::UserAgent, types::RealIp, Handler, IntoResponse, Request, RequestExt,
-    Response, Result, Transform,
+    async_trait, headers::UserAgent, Handler, IntoResponse, Request, RequestExt, Response, Result,
+    Transform,
 };
 
 const HTTP_SERVER_ACTIVE_REQUESTS: &str = "http.server.active_requests";
@@ -149,7 +149,7 @@ fn build_attributes(req: &Request, http_route: &str) -> Vec<KeyValue> {
     {
         attributes.push(HTTP_USER_AGENT.string(user_agent.to_string()));
     }
-    let realip = RealIp::parse(req);
+    let realip = req.realip();
     if let Some(realip) = realip {
         attributes.push(HTTP_CLIENT_IP.string(realip.0.to_string()));
     }

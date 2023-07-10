@@ -4,7 +4,7 @@ use std::{mem::replace, sync::Arc};
 
 use crate::{
     async_trait, header,
-    types::{PayloadError, RouteInfo},
+    types::{PayloadError, RealIp, RouteInfo},
     Bytes, FromRequest, Incoming, IncomingBody, Request, Result,
 };
 use headers::HeaderMapExt;
@@ -170,6 +170,9 @@ pub trait RequestExt: Sized {
 
     /// Get remote addr.
     fn remote_addr(&self) -> Option<&std::net::SocketAddr>;
+
+    /// Get realip.
+    fn realip(&self) -> Option<RealIp>;
 }
 
 #[async_trait]
@@ -415,5 +418,9 @@ impl RequestExt for Request {
 
     fn route_info(&self) -> &Arc<RouteInfo> {
         self.extensions().get().expect("should get current route")
+    }
+
+    fn realip(&self) -> Option<RealIp> {
+        RealIp::parse(self)
     }
 }

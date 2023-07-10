@@ -35,7 +35,6 @@ use crate::{
     async_trait,
     header::{HeaderMap, HeaderName},
     headers::{self, HeaderMapExt, UserAgent},
-    types::RealIp,
     Handler, IntoResponse, Request, RequestExt, Response, Result, Transform,
 };
 
@@ -189,7 +188,7 @@ fn build_attributes(req: &Request, http_route: &str) -> OrderMap<Key, Value> {
     {
         attributes.insert(HTTP_USER_AGENT, user_agent.to_string().into());
     }
-    let realip = RealIp::parse(req);
+    let realip = req.realip();
     if let Some(realip) = realip {
         attributes.insert(HTTP_CLIENT_IP, realip.0.to_string().into());
     }
