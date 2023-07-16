@@ -12,7 +12,7 @@ use crate::{
         Connection, HeaderMapExt, HeaderValue, SecWebsocketAccept, SecWebsocketKey,
         SecWebsocketVersion, Upgrade,
     },
-    FromRequest, IntoResponse, OutgoingBody, Request, RequestExt, Response, Result, StatusCode,
+    FromRequest, IntoResponse, Io, OutgoingBody, Request, RequestExt, Response, Result, StatusCode,
 };
 
 mod error;
@@ -21,7 +21,7 @@ pub use error::WebSocketError;
 pub use tokio_tungstenite::tungstenite::protocol::{Message, WebSocketConfig};
 
 /// A wrapper around an underlying raw stream which implements the `WebSocket` protocol.
-pub type WebSocketStream<T = Upgraded> = tokio_tungstenite::WebSocketStream<T>;
+pub type WebSocketStream<T = Io<Upgraded>> = tokio_tungstenite::WebSocketStream<T>;
 
 /// Then `WebSocket` provides the API for creating and managing a [`WebSocket`][mdn] connection,
 /// as well as for sending and receiving data on the connection.
@@ -81,7 +81,8 @@ impl WebSocket {
                 Err(_) => return,
             };
 
-            let socket = WebSocketStream::from_raw_socket(upgraded, Role::Server, config).await;
+            let socket =
+                WebSocketStream::from_raw_socket(Io::new(upgraded), Role::Server, config).await;
 
             (callback)(socket).await;
         });

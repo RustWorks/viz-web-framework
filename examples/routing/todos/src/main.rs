@@ -11,7 +11,7 @@ use viz::{
     middleware,
     server::conn::http1,
     types::{Json, Params, Query, State},
-    Error, IntoResponse, Request, RequestExt, Responder, Response, ResponseExt, Result, Router,
+    Error, IntoResponse, Io, Request, RequestExt, Responder, Response, ResponseExt, Result, Router,
     StatusCode, Tree,
 };
 
@@ -145,7 +145,7 @@ async fn main() -> Result<()> {
         let tree = tree.clone();
         tokio::task::spawn(async move {
             if let Err(err) = http1::Builder::new()
-                .serve_connection(stream, Responder::new(tree, Some(addr)))
+                .serve_connection(Io::new(stream), Responder::new(tree, Some(addr)))
                 .await
             {
                 eprintln!("Error while serving HTTP connection: {err}");
