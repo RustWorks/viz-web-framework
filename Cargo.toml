@@ -57,7 +57,7 @@ serde_urlencoded = "0.7"
 thiserror = "1.0"
 
 # router
-path-tree = "0.7.1"
+path-tree = "0.7.2"
 
 # http
 headers = "0.3.8"
