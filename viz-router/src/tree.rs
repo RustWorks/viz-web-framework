@@ -62,10 +62,10 @@ impl From<Router> for Tree {
                             },
                         )
                     {
-                        t.insert(&path, handler);
+                        let _ = t.insert(&path, handler);
                     } else {
                         let mut t = PathTree::new();
-                        t.insert(&path, handler);
+                        let _ = t.insert(&path, handler);
                         tree.as_mut().push((method, t));
                     }
                 }
