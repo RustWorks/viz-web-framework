@@ -1,5 +1,3 @@
-#![allow(clippy::module_name_repetitions)]
-
 #[cfg(feature = "json")]
 use bytes::{BufMut, BytesMut};
 use http_body_util::Full;
@@ -8,6 +6,9 @@ use crate::{header, Bytes, Error, OutgoingBody, Response, Result, StatusCode};
 
 /// The [Response] Extension.
 pub trait ResponseExt: Sized {
+    /// Get the size of this response's body.
+    fn content_length(&self) -> Option<u64>;
+
     /// The response with the specified [`Content-Type`][mdn].
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type>
@@ -138,6 +139,13 @@ pub trait ResponseExt: Sized {
 }
 
 impl ResponseExt for Response {
+    fn content_length(&self) -> Option<u64> {
+        self.headers()
+            .get(header::CONTENT_LENGTH)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse().ok())
+    }
+
     fn ok(&self) -> bool {
         self.status().is_success()
     }
