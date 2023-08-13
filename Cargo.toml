@@ -47,7 +47,7 @@ viz-handlers = { version = "0.5.0-rc.2", path = "viz-handlers", default-features
 viz-macros = { version = "0.1.0", path = "viz-macros" }
 viz-test = { version = "0.1.0", path = "viz-test" }
 
-async-trait = "0.1.71"
+async-trait = "0.1"
 dyn-clone = "1.0.12"
 bytes = "1.4.0"
 serde = "1.0"
@@ -67,7 +67,7 @@ http-body-util = "=0.1.0-rc.3"
 hyper = { version = "=1.0.0-rc.4", features = ["server"] }
 
 futures-util = "0.3.28"
-tokio = { version = "1.29", features = ["net"] }
+tokio = { version = "1.31", features = ["net"] }
 tokio-tungstenite = "0.20.0"
 tokio-stream = "0.1.14"
 tokio-util = "0.7.8"
@@ -95,7 +95,7 @@ prometheus = "0.13"
 tracing = "0.1.37"
 tracing-subscriber = { version = "0.3.17", features = ["env-filter"] }
 
-pin-project-lite = "0.2.10"
+pin-project-lite = "0.2.12"
 
 [workspace.metadata.docs.rs]
 all-features = true
