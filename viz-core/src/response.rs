@@ -52,7 +52,7 @@ pub trait ResponseExt: Sized {
     {
         let mut buf = BytesMut::new().writer();
         serde_json::to_writer(&mut buf, &body)
-            .map(|_| {
+            .map(|()| {
                 Self::with(
                     Full::new(buf.into_inner().freeze()),
                     mime::APPLICATION_JSON.as_ref(),

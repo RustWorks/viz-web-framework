@@ -207,7 +207,7 @@ impl Stream for OutgoingBody {
 }
 
 impl<D> From<()> for OutgoingBody<D> {
-    fn from(_: ()) -> Self {
+    fn from((): ()) -> Self {
         Self::Empty
     }
 }

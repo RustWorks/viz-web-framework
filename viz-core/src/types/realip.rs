@@ -10,10 +10,10 @@ pub struct RealIp(pub IpAddr);
 
 impl RealIp {
     /// X-Real-IP header.
-    pub const X_REAL_IP: &str = "x-real-ip";
+    pub const X_REAL_IP: &'static str = "x-real-ip";
 
     /// X-Forwarded-For header.
-    pub const X_FORWARDED_FOR: &str = "x-forwarded-for";
+    pub const X_FORWARDED_FOR: &'static str = "x-forwarded-for";
 
     /// Parse the headers.
     pub fn parse(req: &Request) -> Option<Self> {
