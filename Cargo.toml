@@ -67,7 +67,7 @@ http-body-util = "=0.1.0-rc.3"
 hyper = { version = "=1.0.0-rc.4", features = ["server"] }
 
 futures-util = "0.3"
-tokio = { version = "1.31", features = ["net"] }
+tokio = { version = "1.32", features = ["net"] }
 tokio-tungstenite = "0.20"
 tokio-stream = "0.1"
 tokio-util = "0.7"
