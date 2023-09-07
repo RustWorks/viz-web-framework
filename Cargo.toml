@@ -57,11 +57,11 @@ serde_urlencoded = "0.7"
 thiserror = "1.0"
 
 # router
-path-tree = "0.7.2"
+path-tree = "0.7"
 
 # http
-headers = "0.3.9"
-http = "0.2.9"
+headers = "0.3"
+http = "0.2"
 http-body = "=1.0.0-rc.2"
 http-body-util = "=0.1.0-rc.3"
 hyper = { version = "=1.0.0-rc.4", features = ["server"] }

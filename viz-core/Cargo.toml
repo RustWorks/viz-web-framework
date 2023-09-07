@@ -67,20 +67,20 @@ hyper.workspace = true
 mime.workspace = true
 thiserror.workspace = true
 
-rfc7239 = "0.1.0"                                                               # realip
-cookie = { version = "0.17.0", features = ["percent-encode"], optional = true }
+rfc7239 = "0.1"                                                               # realip
+cookie = { version = "0.17", features = ["percent-encode"], optional = true }
 form-data = { version = "0.5.0-rc.2", optional = true }
 serde = { workspace = true, features = ["derive"], optional = true }
 serde_json = { workspace = true, optional = true }
 serde_urlencoded = { workspace = true, optional = true }
-sessions-core = { version = "0.5.0", optional = true }
+sessions-core = { version = "0.5", optional = true }
 
 # CSRF
-getrandom = { version = "0.2.9", optional = true }
-base64 = { version = "0.21.2", optional = true }
+getrandom = { version = "0.2", optional = true }
+base64 = { version = "0.21", optional = true }
 
 # Compression
-async-compression = { version = "0.4.0", features = [
+async-compression = { version = "0.4", features = [
   "tokio",
   "gzip",
   "brotli",
