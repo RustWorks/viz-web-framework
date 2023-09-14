@@ -538,11 +538,13 @@
 ))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
+#[cfg(any(feature = "http1", feature = "http2"))]
 mod responder;
+#[cfg(any(feature = "http1", feature = "http2"))]
+pub use responder::Responder;
 
 /// TLS
 pub mod tls;
-pub use responder::Responder;
 pub use viz_core::*;
 pub use viz_router::*;
 
