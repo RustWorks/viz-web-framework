@@ -27,6 +27,7 @@ members = [
   "examples/compression",
   "examples/templates/*",
   "examples/tracing",
+  "examples/graceful-shutdown",
 ]
 resolver = "2"
 
