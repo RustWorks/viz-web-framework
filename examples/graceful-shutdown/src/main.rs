@@ -3,7 +3,7 @@
 
 //! Graceful shutdown server.
 //!
-//! See https://github.com/hyperium/hyper/blob/master/examples/graceful_shutdown.rs
+//! See <https://github.com/hyperium/hyper/blob/master/examples/graceful_shutdown.rs>
 
 use std::{net::SocketAddr, sync::Arc, time::Duration};
 use tokio::{net::TcpListener, pin};
@@ -44,7 +44,7 @@ async fn main() -> Result<()> {
             // result of polling the connection itself,
             // and also on tokio::time::sleep for the current timeout duration.
             for (iter, sleep_duration) in connection_timeouts_clone.iter().enumerate() {
-                println!("iter = {} sleep_duration = {:?}", iter, sleep_duration);
+                println!("iter = {iter} sleep_duration = {sleep_duration:?}");
                 tokio::select! {
                     res = conn.as_mut() => {
                         // Polling the connection returned a result.
@@ -52,14 +52,14 @@ async fn main() -> Result<()> {
                         // and break out of the loop.
                         match res {
                             Ok(()) => println!("after polling conn, no error"),
-                            Err(e) =>  println!("error serving connection: {:?}", e),
+                            Err(e) =>  println!("error serving connection: {e:?}"),
                         };
                         break;
                     }
-                    _ = tokio::time::sleep(*sleep_duration) => {
+                    () = tokio::time::sleep(*sleep_duration) => {
                         // tokio::time::sleep returned a result.
                         // Call graceful_shutdown on the connection and continue the loop.
-                        println!("iter = {} got timeout_interval, calling conn.graceful_shutdown", iter);
+                        println!("iter = {iter} got timeout_interval, calling conn.graceful_shutdown");
                         conn.as_mut().graceful_shutdown();
                     }
                 }
