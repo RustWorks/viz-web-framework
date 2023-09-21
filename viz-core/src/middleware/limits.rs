@@ -27,8 +27,8 @@ impl Config {
         self
     }
 
-    #[cfg(feature = "multipart")]
     /// Sets a limits for the Multipart Form.
+    #[cfg(feature = "multipart")]
     #[must_use]
     pub fn multipart(mut self, limits: types::MultipartLimits) -> Self {
         *Arc::make_mut(&mut self.multipart) = limits;

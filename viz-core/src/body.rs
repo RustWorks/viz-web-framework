@@ -9,8 +9,8 @@ use hyper::body::{Body, Frame, Incoming, SizeHint};
 
 use crate::{Bytes, Error, Result};
 
-#[derive(Debug)]
 /// Incoming Body from request.
+#[derive(Debug)]
 pub enum IncomingBody {
     /// A empty body.
     Empty,
@@ -107,8 +107,8 @@ impl Stream for IncomingBody {
     }
 }
 
-#[derive(Debug)]
 /// Outgoing Body to response.
+#[derive(Debug)]
 pub enum OutgoingBody<D = Bytes> {
     /// A empty body.
     Empty,

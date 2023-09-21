@@ -123,8 +123,8 @@ impl Default for CookieOptions {
     }
 }
 
-#[cfg(not(feature = "cookie-private"))]
 /// An interface for managing the cookies.
+#[cfg(not(feature = "cookie-private"))]
 pub trait Cookieable {
     /// Gets the options of the cookie.
     fn options(&self) -> &CookieOptions;
@@ -145,8 +145,8 @@ pub trait Cookieable {
     }
 }
 
-#[cfg(feature = "cookie-private")]
 /// An interface for managing the `private` cookies.
+#[cfg(feature = "cookie-private")]
 pub trait Cookieable {
     /// Gets the options of the cookie.
     fn options(&self) -> &CookieOptions;

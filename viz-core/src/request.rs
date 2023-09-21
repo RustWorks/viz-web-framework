@@ -129,8 +129,8 @@ pub trait RequestExt: Sized {
     #[cfg(feature = "multipart")]
     async fn multipart(&mut self) -> Result<Multipart, PayloadError>;
 
-    #[cfg(feature = "state")]
     /// Return a shared state by the specified type.
+    #[cfg(feature = "state")]
     fn state<T>(&self) -> Option<T>
     where
         T: Clone + Send + Sync + 'static;

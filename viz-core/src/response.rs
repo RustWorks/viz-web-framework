@@ -1,5 +1,3 @@
-#[cfg(feature = "json")]
-use bytes::{BufMut, BytesMut};
 use http_body_util::Full;
 
 use crate::{header, Bytes, Error, OutgoingBody, Response, Result, StatusCode};
@@ -40,17 +38,20 @@ pub trait ResponseExt: Sized {
         Self::with(body.into(), mime::TEXT_HTML_UTF_8.as_ref())
     }
 
-    #[cfg(feature = "json")]
     /// The response with `application/javascript; charset=utf-8` media type.
     ///
     /// # Errors
     ///
     /// Throws an error if serialization fails.
+    #[cfg(feature = "json")]
     fn json<T>(body: T) -> Result<Response, crate::types::PayloadError>
     where
         T: serde::Serialize,
     {
-        let mut buf = BytesMut::new().writer();
+        use bytes::{BufMut, BytesMut};
+
+        // See <https://docs.rs/serde_json/latest/src/serde_json/ser.rs.html#2179>
+        let mut buf = BytesMut::with_capacity(128).writer();
         serde_json::to_writer(&mut buf, &body)
             .map(|()| {
                 Self::with(
