@@ -7,6 +7,15 @@ pub trait ResponseExt: Sized {
     /// Get the size of this response's body.
     fn content_length(&self) -> Option<u64>;
 
+    /// Get the media type of this response.
+    fn content_type(&self) -> Option<mime::Mime>;
+
+    /// Get a header with the key.
+    fn header<K, T>(&self, key: K) -> Option<T>
+    where
+        K: header::AsHeaderName,
+        T: std::str::FromStr;
+
     /// The response with the specified [`Content-Type`][mdn].
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type>
@@ -145,6 +154,21 @@ impl ResponseExt for Response {
             .get(header::CONTENT_LENGTH)
             .and_then(|v| v.to_str().ok())
             .and_then(|v| v.parse().ok())
+    }
+
+    fn content_type(&self) -> Option<mime::Mime> {
+        self.header(header::CONTENT_TYPE)
+    }
+
+    fn header<K, T>(&self, key: K) -> Option<T>
+    where
+        K: header::AsHeaderName,
+        T: std::str::FromStr,
+    {
+        self.headers()
+            .get(key)
+            .and_then(|v| v.to_str().ok())
+            .and_then(|v| v.parse::<T>().ok())
     }
 
     fn ok(&self) -> bool {
