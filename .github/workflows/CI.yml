@@ -12,7 +12,7 @@ env:
   CARGO_NET_RETRY: 10
   CARGO_TERM_COLOR: always
   RUST_BACKTRACE: 1
-  RUSTFLAGS: -D warnings
+  RUSTFLAGS: -Dwarnings
   RUSTUP_MAX_RETRIES: 10
 
 jobs:
@@ -65,7 +65,9 @@ jobs:
   docs:
     name: Doc
     runs-on: ubuntu-latest
+    env:
+      RUSTDOCFLAGS: -Dwarnings --cfg docsrs
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@nightly
-      - run: RUSTDOCFLAGS="-D warnings --cfg docsrs" cargo doc --workspace --all-features --no-deps
+      - run: cargo doc --workspace --all-features --no-deps
