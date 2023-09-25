@@ -17,6 +17,7 @@ struct Page {
 async fn response_ext() -> Result<()> {
     let resp = Response::with(Full::new("<xml/>".into()), mime::TEXT_XML.as_ref());
     assert!(resp.ok());
+    assert!(resp.content_length().is_none());
     let content_type = resp.headers().typed_get::<ContentType>();
     assert_eq!(
         Into::<mime::Mime>::into(content_type.unwrap()),
@@ -121,4 +122,31 @@ async fn response_ext() -> Result<()> {
 #[should_panic(expected = "not a redirection status code")]
 fn response_ext_panic() {
     Response::redirect_with_status("/oauth", StatusCode::OK);
+}
+
+#[tokio::test]
+async fn response_ext_with_server() -> Result<()> {
+    use viz::{Request, Router};
+    use viz_test::TestServer;
+
+    let router = Router::new()
+        .get("/", |_: Request| async move { Ok("") })
+        .post("/", |_: Request| async move {
+            Ok(Response::with(
+                Full::new("<xml/>".into()),
+                mime::TEXT_XML.as_ref(),
+            ))
+        });
+
+    let client = TestServer::new(router).await?;
+
+    let resp = client.get("/").send().await.map_err(Error::normal)?;
+    assert_eq!(resp.content_length(), Some(0));
+    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+
+    let resp = client.post("/").send().await.map_err(Error::normal)?;
+    assert_eq!(resp.content_length(), Some(6));
+    assert_eq!(resp.text().await.map_err(Error::normal)?, "<xml/>");
+
+    Ok(())
 }

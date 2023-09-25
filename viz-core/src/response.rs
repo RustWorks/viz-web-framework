@@ -2,7 +2,7 @@ use http_body_util::Full;
 
 use crate::{header, Bytes, Error, OutgoingBody, Response, Result, StatusCode};
 
-/// The [Response] Extension.
+/// The [`Response`] Extension.
 pub trait ResponseExt: Sized {
     /// Get the size of this response's body.
     fn content_length(&self) -> Option<u64>;
