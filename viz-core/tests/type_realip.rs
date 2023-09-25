@@ -1,8 +1,11 @@
-use http::HeaderValue;
-use viz_core::{header::FORWARDED, types::RealIp, Request, RequestExt};
+use viz_core::{
+    header::{HeaderValue, FORWARDED},
+    types::RealIp,
+    Request, RequestExt, Result,
+};
 
 #[test]
-fn realip() {
+fn realip() -> Result<()> {
     let mut req = Request::default();
     req.headers_mut()
         .insert(RealIp::X_REAL_IP, HeaderValue::from_static("10.10.10.10"));
@@ -27,4 +30,6 @@ fn realip() {
     req.extensions_mut()
         .insert("1.1.1.1:80".parse::<std::net::SocketAddr>().unwrap());
     assert_eq!(req.realip(), Some(RealIp("1.1.1.1".parse().unwrap())));
+
+    Ok(())
 }
