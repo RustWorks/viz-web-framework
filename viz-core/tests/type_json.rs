@@ -1,4 +1,4 @@
-use viz_core::{types::Json, IntoResponse, ResponseExt, Result};
+use viz_core::{types::Json, IntoResponse, ResponseExt};
 
 #[test]
 fn json() {
