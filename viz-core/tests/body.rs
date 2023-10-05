@@ -182,7 +182,7 @@ async fn outgoing_body() -> Result<()> {
     let size_hint = boxed.size_hint();
     assert_eq!(size_hint.lower(), 0);
     assert_eq!(size_hint.upper(), Some(0));
-    assert_eq!(&format!("{boxed:?}"), r#"Boxed(BoxBody)"#);
+    assert_eq!(&format!("{boxed:?}"), r"Boxed(BoxBody)");
     assert!(boxed.frame().await.is_none());
 
     let mut boxed: OutgoingBody =
@@ -191,7 +191,7 @@ async fn outgoing_body() -> Result<()> {
     let size_hint = boxed.size_hint();
     assert_eq!(size_hint.lower(), 4);
     assert_eq!(size_hint.upper(), Some(4));
-    assert_eq!(&format!("{boxed:?}"), r#"Boxed(BoxBody)"#);
+    assert_eq!(&format!("{boxed:?}"), r"Boxed(BoxBody)");
     assert_eq!(
         boxed
             .frame()
