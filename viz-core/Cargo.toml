@@ -63,6 +63,7 @@ http-body.workspace = true
 http-body-util.workspace = true
 
 hyper.workspace = true
+hyper-util.workspace = true
 
 mime.workspace = true
 thiserror.workspace = true

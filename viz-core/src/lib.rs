@@ -5,7 +5,7 @@
 #![doc(html_logo_url = "https://viz.rs/logo.svg")]
 #![doc(html_favicon_url = "https://viz.rs/logo.svg")]
 #![allow(clippy::module_name_repetitions)]
-// #![forbid(unsafe_code)]
+#![forbid(unsafe_code)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -43,7 +43,6 @@ mod body;
 mod error;
 mod from_request;
 mod into_response;
-mod io;
 mod request;
 mod response;
 
@@ -51,7 +50,6 @@ pub use body::{IncomingBody, OutgoingBody};
 pub use error::Error;
 pub use from_request::FromRequest;
 pub use into_response::IntoResponse;
-pub use io::Io;
 pub use request::RequestExt;
 pub use response::ResponseExt;
 
@@ -61,6 +59,7 @@ pub use bytes::{Bytes, BytesMut};
 pub use headers;
 pub use http::{header, Method, StatusCode};
 pub use hyper::body::{Body, Incoming};
+pub use hyper_util::rt::TokioIo as Io;
 pub use std::future::Future;
 pub use thiserror::Error as ThisError;
 

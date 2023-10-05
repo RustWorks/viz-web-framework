@@ -522,7 +522,7 @@
 
 #![doc(html_logo_url = "https://viz.rs/logo.svg")]
 #![doc(html_favicon_url = "https://viz.rs/logo.svg")]
-// #![forbid(unsafe_code)]
+#![forbid(unsafe_code)]
 #![warn(
     missing_debug_implementations,
     missing_docs,
@@ -543,6 +543,9 @@ mod responder;
 #[cfg(any(feature = "http1", feature = "http2"))]
 pub use responder::Responder;
 
+mod serve;
+pub use serve::serve;
+
 /// TLS
 pub mod tls;
 pub use viz_core::*;
@@ -553,10 +556,10 @@ pub use viz_router::*;
 #[doc(inline)]
 pub use viz_handlers as handlers;
 
+#[cfg(any(feature = "http1", feature = "http2"))]
+pub use hyper::server;
+
 #[cfg(feature = "macros")]
 #[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
 #[doc(inline)]
 pub use viz_macros::handler;
-
-#[cfg(any(feature = "http1", feature = "http2"))]
-pub use hyper::server;
