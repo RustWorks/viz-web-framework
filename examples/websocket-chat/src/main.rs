@@ -7,9 +7,9 @@ use tokio::net::TcpListener;
 use tokio::sync::broadcast::{channel, Sender};
 use viz::{
     get,
-    server::conn::http1,
+    serve,
     types::{Message, Params, State, WebSocket},
-    HandlerExt, IntoHandler, IntoResponse, Io, Request, RequestExt, Responder, Response,
+    HandlerExt, IntoHandler, IntoResponse, Request, RequestExt, Response,
     ResponseExt, Result, Router, Tree,
 };
 
@@ -55,7 +55,7 @@ async fn ws(mut req: Request) -> Result<impl IntoResponse> {
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let listener = TcpListener::bind(addr).await?;
-    println!("listening on {addr}");
+    println!("listening on http://{addr}");
 
     let channel = channel::<String>(32);
 
@@ -68,10 +68,7 @@ async fn main() -> Result<()> {
         let (stream, addr) = listener.accept().await?;
         let tree = tree.clone();
         tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new()
-                .serve_connection(Io::new(stream), Responder::new(tree, Some(addr)))
-                .with_upgrades()
-                .await
+            if let Err(err) = serve(stream, tree, Some(addr)).await
             {
                 eprintln!("Error while serving HTTP connection: {err}");
             }

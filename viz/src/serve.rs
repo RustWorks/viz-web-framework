@@ -13,7 +13,7 @@ use crate::Responder;
 /// # Errors
 ///
 /// Will return `Err` if the connection does not be served.
-pub async fn serve<I>(stream: I, addr: Option<SocketAddr>, tree: Arc<Tree>) -> Result<()>
+pub async fn serve<I>(stream: I, tree: Arc<Tree>, addr: Option<SocketAddr>) -> Result<()>
 where
     I: AsyncRead + AsyncWrite + Unpin + Send + 'static,
 {

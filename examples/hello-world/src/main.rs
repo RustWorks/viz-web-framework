@@ -21,10 +21,6 @@ async fn main() -> Result<()> {
     loop {
         let (stream, addr) = listener.accept().await?;
         let tree = tree.clone();
-        tokio::task::spawn(async move {
-            if let Err(err) = serve(stream, Some(addr), tree).await {
-                eprintln!("Error while serving HTTP connection: {err}");
-            }
-        });
+        tokio::task::spawn(serve(stream, tree, Some(addr)));
     }
 }

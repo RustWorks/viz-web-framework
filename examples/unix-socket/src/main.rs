@@ -12,14 +12,14 @@ async fn main() -> viz::Result<()> {
     use std::sync::Arc;
 
     use tokio::net::UnixListener;
-    use viz::{get, server::conn::http1, IntoHandler, Io, Responder, Result, Router, Tree};
+    use viz::{get, serve, IntoHandler, Result, Router, Tree};
 
     async fn index() -> Result<&'static str> {
         Ok("Hello world!")
     }
 
     let path = "/tmp/viz.sock";
-    println!("listening on {path}");
+    println!("listening on http://{path}");
 
     let listener = UnixListener::bind(path)?;
 
@@ -30,10 +30,7 @@ async fn main() -> viz::Result<()> {
         let (stream, _) = listener.accept().await?;
         let tree = tree.clone();
         tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new()
-                .serve_connection(Io::new(stream), Responder::new(tree, None))
-                .await
-            {
+            if let Err(err) = serve(stream, tree, None).await {
                 eprintln!("Error while serving HTTP connection: {err}");
             }
         });

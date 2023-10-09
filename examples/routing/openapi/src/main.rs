@@ -18,11 +18,10 @@ use utoipa_swagger_ui::Config;
 use viz::{
     header::{self, HeaderMap},
     headers::HeaderValue,
-    middleware,
-    server::conn::http1,
+    middleware, serve,
     types::{Json, Params, Query, State, StateError},
-    Error, HandlerExt, IntoResponse, Io, Request, RequestExt, Responder, Response, ResponseExt,
-    Result, Router, StatusCode, Tree,
+    Error, HandlerExt, IntoResponse, Request, RequestExt, Response, ResponseExt, Result, Router,
+    StatusCode, Tree,
 };
 
 /// In-memory todo store
@@ -300,7 +299,7 @@ async fn swagger_ui(req: Request) -> Result<Response> {
 async fn main() -> Result<(), Error> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let listener = TcpListener::bind(addr).await?;
-    println!("listening on {addr}");
+    println!("listening on http://{addr}");
 
     let apidoc = Arc::new(ApiDoc::openapi());
     let config = Arc::new(Config::from("/api-doc/openapi.json"));
@@ -327,10 +326,7 @@ async fn main() -> Result<(), Error> {
         let (stream, addr) = listener.accept().await?;
         let tree = tree.clone();
         tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new()
-                .serve_connection(Io::new(stream), Responder::new(tree, Some(addr)))
-                .await
-            {
+            if let Err(err) = serve(stream, tree, Some(addr)).await {
                 eprintln!("Error while serving HTTP connection: {err}");
             }
         });

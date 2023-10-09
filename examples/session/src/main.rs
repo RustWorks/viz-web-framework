@@ -13,9 +13,9 @@ use viz::{
         helper::CookieOptions,
         session::{self, Store},
     },
-    server::conn::http1,
+    serve,
     types::CookieKey,
-    Io, Request, RequestExt, Responder, Result, Router, Tree,
+    Request, RequestExt, Result, Router, Tree,
 };
 
 async fn index(req: Request) -> Result<&'static str> {
@@ -30,7 +30,7 @@ async fn index(req: Request) -> Result<&'static str> {
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let listener = TcpListener::bind(addr).await?;
-    println!("listening on {addr}");
+    println!("listening on http://{addr}");
 
     let app = Router::new()
         .route("/", get(index))
@@ -47,10 +47,7 @@ async fn main() -> Result<()> {
         let (stream, addr) = listener.accept().await?;
         let tree = tree.clone();
         tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new()
-                .serve_connection(Io::new(stream), Responder::new(tree, Some(addr)))
-                .await
-            {
+            if let Err(err) = serve(stream, tree, Some(addr)).await {
                 eprintln!("Error while serving HTTP connection: {err}");
             }
         });

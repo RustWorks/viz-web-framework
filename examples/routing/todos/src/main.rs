@@ -8,11 +8,10 @@ use tokio::net::TcpListener;
 
 use serde::{Deserialize, Serialize};
 use viz::{
-    middleware,
-    server::conn::http1,
+    middleware, serve,
     types::{Json, Params, Query, State},
-    Error, IntoResponse, Io, Request, RequestExt, Responder, Response, ResponseExt, Result, Router,
-    StatusCode, Tree,
+    Error, IntoResponse, Request, RequestExt, Response, ResponseExt, Result, Router, StatusCode,
+    Tree,
 };
 
 /// In-memory todo store
@@ -125,7 +124,7 @@ async fn delete(mut req: Request) -> Result<StatusCode> {
 async fn main() -> Result<()> {
     let addr = SocketAddr::from(([127, 0, 0, 1], 3000));
     let listener = TcpListener::bind(addr).await?;
-    println!("listening on {addr}");
+    println!("listening on http://{addr}");
 
     let db = DB::default();
 
@@ -144,10 +143,7 @@ async fn main() -> Result<()> {
         let (stream, addr) = listener.accept().await?;
         let tree = tree.clone();
         tokio::task::spawn(async move {
-            if let Err(err) = http1::Builder::new()
-                .serve_connection(Io::new(stream), Responder::new(tree, Some(addr)))
-                .await
-            {
+            if let Err(err) = serve(stream, tree, Some(addr)).await {
                 eprintln!("Error while serving HTTP connection: {err}");
             }
         });
