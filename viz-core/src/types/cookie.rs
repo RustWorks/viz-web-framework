@@ -53,7 +53,7 @@ impl Cookies {
     /// Removes `cookie` from this cookies.
     pub fn remove(&self, name: impl AsRef<str>) {
         if let Ok(mut c) = self.jar().lock() {
-            c.remove(Cookie::named(name.as_ref().to_string()));
+            c.remove(Cookie::from(name.as_ref().to_string()));
         }
     }
 
@@ -128,7 +128,7 @@ impl Cookies {
     pub fn private_remove(&self, name: impl AsRef<str>) {
         if let Ok(mut c) = self.jar().lock() {
             c.private_mut(self.key())
-                .remove(Cookie::named(name.as_ref().to_string()));
+                .remove(Cookie::from(name.as_ref().to_string()));
         }
     }
 
@@ -171,7 +171,7 @@ impl Cookies {
     pub fn signed_remove(&self, name: impl AsRef<str>) {
         if let Ok(mut c) = self.jar().lock() {
             c.signed_mut(self.key())
-                .remove(Cookie::named(name.as_ref().to_string()));
+                .remove(Cookie::from(name.as_ref().to_string()));
         }
     }
 
