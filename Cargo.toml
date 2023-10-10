@@ -69,7 +69,7 @@ hyper = { version = "=1.0.0-rc.4", features = ["server"] }
 hyper-util = { git = "https://github.com/hyperium/hyper-util", rev = "63e84bf", features = ["auto"] }
 
 futures-util = "0.3"
-tokio = { version = "1.32", features = ["net"] }
+tokio = { version = "1.33", features = ["net"] }
 tokio-tungstenite = "0.20"
 tokio-stream = "0.1"
 tokio-util = "0.7"
