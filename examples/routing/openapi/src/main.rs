@@ -319,7 +319,16 @@ async fn main() -> Result<(), Error> {
             "/api-doc/openapi.json",
             openapi_json.with(State::new(apidoc)),
         )
-        .get("/swagger-ui/*", swagger_ui.with(State::new(config)));
+        .get("/swagger-ui/*", swagger_ui.with(State::new(config)))
+        .get("/", |_| async move {
+            Ok(Response::html(
+                r#"
+            <a href="/swagger-ui/">Swagger UI</a>
+            <br />
+            <a href="/api-doc/openapi.json">OpenAPI JSON</a>
+            "#,
+            ))
+        });
     let tree = Arc::new(Tree::from(app));
 
     loop {
