@@ -266,15 +266,15 @@ mod tests {
 
     #[tokio::test]
     async fn file() -> Result<()> {
-        let serve = File::new("src/serve/mod.rs");
+        let serve = File::new("src/serve.rs");
 
         let mut req: Request = Request::default();
         req.extensions_mut().insert(Arc::new(RouteInfo {
             id: 2,
             pattern: "/*".to_string(),
-            params: Into::<Params>::into(vec![("*1", "mod.rs")]),
+            params: Into::<Params>::into(vec![("*1", "serve.rs")]),
         }));
-        *req.uri_mut() = "/mod.rs".parse().unwrap();
+        *req.uri_mut() = "/serve.rs".parse().unwrap();
 
         let result = serve.call(req).await;
 
@@ -284,9 +284,9 @@ mod tests {
         req.extensions_mut().insert(Arc::new(RouteInfo {
             id: 2,
             pattern: "/*".to_string(),
-            params: Into::<Params>::into(vec![("*1", "mod")]),
+            params: Into::<Params>::into(vec![("*1", "serve")]),
         }));
-        *req.uri_mut() = "/mod".parse().unwrap();
+        *req.uri_mut() = "/serve".parse().unwrap();
 
         let result = serve.call(req).await;
 
