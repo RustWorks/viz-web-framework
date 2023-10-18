@@ -11,7 +11,7 @@ pub mod limits;
 #[cfg(feature = "session")]
 pub mod session;
 
-#[cfg(feature = "otel")]
+#[cfg(all(feature = "params", feature = "otel"))]
 pub mod otel;
 
 #[cfg(feature = "cookie")]

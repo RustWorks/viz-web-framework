@@ -1,12 +1,15 @@
-use std::{mem::replace, sync::Arc};
+use std::mem::replace;
 
 use crate::{
     async_trait, header,
-    types::{PayloadError, RealIp, RouteInfo},
+    types::{PayloadError, RealIp},
     Bytes, FromRequest, Incoming, IncomingBody, Request, Result,
 };
 use headers::HeaderMapExt;
 use http_body_util::{BodyExt, Collected};
+
+#[cfg(any(feature = "params", feature = "multipart"))]
+use std::sync::Arc;
 
 #[cfg(feature = "limits")]
 use crate::types::Limits;
@@ -32,7 +35,7 @@ use crate::types::{Cookie, Cookies, CookiesError};
 use crate::types::Session;
 
 #[cfg(feature = "params")]
-use crate::types::{ParamsError, PathDeserializer};
+use crate::types::{ParamsError, PathDeserializer, RouteInfo};
 
 /// The [Request] Extension.
 #[async_trait]
@@ -185,6 +188,7 @@ pub trait RequestExt: Sized {
         T::Err: std::fmt::Display;
 
     /// Get current route.
+    #[cfg(feature = "params")]
     fn route_info(&self) -> &Arc<RouteInfo>;
 
     /// Get remote addr.
@@ -435,6 +439,7 @@ impl RequestExt for Request {
         self.extensions().get()
     }
 
+    #[cfg(feature = "params")]
     fn route_info(&self) -> &Arc<RouteInfo> {
         self.extensions().get().expect("should get current route")
     }

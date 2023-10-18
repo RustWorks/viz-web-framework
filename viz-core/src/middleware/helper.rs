@@ -131,7 +131,7 @@ pub trait Cookieable {
 
     /// Gets a cookie from the cookies.
     fn get_cookie<'a>(&'a self, cookies: &'a Cookies) -> Option<Cookie<'a>> {
-        cookies.get(self.options().name);
+        cookies.get(self.options().name)
     }
 
     /// Deletes a cookie from the cookies.
