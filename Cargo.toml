@@ -83,7 +83,7 @@ mime_guess = "2.0"
 percent-encoding = "2.3"
 
 hex = "0.4"
-rust-embed = "6.8"
+rust-embed = "8"
 
 # OpenTelemetry
 opentelemetry = { version = "0.20", default-features = false }

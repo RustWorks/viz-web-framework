@@ -7,8 +7,7 @@ use rust_embed::{EmbeddedFile, RustEmbed};
 use viz_core::{
     async_trait,
     header::{HeaderMap, CONTENT_TYPE, ETAG, IF_NONE_MATCH},
-    types::Params,
-    Handler, IntoResponse, Method, Request, Response, Result, StatusCode,
+    Handler, IntoResponse, Method, Request, RequestExt, Response, Result, StatusCode,
 };
 
 /// Serve a single embedded file.
@@ -65,11 +64,7 @@ where
     type Output = Result<Response>;
 
     async fn call(&self, req: Request) -> Self::Output {
-        let path = match req
-            .extensions()
-            .get::<Params>()
-            .and_then(|params| params.first().map(|(_, v)| v))
-        {
+        let path = match req.route_info().params.first().map(|(_, v)| v) {
             Some(p) => p,
             None => "index.html",
         };
