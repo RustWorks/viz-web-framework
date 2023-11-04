@@ -86,9 +86,7 @@ More examples can be found
 
 ## Get started
 
-* [English](https://viz.rs)
-
-* [简体中文](https://zh-cn.viz.rs)
+Open [Viz.rs](https://viz.rs), select language or version.
 
 ## License
 
