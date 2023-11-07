@@ -405,7 +405,6 @@ mod tests {
             })
             // .with(viz_core::middleware::cookie::Config::new())
             .into_iter()
-            .map(|(method, handler)| (method, handler))
             // .filter(|(method, _)| method != Method::GET)
             .collect::<Route>();
 
