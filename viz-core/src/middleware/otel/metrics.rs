@@ -165,7 +165,7 @@ fn build_attributes(req: &Request, http_route: &str) -> Vec<KeyValue> {
     }
     if let Some(port) = uri
         .port_u16()
-        .and_then(|port| i64::try_from(port).ok())
+        .map(i64::from)
         .filter(|port| *port != 80 && *port != 443)
     {
         attributes.push(SERVER_PORT.i64(port));

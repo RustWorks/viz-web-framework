@@ -183,7 +183,7 @@ fn build_attributes(req: &Request, http_route: &str) -> OrderMap<Key, Value> {
     }
     if let Some(port) = uri
         .port_u16()
-        .and_then(|len| i64::try_from(len).ok())
+        .map(i64::from)
         .filter(|port| *port != 80 && *port != 443)
     {
         attributes.insert(SERVER_PORT, port.into());
