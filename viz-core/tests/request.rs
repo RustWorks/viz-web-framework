@@ -4,10 +4,19 @@ use headers::{authorization::Bearer, Authorization, ContentType, HeaderValue};
 use http::uri::Scheme;
 use serde::{Deserialize, Serialize};
 use viz_core::{
-    header::{AUTHORIZATION, CONTENT_TYPE, COOKIE, SET_COOKIE},
+    // TODO: reqwest and hyper haven't used the same version of `http`.
+    // header::{AUTHORIZATION, CONTENT_TYPE, COOKIE, SET_COOKIE},
+    // StatusCode,
+    header::CONTENT_TYPE,
     types::{self, PayloadError},
-    Error, IncomingBody, IntoResponse, Request, RequestExt, Response, ResponseExt, Result,
-    StatusCode,
+    Error,
+    IncomingBody,
+    IntoResponse,
+    Request,
+    RequestExt,
+    Response,
+    ResponseExt,
+    Result,
 };
 
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
@@ -62,13 +71,16 @@ fn request_ext() -> Result<()> {
     Ok(())
 }
 
-#[allow(clippy::too_many_lines)]
 #[tokio::test]
 async fn request_body() -> Result<()> {
     use futures_util::stream::TryStreamExt;
     use viz::{
         middleware::{cookie, limits},
         Router,
+    };
+    use viz_test::http::{
+        header::{AUTHORIZATION, COOKIE},
+        StatusCode,
     };
     use viz_test::TestServer;
 
@@ -300,6 +312,7 @@ async fn request_session() -> Result<()> {
         middleware::{cookie, helper::CookieOptions, session},
         Router,
     };
+    use viz_test::http::header::{COOKIE, SET_COOKIE};
     use viz_test::{nano_id, sessions, TestServer};
 
     let router = Router::new()

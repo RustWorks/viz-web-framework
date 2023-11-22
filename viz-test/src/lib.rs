@@ -3,6 +3,7 @@ use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
 use viz::{serve, Error, Result, Router, Tree};
 
+pub use http;
 pub use nano_id;
 pub use sessions;
 

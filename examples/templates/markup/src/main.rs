@@ -1,5 +1,7 @@
 #![deny(warnings)]
 #![allow(clippy::unused_async)]
+#![allow(clippy::must_use_candidate)]
+#![allow(clippy::inherent_to_string_shadow_display)]
 
 use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;

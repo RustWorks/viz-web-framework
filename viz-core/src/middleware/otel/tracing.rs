@@ -8,10 +8,8 @@ use http::uri::Scheme;
 use opentelemetry::{
     global,
     propagation::Extractor,
-    trace::{
-        FutureExt as OtelFutureExt, OrderMap, Span, SpanKind, Status, TraceContextExt, Tracer,
-    },
-    Context, Key, Value,
+    trace::{FutureExt as OtelFutureExt, Span, SpanKind, Status, TraceContextExt, Tracer},
+    Context, KeyValue,
 };
 use opentelemetry_semantic_conventions::trace::{
     CLIENT_ADDRESS, CLIENT_SOCKET_ADDRESS, EXCEPTION_MESSAGE, HTTP_REQUEST_BODY_SIZE,
@@ -82,7 +80,7 @@ where
             .tracer
             .span_builder(format!("{} {}", req.method(), http_route))
             .with_kind(SpanKind::Server)
-            .with_attributes_map(attributes)
+            .with_attributes(attributes)
             .start_with_context(&*self.tracer, &parent_context);
 
         span.add_event("request.started".to_string(), vec![]);
@@ -143,7 +141,7 @@ impl<'a> RequestHeaderCarrier<'a> {
     }
 }
 
-impl<'a> Extractor for RequestHeaderCarrier<'a> {
+impl Extractor for RequestHeaderCarrier<'_> {
     fn get(&self, key: &str) -> Option<&str> {
         self.headers.get(key).and_then(|v| v.to_str().ok())
     }
@@ -153,62 +151,65 @@ impl<'a> Extractor for RequestHeaderCarrier<'a> {
     }
 }
 
-fn build_attributes(req: &Request, http_route: &str) -> OrderMap<Key, Value> {
-    let mut attributes = OrderMap::<Key, Value>::with_capacity(10);
+fn build_attributes(req: &Request, http_route: &str) -> Vec<KeyValue> {
+    let mut attributes = Vec::with_capacity(10);
     // <https://github.com/open-telemetry/semantic-conventions/blob/v1.21.0/docs/http/http-spans.md#http-server>
-    attributes.insert(HTTP_ROUTE, http_route.to_string().into());
+    attributes.push(KeyValue::new(HTTP_ROUTE, http_route.to_string()));
 
     // <https://github.com/open-telemetry/semantic-conventions/blob/v1.21.0/docs/http/http-spans.md#common-attributes>
-    attributes.insert(HTTP_REQUEST_METHOD, req.method().to_string().into());
-    attributes.insert(
+    attributes.push(KeyValue::new(HTTP_REQUEST_METHOD, req.method().to_string()));
+    attributes.push(KeyValue::new(
         NETWORK_PROTOCOL_VERSION,
-        format!("{:?}", req.version()).into(),
-    );
+        format!("{:?}", req.version()),
+    ));
 
     let remote_addr = req.remote_addr();
     if let Some(remote_addr) = remote_addr {
-        attributes.insert(CLIENT_ADDRESS, remote_addr.to_string().into());
+        attributes.push(KeyValue::new(CLIENT_ADDRESS, remote_addr.to_string()));
     }
     if let Some(realip) = req.realip().map(|value| value.0).filter(|realip| {
         remote_addr
             .map(SocketAddr::ip)
             .map_or(true, |remoteip| &remoteip != realip)
     }) {
-        attributes.insert(CLIENT_SOCKET_ADDRESS, realip.to_string().into());
+        attributes.push(KeyValue::new(CLIENT_SOCKET_ADDRESS, realip.to_string()));
     }
 
     let uri = req.uri();
     if let Some(host) = uri.host() {
-        attributes.insert(SERVER_ADDRESS, host.to_string().into());
+        attributes.push(KeyValue::new(SERVER_ADDRESS, host.to_string()));
     }
     if let Some(port) = uri
         .port_u16()
         .map(i64::from)
         .filter(|port| *port != 80 && *port != 443)
     {
-        attributes.insert(SERVER_PORT, port.into());
+        attributes.push(KeyValue::new(SERVER_PORT, port.to_string()));
     }
 
     if let Some(path_query) = uri.path_and_query() {
         if path_query.path() != "/" {
-            attributes.insert(URL_PATH, path_query.path().to_string().into());
+            attributes.push(KeyValue::new(URL_PATH, path_query.path().to_string()));
         }
         if let Some(query) = path_query.query() {
-            attributes.insert(URL_QUERY, query.to_string().into());
+            attributes.push(KeyValue::new(URL_QUERY, query.to_string()));
         }
     }
 
-    attributes.insert(
+    attributes.push(KeyValue::new(
         URL_SCHEME,
-        uri.scheme().unwrap_or(&Scheme::HTTP).to_string().into(),
-    );
+        uri.scheme().unwrap_or(&Scheme::HTTP).to_string(),
+    ));
 
     if let Some(content_length) = req
         .content_length()
         .and_then(|len| i64::try_from(len).ok())
         .filter(|len| *len > 0)
     {
-        attributes.insert(HTTP_REQUEST_BODY_SIZE, content_length.into());
+        attributes.push(KeyValue::new(
+            HTTP_REQUEST_BODY_SIZE,
+            content_length.to_string(),
+        ));
     }
 
     if let Some(user_agent) = req
@@ -216,7 +217,7 @@ fn build_attributes(req: &Request, http_route: &str) -> OrderMap<Key, Value> {
         .as_ref()
         .map(UserAgent::as_str)
     {
-        attributes.insert(USER_AGENT_ORIGINAL, user_agent.to_string().into());
+        attributes.push(KeyValue::new(USER_AGENT_ORIGINAL, user_agent.to_string()));
     }
 
     attributes

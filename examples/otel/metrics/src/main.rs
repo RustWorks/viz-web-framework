@@ -4,13 +4,10 @@
 use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;
 
-use opentelemetry::{
-    global,
-    sdk::{
-        metrics::{self, Aggregation, Instrument, MeterProvider, Stream},
-        Resource,
-    },
-    KeyValue,
+use opentelemetry::{global, KeyValue};
+use opentelemetry_sdk::{
+    metrics::{self, Aggregation, Instrument, MeterProvider, Stream},
+    Resource,
 };
 
 use viz::{

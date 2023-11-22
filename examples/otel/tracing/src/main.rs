@@ -1,10 +1,10 @@
 #![deny(warnings)]
 #![allow(clippy::unused_async)]
 
-use opentelemetry::{
-    global,
+use opentelemetry::global;
+use opentelemetry_sdk::{
     runtime::TokioCurrentThread,
-    sdk::{propagation::TraceContextPropagator, trace::Tracer},
+    {propagation::TraceContextPropagator, trace::Tracer},
 };
 use std::{net::SocketAddr, sync::Arc};
 use tokio::net::TcpListener;

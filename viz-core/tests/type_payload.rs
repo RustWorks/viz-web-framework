@@ -1,9 +1,10 @@
 use std::collections::HashMap;
-use viz_core::{types, Error, Request, RequestExt, Response, ResponseExt, Result, StatusCode};
+use viz_core::{types, Error, Request, RequestExt, Response, ResponseExt, Result};
 
 #[tokio::test]
 async fn payload() -> Result<()> {
     use viz::{middleware::limits, Router};
+    use viz_test::http::StatusCode;
     use viz_test::TestServer;
 
     let router = Router::new()
