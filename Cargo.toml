@@ -62,7 +62,7 @@ path-tree = "0.7"
 
 # http
 # TODO: wait headers-v1.0
-headers = { git = "https://github.com/hyperium/headers.git", rev = "4400aa9" }
+headers = "0.4"
 http = "1"
 http-body = "1"
 http-body-util = "0.1"

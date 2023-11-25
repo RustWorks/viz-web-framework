@@ -208,9 +208,8 @@ where
     type Output = Result<Response>;
 
     async fn call(&self, req: Request) -> Self::Output {
-        let origin = match req.header(ORIGIN).filter(is_not_empty) {
-            Some(origin) => origin,
-            None => return self.h.call(req).await.map(IntoResponse::into_response),
+        let Some(origin) = req.header(ORIGIN).filter(is_not_empty) else {
+            return self.h.call(req).await.map(IntoResponse::into_response);
         };
 
         if !self.config.allow_origins.contains(&origin)
