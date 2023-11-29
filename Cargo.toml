@@ -28,6 +28,7 @@ members = [
   "examples/templates/*",
   "examples/tracing",
   "examples/graceful-shutdown",
+  "examples/databases/*",
 ]
 resolver = "2"
 
