@@ -11,7 +11,7 @@ members = [
   "examples/unix-socket",
   "examples/static-files/embed",
   "examples/static-files/serve",
-  "examples/static-files/static-embed",
+  "examples/static-files/include-dir",
   "examples/limits",
   "examples/forms/form",
   "examples/forms/multipart",
