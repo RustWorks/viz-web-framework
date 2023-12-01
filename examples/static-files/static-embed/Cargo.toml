@@ -1,0 +1,12 @@
+[package]
+name = "static-embed"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+viz.workspace = true
+include_dir = "0.7.3"
+http-body-util = "0.1"
+
+tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
