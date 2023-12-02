@@ -44,7 +44,7 @@ license = "MIT"
 rust-version = "1.63"                           # follows `tokio` and `hyper`
 
 [workspace.dependencies]
-viz = { version = "0.5.0", path = "viz" }
+viz = { version = "0.5.0-rc.2", path = "viz" }
 viz-core = { version = "0.5.0", path = "viz-core" }
 viz-router = { version = "0.5.0", path = "viz-router" }
 viz-handlers = { version = "0.5.0", path = "viz-handlers", default-features = false }

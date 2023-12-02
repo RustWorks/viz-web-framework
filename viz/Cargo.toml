@@ -81,6 +81,13 @@ tokio-rustls = { workspace = true, optional = true }
 tokio-native-tls = { workspace = true, optional = true }
 
 [dev-dependencies]
+viz-test.workspace = true
+bytes.workspace = true
+headers.workspace = true
+http.workspace = true
+http-body-util.workspace = true
+mime.workspace = true
+serde.workspace = true
 tokio = { workspace = true, features = ["macros", "rt", "rt-multi-thread"] }
 
 [package.metadata.docs.rs]
