@@ -2,7 +2,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use headers::{authorization::Bearer, Authorization};
 use serde::{Deserialize, Serialize};
-use viz_core::{
+use viz::{
     // TODO: reqwest and hyper haven't used the same version of `http`.
     // header::{AUTHORIZATION, CONTENT_TYPE, COOKIE, SET_COOKIE},
     // StatusCode,

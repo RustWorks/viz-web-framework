@@ -3,7 +3,7 @@ use headers::{ContentDisposition, ContentType, HeaderMapExt};
 use http_body_util::{BodyExt, Full};
 use hyper::body::Body;
 use serde::{Deserialize, Serialize};
-use viz_core::{
+use viz::{
     header::{CONTENT_DISPOSITION, CONTENT_LOCATION, LOCATION},
     Error, OutgoingBody, Response, ResponseExt, Result, StatusCode,
 };
