@@ -10,7 +10,7 @@ use viz::{
     Tree,
 };
 
-const ASSETS: Dir = include_dir!("examples/static-files/static-embed/html"); // frontend dir
+const ASSETS: Dir = include_dir!("examples/static-files/include-dir/html"); // frontend dir
 
 pub async fn index(_: Request) -> Result<Response> {
     let file_content = ASSETS
