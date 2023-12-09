@@ -28,6 +28,7 @@ Here you can find a lot of small crabs 🦀.
   * [askama](templates/askama)
   * [markup](templates/markup)
   * [tera](templates/tera)
+  * [maud](templates/maud)
 * [Tracing aka logging](tracing)
 
 ## Usage
