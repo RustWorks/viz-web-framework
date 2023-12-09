@@ -72,8 +72,8 @@ hyper = { version = "1", features = ["server"] }
 hyper-util = { version = "0.1", features = ["server-auto", "tokio"] }
 
 futures-util = "0.3"
-tokio = { version = "1.33", features = ["net"] }
-tokio-tungstenite = "0.20"
+tokio = { version = "1.35", features = ["net"] }
+tokio-tungstenite = "0.21"
 tokio-stream = "0.1"
 tokio-util = "0.7"
 rustls-pemfile = "1.0"
