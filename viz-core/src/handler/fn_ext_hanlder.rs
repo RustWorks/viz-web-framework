@@ -25,20 +25,14 @@ impl<H, E, O> FnExtHandler<H, E, O> {
 #[async_trait]
 impl<H, E, O> Handler<Request> for FnExtHandler<H, E, O>
 where
-    E: FromRequest + Send + Sync + 'static,
-    E::Error: IntoResponse + Send + Sync,
+    E: FromRequest + 'static,
+    E::Error: IntoResponse + Send,
     H: FnExt<E, Output = Result<O>>,
-    O: Send + Sync + 'static,
-    // O: IntoResponse + Send + Sync + 'static,
+    O: 'static,
 {
     type Output = H::Output;
-    // type Output = Result<Response>;
 
     async fn call(&self, req: Request) -> Self::Output {
-        self.0
-            .call(req)
-            .await
-            // .map(IntoResponse::into_response)
-            .map_err(IntoResponse::into_error)
+        self.0.call(req).await.map_err(IntoResponse::into_error)
     }
 }

@@ -18,8 +18,8 @@ impl<H, F> Map<H, F> {
 impl<H, F, I, O> Handler<I> for Map<H, F>
 where
     I: Send + 'static,
-    O: Send,
     H: Handler<I, Output = Result<O>> + Clone,
+    O: Send,
     F: Handler<O, Output = O> + Clone,
 {
     type Output = H::Output;

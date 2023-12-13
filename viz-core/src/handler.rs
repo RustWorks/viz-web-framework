@@ -113,7 +113,7 @@ pub trait HandlerExt<I>: Handler<I> {
     }
 
     /// Maps the handler's output type to the [`Response`][crate::Response].
-    fn map_into_response<O>(self) -> MapInToResponse<Self, O>
+    fn map_into_response(self) -> MapInToResponse<Self>
     where
         Self: Sized,
     {

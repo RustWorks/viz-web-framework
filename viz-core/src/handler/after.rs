@@ -18,7 +18,6 @@ impl<H, F> After<H, F> {
 impl<H, F, I, O> Handler<I> for After<H, F>
 where
     I: Send + 'static,
-    O: Send,
     H: Handler<I, Output = Result<O>> + Clone,
     F: Handler<Result<O>, Output = Result<O>> + Clone,
 {

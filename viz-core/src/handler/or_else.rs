@@ -18,8 +18,8 @@ impl<H, F> OrElse<H, F> {
 impl<H, F, I, O> Handler<I> for OrElse<H, F>
 where
     I: Send + 'static,
-    O: Send,
     H: Handler<I, Output = Result<O>> + Clone,
+    O: Send,
     F: Handler<Error, Output = H::Output> + Clone,
 {
     type Output = F::Output;

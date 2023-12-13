@@ -14,10 +14,10 @@ pub trait IntoHandler<E, I> {
 
 impl<H, E, O> IntoHandler<E, Request> for H
 where
-    E: FromRequest + Send + Sync + 'static,
-    E::Error: IntoResponse + Send + Sync,
+    E: FromRequest + 'static,
+    E::Error: IntoResponse + Send,
     H: FnExt<E, Output = Result<O>>,
-    O: Send + Sync + 'static,
+    O: 'static,
 {
     type Handler = FnExtHandler<H, E, O>;
 

@@ -18,8 +18,8 @@ impl<H, F> MapErr<H, F> {
 impl<H, F, I, O> Handler<I> for MapErr<H, F>
 where
     I: Send + 'static,
-    O: Send,
     H: Handler<I, Output = Result<O>> + Clone,
+    O: Send,
     F: Handler<Error, Output = Error> + Clone,
 {
     type Output = H::Output;

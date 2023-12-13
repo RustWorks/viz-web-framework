@@ -9,7 +9,7 @@ use viz_core::*;
 
 #[tokio::test]
 async fn handler() -> Result<()> {
-    pub struct CatchError<H, F, R, E> {
+    struct CatchError<H, F, R, E> {
         h: H,
         f: F,
         r: PhantomData<R>,

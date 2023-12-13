@@ -22,10 +22,10 @@ impl<H, F> CatchUnwind<H, F> {
 impl<H, F, I, O, R> Handler<I> for CatchUnwind<H, F>
 where
     I: Send + 'static,
+    O: IntoResponse + Send,
     H: Handler<I, Output = Result<O>> + Clone,
     F: Handler<Box<dyn Any + Send>, Output = R> + Clone,
-    O: IntoResponse + Send + Sync + 'static,
-    R: IntoResponse + Send + Sync + 'static,
+    R: IntoResponse,
 {
     type Output = Result<Response>;
 

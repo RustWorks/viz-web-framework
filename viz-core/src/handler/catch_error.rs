@@ -39,10 +39,10 @@ impl<H, F, R, E> CatchError<H, F, R, E> {
 impl<H, F, I, O, R, E> Handler<I> for CatchError<H, F, R, E>
 where
     I: Send + 'static,
-    O: IntoResponse + Send,
     H: Handler<I, Output = Result<O>> + Clone,
-    F: Handler<E, Output = R> + Clone,
+    O: IntoResponse + Send,
     R: IntoResponse + Send + Sync + 'static,
+    F: Handler<E, Output = R> + Clone,
     E: std::error::Error + Send + Sync + 'static,
 {
     type Output = Result<Response>;
