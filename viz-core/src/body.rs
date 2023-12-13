@@ -9,23 +9,25 @@ use hyper::body::{Body, Frame, Incoming, SizeHint};
 
 use crate::{Bytes, Error, Result};
 
-/// Incoming Body from request.
+/// The incoming body from HTTP [`Request`].
+///
+/// [`Request`]: crate::Request
 #[derive(Debug)]
 pub enum IncomingBody {
-    /// A empty body.
+    /// An empty body.
     Empty,
-    /// A incoming body.
+    /// An incoming body.
     Incoming(Option<Incoming>),
 }
 
 impl IncomingBody {
-    /// Creates new Incoming Body
+    /// Creates new incoming body.
     #[must_use]
     pub fn new(inner: Option<Incoming>) -> Self {
         Self::Incoming(inner)
     }
 
-    /// Incoming body has been used
+    /// The incoming body has been used.
     #[must_use]
     pub fn used() -> Self {
         Self::Incoming(None)
@@ -107,10 +109,12 @@ impl Stream for IncomingBody {
     }
 }
 
-/// Outgoing Body to response.
+/// The outgoing body to HTTP [`Response`].
+///
+/// [`Response`]: crate::Response
 #[derive(Debug)]
 pub enum OutgoingBody<D = Bytes> {
-    /// A empty body.
+    /// An empty body.
     Empty,
     /// A body that consists of a single chunk.
     Full(Full<D>),
