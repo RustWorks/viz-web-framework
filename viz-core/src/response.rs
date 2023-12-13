@@ -1,3 +1,4 @@
+use futures_util::Stream;
 use http_body_util::Full;
 
 use crate::{header, Bytes, Error, OutgoingBody, Response, Result, StatusCode};
@@ -74,8 +75,8 @@ pub trait ResponseExt: Sized {
     /// Responds to a stream.
     fn stream<S, D, E>(stream: S) -> Response
     where
-        S: futures_util::Stream<Item = Result<D, E>> + Send + Sync + 'static,
-        D: Into<Bytes>,
+        S: Stream<Item = Result<D, E>> + Send + Sync + 'static,
+        D: Into<Bytes> + 'static,
         E: Into<Error> + 'static,
     {
         Response::new(OutgoingBody::streaming(stream))

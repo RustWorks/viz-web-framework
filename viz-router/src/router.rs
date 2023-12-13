@@ -12,7 +12,7 @@ macro_rules! export_verb {
         where
             S: AsRef<str>,
             H: Handler<Request, Output = Result<O>> + Clone,
-            O: IntoResponse + Send + Sync + 'static,
+            O: IntoResponse + Send + 'static,
         {
             self.route(path, Route::new().$name(handler))
         }
@@ -131,7 +131,7 @@ impl Router {
     where
         S: AsRef<str>,
         H: Handler<Request, Output = Result<O>> + Clone,
-        O: IntoResponse + Send + Sync + 'static,
+        O: IntoResponse + Send + 'static,
     {
         self.route(path, Route::new().any(handler))
     }

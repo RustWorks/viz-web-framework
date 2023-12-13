@@ -49,7 +49,7 @@ pub trait Handler<Input>: dyn_clone::DynClone + Send + Sync + 'static {
     async fn call(&self, input: Input) -> Self::Output;
 }
 
-impl<I, T> HandlerExt<I> for T where T: Handler<I> + ?Sized {}
+impl<I, T: ?Sized> HandlerExt<I> for T where T: Handler<I> {}
 
 #[async_trait]
 impl<F, I, Fut, O> Handler<I> for F

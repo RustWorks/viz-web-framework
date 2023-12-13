@@ -3,7 +3,7 @@ use std::{
     task::{Context, Poll},
 };
 
-use futures_util::{stream::Stream, TryStreamExt};
+use futures_util::{Stream, TryStreamExt};
 use http_body_util::{combinators::BoxBody, BodyExt, Full, StreamBody};
 use hyper::body::{Body, Frame, Incoming, SizeHint};
 
@@ -123,14 +123,18 @@ impl OutgoingBody {
     pub fn streaming<S, D, E>(stream: S) -> Self
     where
         S: Stream<Item = Result<D, E>> + Send + Sync + 'static,
-        D: Into<Bytes>,
+        D: Into<Bytes> + 'static,
         E: Into<Error> + 'static,
     {
-        Self::Boxed(BodyExt::boxed(StreamBody::new(
-            stream
-                .map_ok(|data| Frame::<Bytes>::data(data.into()))
-                .map_err(Into::into),
-        )))
+        Self::Boxed(
+            StreamBody::new(
+                stream
+                    .map_ok(Into::into)
+                    .map_ok(Frame::<Bytes>::data)
+                    .map_err(Into::into),
+            )
+            .boxed(),
+        )
     }
 }
 
