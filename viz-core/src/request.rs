@@ -1,5 +1,3 @@
-use std::mem::replace;
-
 use crate::{
     async_trait, header,
     types::{PayloadError, RealIp},
@@ -37,7 +35,7 @@ use crate::types::Session;
 #[cfg(feature = "params")]
 use crate::types::{ParamsError, PathDeserializer, RouteInfo};
 
-/// The [Request] Extension.
+/// The [`Request`] Extension.
 #[async_trait]
 pub trait RequestExt: Sized {
     /// Get URL's schema of this request.
@@ -255,7 +253,7 @@ impl RequestExt for Request {
     }
 
     fn incoming_body(&mut self) -> IncomingBody {
-        replace(self.body_mut(), IncomingBody::used())
+        std::mem::replace(self.body_mut(), IncomingBody::used())
     }
 
     fn incoming(&mut self) -> Result<Incoming, PayloadError> {
@@ -267,12 +265,11 @@ impl RequestExt for Request {
     }
 
     async fn bytes(&mut self) -> Result<Bytes, PayloadError> {
-        // self.body_mut()
         self.incoming()?
             .collect()
             .await
-            .map_err(|_| PayloadError::Read)
             .map(Collected::to_bytes)
+            .map_err(|_| PayloadError::Read)
     }
 
     #[cfg(feature = "limits")]

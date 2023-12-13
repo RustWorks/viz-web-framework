@@ -45,7 +45,6 @@ pub trait Handler<Input>: dyn_clone::DynClone + Send + Sync + 'static {
     type Output;
 
     /// Performs the call operation.
-    #[must_use]
     async fn call(&self, input: Input) -> Self::Output;
 }
 
@@ -67,7 +66,7 @@ where
 
 /// The [`HandlerExt`] trait, which provides adapters for chaining and composing handlers.
 ///
-/// Likes the [`FutureExt`] and [`StreamExt`] trait.
+/// Likes the [`FutureExt`] and [`StreamExt`] traits.
 ///
 /// [`FutureExt`]: https://docs.rs/futures/latest/futures/future/trait.FutureExt.html
 /// [`StreamExt`]: https://docs.rs/futures/latest/futures/stream/trait.StreamExt.html

@@ -11,7 +11,6 @@ pub trait FromRequest: Sized {
     type Error: IntoResponse;
 
     /// Extracts this type from the HTTP [`Request`].
-    #[must_use]
     async fn extract(req: &mut Request) -> Result<Self, Self::Error>;
 }
 
