@@ -13,18 +13,10 @@
 ))]
 #![cfg_attr(docsrs, feature(doc_cfg, doc_auto_cfg))]
 
-/// Represents an HTTP Request.
-pub type Request<T = IncomingBody> = http::Request<T>;
-/// Represents an HTTP Response.
-pub type Response<T = OutgoingBody> = http::Response<T>;
-/// Represents either success (Ok) or failure (Err).
-pub type Result<T, E = Error> = core::result::Result<T, E>;
-
 #[macro_use]
 pub(crate) mod macros;
 
 pub mod handler;
-
 #[doc(inline)]
 pub use crate::handler::{BoxHandler, FnExt, Handler, HandlerExt, IntoHandler, Next, Transform};
 
@@ -32,18 +24,29 @@ pub mod middleware;
 pub mod types;
 
 mod body;
-mod error;
-mod from_request;
-mod into_response;
-mod request;
-mod response;
-
 pub use body::{IncomingBody, OutgoingBody};
-pub use error::Error;
+
+mod error;
+pub use error::{BoxError, Error};
+
+mod from_request;
 pub use from_request::FromRequest;
+
+mod into_response;
 pub use into_response::IntoResponse;
+
+mod request;
 pub use request::RequestExt;
+
+mod response;
 pub use response::ResponseExt;
+
+/// Represents an HTTP Request.
+pub type Request<T = IncomingBody> = http::Request<T>;
+/// Represents an HTTP Response.
+pub type Response<T = OutgoingBody> = http::Response<T>;
+/// Represents either success (Ok) or failure (Err).
+pub type Result<T, E = Error> = core::result::Result<T, E>;
 
 pub use async_trait::async_trait;
 pub use bytes::{Bytes, BytesMut};

@@ -140,13 +140,13 @@ async fn response_ext_with_server() -> Result<()> {
 
     let client = TestServer::new(router).await?;
 
-    let resp = client.get("/").send().await.map_err(Error::normal)?;
+    let resp = client.get("/").send().await.map_err(Error::boxed)?;
     assert_eq!(resp.content_length(), Some(0));
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "");
 
-    let resp = client.post("/").send().await.map_err(Error::normal)?;
+    let resp = client.post("/").send().await.map_err(Error::boxed)?;
     assert_eq!(resp.content_length(), Some(6));
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "<xml/>");
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "<xml/>");
 
     Ok(())
 }

@@ -39,8 +39,8 @@ async fn stats(req: Request) -> Result<impl IntoResponse> {
         IntervalStream::new(interval(Duration::from_secs(10))).map(move |_| {
             match sys
                 .load_average()
-                .map_err(Error::normal)
-                .and_then(|loadavg| serde_json::to_string(&loadavg).map_err(Error::normal))
+                .map_err(Error::boxed)
+                .and_then(|loadavg| serde_json::to_string(&loadavg).map_err(Error::boxed))
             {
                 Ok(loadavg) => Event::default().data(loadavg),
                 Err(err) => {

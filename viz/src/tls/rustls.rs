@@ -98,27 +98,27 @@ impl Config {
     pub fn build(self) -> Result<ServerConfig> {
         fn read_trust_anchor(trust_anchor: &Certificate) -> Result<RootCertStore> {
             let mut store = RootCertStore::empty();
-            store.add(trust_anchor).map_err(Error::normal)?;
+            store.add(trust_anchor).map_err(Error::boxed)?;
             Ok(store)
         }
 
         let certs = rustls_pemfile::certs(&mut self.cert.as_slice())
             .map(|mut certs| certs.drain(..).map(Certificate).collect())
-            .map_err(Error::normal)?;
+            .map_err(Error::boxed)?;
 
         let keys = {
             let mut pkcs8: Vec<PrivateKey> =
                 rustls_pemfile::pkcs8_private_keys(&mut self.key.as_slice())
                     .map(|mut keys| keys.drain(..).map(PrivateKey).collect())
-                    .map_err(Error::normal)?;
+                    .map_err(Error::boxed)?;
             if pkcs8.is_empty() {
                 let mut rsa: Vec<PrivateKey> =
                     rustls_pemfile::rsa_private_keys(&mut self.key.as_slice())
                         .map(|mut keys| keys.drain(..).map(PrivateKey).collect())
-                        .map_err(Error::normal)?;
+                        .map_err(Error::boxed)?;
 
                 if rsa.is_empty() {
-                    return Err(Error::normal(IoError::new(
+                    return Err(Error::boxed(IoError::new(
                         ErrorKind::InvalidData,
                         "failed to parse tls private keys",
                     )));
@@ -145,7 +145,7 @@ impl Config {
             .with_safe_defaults()
             .with_client_cert_verifier(client_auth)
             .with_single_cert_with_ocsp_and_sct(certs, keys, self.ocsp_resp, Vec::new())
-            .map_err(Error::normal)
+            .map_err(Error::boxed)
     }
 }
 

@@ -32,7 +32,7 @@ async fn main() -> Result<()> {
             ExporterBuilder::default()
                 .with_registry(registry.clone())
                 .build()
-                .map_err(Error::normal)?,
+                .map_err(Error::boxed)?,
             metrics::new_view(
                 Instrument::new().name("http.server.duration"),
                 Stream::new().aggregation(Aggregation::ExplicitBucketHistogram {

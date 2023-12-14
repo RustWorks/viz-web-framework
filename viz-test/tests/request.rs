@@ -94,7 +94,7 @@ async fn request_body() -> Result<()> {
 
             while let Some(mut field) = multipart.try_next().await? {
                 let buf = field.bytes().await?.to_vec();
-                data.insert(field.name, String::from_utf8(buf).map_err(Error::normal)?);
+                data.insert(field.name, String::from_utf8(buf).map_err(Error::boxed)?);
             }
 
             Ok(Response::json(data))
@@ -103,23 +103,23 @@ async fn request_body() -> Result<()> {
 
     let client = TestServer::new(router).await?;
 
-    let resp = client.get("/7").send().await.map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "7");
+    let resp = client.get("/7").send().await.map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "7");
 
     let resp = client
         .get("/viz-rs/viz")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "viz-rs/viz");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "viz-rs/viz");
 
     let resp = client
         .get("/extract-token")
         .header(AUTHORIZATION, "Bearer viz.rs")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "viz.rs");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "viz.rs");
 
     let mut form = BTreeMap::new();
     form.insert("password", "rs");
@@ -129,9 +129,9 @@ async fn request_body() -> Result<()> {
         .form(&form)
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(
-        resp.text().await.map_err(Error::normal)?,
+        resp.text().await.map_err(Error::boxed)?,
         r#"{"password":"rs","username":"viz"}"#
     );
 
@@ -140,43 +140,43 @@ async fn request_body() -> Result<()> {
         .header(COOKIE, "viz=crate")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "crate");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "crate");
 
     let resp = client
         .get("/cookies")
         .header(COOKIE, "auth=true;dark=false")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "2");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "2");
 
     let resp = client
         .post("/bytes")
         .body("bytes")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "bytes");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "bytes");
 
     let resp = client
         .post("/bytes-with-limit")
         .body("rust")
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(resp.status(), StatusCode::OK);
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "rust");
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "rust");
 
     let resp = client
         .post("/bytes-with-limit")
         .body("crate")
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(resp.status(), StatusCode::PAYLOAD_TOO_LARGE);
     assert_eq!(
-        resp.text().await.map_err(Error::normal)?,
+        resp.text().await.map_err(Error::boxed)?,
         "payload is too large"
     );
 
@@ -185,10 +185,10 @@ async fn request_body() -> Result<()> {
         .body("used")
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(resp.status(), StatusCode::INTERNAL_SERVER_ERROR);
     assert_eq!(
-        resp.text().await.map_err(Error::normal)?,
+        resp.text().await.map_err(Error::boxed)?,
         "payload has been used"
     );
 
@@ -197,17 +197,17 @@ async fn request_body() -> Result<()> {
         .body("text")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "text");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "text");
 
     let resp = client
         .post("/json")
         .json(&Page { p: 1 })
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(
-        resp.json::<Page>().await.map_err(Error::normal)?,
+        resp.json::<Page>().await.map_err(Error::boxed)?,
         Page { p: 1 }
     );
 
@@ -219,11 +219,11 @@ async fn request_body() -> Result<()> {
         .form(&form)
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(
         resp.json::<HashMap<String, String>>()
             .await
-            .map_err(Error::normal)?,
+            .map_err(Error::boxed)?,
         {
             let mut form = HashMap::new();
             form.insert("username".to_string(), "viz".to_string());
@@ -240,11 +240,11 @@ async fn request_body() -> Result<()> {
         .multipart(form)
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(
         resp.json::<HashMap<String, String>>()
             .await
-            .map_err(Error::normal)?,
+            .map_err(Error::boxed)?,
         {
             let mut form = HashMap::new();
             form.insert("key3".to_string(), "3".to_string());
@@ -287,17 +287,17 @@ async fn request_session() -> Result<()> {
         .post("/session/set")
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     let cookie = resp.headers().get(SET_COOKIE).cloned().unwrap();
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "1");
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "1");
 
     let resp = client
         .post("/session/set")
         .header(COOKIE, cookie)
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "2");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "2");
 
     Ok(())
 }

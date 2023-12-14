@@ -6,7 +6,7 @@ fn error() {
     let e: Error = std::io::Error::last_os_error().into();
     assert!(e.is::<std::io::Error>());
     assert!(e.downcast::<std::io::Error>().is_ok());
-    let e: Error = Error::normal(std::io::Error::last_os_error());
+    let e: Error = Error::boxed(std::io::Error::last_os_error());
     assert!(e.downcast_ref::<std::io::Error>().is_some());
     let boxed: Box<dyn StdError + Send + Sync> = Box::new(std::io::Error::last_os_error());
     let mut e: Error = boxed.into();

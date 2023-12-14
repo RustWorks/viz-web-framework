@@ -52,16 +52,16 @@ async fn incoming_body() -> Result<()> {
         .post("/login-empty")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "");
 
     let resp = client
         .post("/login")
         .body("hello world!")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "");
 
     Ok(())
 }
@@ -118,16 +118,16 @@ async fn incoming_stream() -> Result<()> {
         .post("/login-empty")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "");
 
     let resp = client
         .post("/login")
         .body("hello world!")
         .send()
         .await
-        .map_err(Error::normal)?;
-    assert_eq!(resp.text().await.map_err(Error::normal)?, "");
+        .map_err(Error::boxed)?;
+    assert_eq!(resp.text().await.map_err(Error::boxed)?, "");
 
     Ok(())
 }

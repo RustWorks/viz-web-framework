@@ -3,37 +3,51 @@
 use crate::{async_trait, Future};
 
 mod after;
-mod and_then;
-mod around;
-mod before;
-mod boxed;
-mod catch_error;
-mod catch_unwind;
-mod either;
-mod fn_ext;
-mod fn_ext_hanlder;
-mod into_handler;
-mod map;
-mod map_err;
-mod map_into_response;
-mod or_else;
-mod transform;
-
 pub use after::After;
+
+mod and_then;
 pub use and_then::AndThen;
+
+mod around;
 pub use around::{Around, Next};
+
+mod before;
 pub use before::Before;
+
+mod boxed;
 pub use boxed::BoxHandler;
+
+mod catch_error;
 pub use catch_error::CatchError;
+
+mod catch_unwind;
 pub use catch_unwind::CatchUnwind;
+
+mod either;
 pub use either::Either;
+
+mod fn_ext;
 pub use fn_ext::FnExt;
+
+mod fn_ext_hanlder;
 pub use fn_ext_hanlder::FnExtHandler;
+
+mod into_handler;
 pub use into_handler::IntoHandler;
+
+mod map;
 pub use map::Map;
+
+mod map_err;
 pub use map_err::MapErr;
+
+mod map_into_response;
 pub use map_into_response::MapInToResponse;
+
+mod or_else;
 pub use or_else::OrElse;
+
+mod transform;
 pub use transform::Transform;
 
 /// A simplified asynchronous interface for handling input and output.
@@ -47,8 +61,6 @@ pub trait Handler<Input>: dyn_clone::DynClone + Send + Sync + 'static {
     /// Performs the call operation.
     async fn call(&self, input: Input) -> Self::Output;
 }
-
-impl<I, T: ?Sized> HandlerExt<I> for T where T: Handler<I> {}
 
 #[async_trait]
 impl<F, I, Fut, O> Handler<I> for F
@@ -180,3 +192,5 @@ pub trait HandlerExt<I>: Handler<I> {
         f(self)
     }
 }
+
+impl<I, T: ?Sized> HandlerExt<I> for T where T: Handler<I> {}

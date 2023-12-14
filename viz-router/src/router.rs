@@ -298,7 +298,7 @@ mod tests {
 
                     let mut buf = bytes::BytesMut::new();
                     buf.extend(b"users: ");
-                    buf.extend(body.collect().await.map_err(Error::normal)?.to_bytes());
+                    buf.extend(body.collect().await.map_err(Error::boxed)?.to_bytes());
 
                     Ok(Response::from_parts(parts, Full::from(buf.freeze()).into()))
                 })
@@ -319,7 +319,7 @@ mod tests {
 
                         let mut buf = bytes::BytesMut::new();
                         buf.extend(b"posts: ");
-                        buf.extend(body.collect().await.map_err(Error::normal)?.to_bytes());
+                        buf.extend(body.collect().await.map_err(Error::boxed)?.to_bytes());
 
                         Ok(Response::from_parts(parts, Full::from(buf.freeze()).into()))
                     })

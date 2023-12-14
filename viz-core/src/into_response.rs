@@ -26,7 +26,7 @@ impl IntoResponse for Response {
 impl IntoResponse for Error {
     fn into_response(self) -> Response {
         match self {
-            Error::Normal(error) => {
+            Error::Boxed(error) => {
                 let body = error.to_string();
                 Response::builder()
                     .status(StatusCode::INTERNAL_SERVER_ERROR)

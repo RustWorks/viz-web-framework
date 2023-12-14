@@ -18,7 +18,7 @@ async fn index(_: Request) -> Result<Response> {
     buf.extend(
         HelloTemplate { name: "world" }
             .render()
-            .map_err(Error::normal)?
+            .map_err(Error::boxed)?
             .as_bytes(),
     );
 

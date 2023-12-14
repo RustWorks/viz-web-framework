@@ -27,7 +27,7 @@ impl TestServer {
         let client = reqwest::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .build()
-            .map_err(Error::normal)?;
+            .map_err(Error::boxed)?;
 
         tokio::spawn(run(listener, tree));
 

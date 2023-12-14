@@ -53,8 +53,8 @@ impl Body for IncomingBody {
             Self::Empty => Poll::Ready(None),
             Self::Incoming(i) => match i {
                 None => Poll::Ready(None),
-                Some(b) => match Pin::new(b).poll_frame(cx)? {
-                    Poll::Ready(Some(f)) => Poll::Ready(Some(Ok(f))),
+                Some(inner) => match Pin::new(inner).poll_frame(cx)? {
+                    Poll::Ready(Some(frame)) => Poll::Ready(Some(Ok(frame))),
                     Poll::Ready(None) => {
                         // the body has been used.
                         *i = None;
@@ -66,6 +66,7 @@ impl Body for IncomingBody {
         }
     }
 
+    #[inline]
     fn is_end_stream(&self) -> bool {
         match self {
             Self::Empty | Self::Incoming(None) => true,
@@ -73,6 +74,7 @@ impl Body for IncomingBody {
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> SizeHint {
         match self {
             Self::Empty | Self::Incoming(None) => SizeHint::with_exact(0),
@@ -84,11 +86,12 @@ impl Body for IncomingBody {
 impl Stream for IncomingBody {
     type Item = Result<Bytes, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
+    #[inline]
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match self.get_mut() {
             Self::Empty | Self::Incoming(None) => Poll::Ready(None),
             Self::Incoming(Some(inner)) => match Pin::new(inner).poll_frame(cx)? {
-                Poll::Ready(Some(f)) => Poll::Ready(f.into_data().map(Ok).ok()),
+                Poll::Ready(Some(frame)) => Poll::Ready(frame.into_data().map(Ok).ok()),
                 Poll::Ready(None) => Poll::Ready(None),
                 Poll::Pending => Poll::Pending,
             },
@@ -160,24 +163,26 @@ impl Body for OutgoingBody {
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         match self.get_mut() {
             Self::Empty => Poll::Ready(None),
-            Self::Full(f) => Pin::new(f).poll_frame(cx).map_err(Error::from),
-            Self::Boxed(b) => Pin::new(b).poll_frame(cx),
+            Self::Full(full) => Pin::new(full).poll_frame(cx).map_err(Error::from),
+            Self::Boxed(body) => Pin::new(body).poll_frame(cx),
         }
     }
 
+    #[inline]
     fn is_end_stream(&self) -> bool {
         match self {
             Self::Empty => true,
-            Self::Full(f) => f.is_end_stream(),
-            Self::Boxed(b) => b.is_end_stream(),
+            Self::Full(full) => full.is_end_stream(),
+            Self::Boxed(body) => body.is_end_stream(),
         }
     }
 
+    #[inline]
     fn size_hint(&self) -> SizeHint {
         match self {
             Self::Empty => SizeHint::with_exact(0),
-            Self::Full(f) => f.size_hint(),
-            Self::Boxed(b) => b.size_hint(),
+            Self::Full(full) => full.size_hint(),
+            Self::Boxed(body) => body.size_hint(),
         }
     }
 }
@@ -185,17 +190,18 @@ impl Body for OutgoingBody {
 impl Stream for OutgoingBody {
     type Item = Result<Bytes, std::io::Error>;
 
+    #[inline]
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
         match match self.get_mut() {
             Self::Empty => return Poll::Ready(None),
-            Self::Full(f) => Pin::new(f)
+            Self::Full(full) => Pin::new(full)
                 .poll_frame(cx)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?,
-            Self::Boxed(b) => Pin::new(b)
+            Self::Boxed(body) => Pin::new(body)
                 .poll_frame(cx)
                 .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?,
         } {
-            Poll::Ready(Some(f)) => Poll::Ready(f.into_data().map(Ok).ok()),
+            Poll::Ready(Some(frame)) => Poll::Ready(frame.into_data().map(Ok).ok()),
             Poll::Ready(None) => Poll::Ready(None),
             Poll::Pending => Poll::Pending,
         }
@@ -205,8 +211,8 @@ impl Stream for OutgoingBody {
     fn size_hint(&self) -> (usize, Option<usize>) {
         let sh = match self {
             Self::Empty => return (0, Some(0)),
-            Self::Full(f) => f.size_hint(),
-            Self::Boxed(b) => b.size_hint(),
+            Self::Full(full) => full.size_hint(),
+            Self::Boxed(body) => body.size_hint(),
         };
         (
             usize::try_from(sh.lower()).unwrap_or(usize::MAX),

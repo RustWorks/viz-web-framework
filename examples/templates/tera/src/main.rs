@@ -37,7 +37,7 @@ async fn index(_: Request) -> Result<Response> {
     let mut buf = BytesMut::with_capacity(512);
     buf.extend(
         TPLS.render("index.html", &ctx)
-            .map_err(Error::normal)?
+            .map_err(Error::boxed)?
             .as_bytes(),
     );
 

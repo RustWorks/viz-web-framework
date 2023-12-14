@@ -2,27 +2,30 @@ use std::error::Error as StdError;
 
 use crate::{IntoResponse, Response, StatusCode, ThisError};
 
+/// An owned dynamically typed [`StdError`].
+pub type BoxError = Box<dyn StdError + Send + Sync>;
+
 /// Represents errors that can occur handling application.
 #[derive(ThisError, Debug)]
 pub enum Error {
-    /// Receives a [`Response`] as error.
+    /// Receives a [`Response`] as an error.
     #[error("response")]
     Responder(Response),
-    /// Receives a boxed [`std::error::Error`][StdError] as error.
+    /// Receives a boxed [`std::error::Error`][StdError] as an error.
     #[error(transparent)]
-    Normal(Box<dyn StdError + Send + Sync>),
-    /// Receives a boxed [`std::error::Error`][StdError] and [`Response`] pair as error.
+    Boxed(BoxError),
+    /// Receives a boxed [`std::error::Error`][StdError] and [`Response`] pair as an error.
     #[error("report")]
-    Report(Box<dyn StdError + Send + Sync>, Response),
+    Report(BoxError, Response),
 }
 
 impl Error {
     /// Create a new error object from any error type.
-    pub fn normal<T>(t: T) -> Self
+    pub fn boxed<T>(t: T) -> Self
     where
         T: StdError + Send + Sync + 'static,
     {
-        Self::Normal(Box::new(t))
+        Self::Boxed(Box::new(t))
     }
 
     /// Forwards to the method defined on the type `dyn Error`.
@@ -32,7 +35,7 @@ impl Error {
         T: StdError + 'static,
     {
         match self {
-            Self::Normal(e) | Self::Report(e, _) => e.is::<T>(),
+            Self::Boxed(e) | Self::Report(e, _) => e.is::<T>(),
             Self::Responder(_) => false,
         }
     }
@@ -47,10 +50,10 @@ impl Error {
     where
         T: StdError + 'static,
     {
-        if let Self::Normal(e) = self {
+        if let Self::Boxed(e) = self {
             return match e.downcast::<T>() {
                 Ok(e) => Ok(*e),
-                Err(e) => Err(Self::Normal(e)),
+                Err(e) => Err(Self::Boxed(e)),
             };
         }
         if let Self::Report(e, r) = self {
@@ -68,7 +71,7 @@ impl Error {
     where
         T: StdError + 'static,
     {
-        if let Self::Normal(e) = self {
+        if let Self::Boxed(e) = self {
             return e.downcast_ref::<T>();
         }
         if let Self::Report(e, _) = self {
@@ -83,7 +86,7 @@ impl Error {
     where
         T: StdError + 'static,
     {
-        if let Self::Normal(e) = self {
+        if let Self::Boxed(e) = self {
             return e.downcast_mut::<T>();
         }
         if let Self::Report(e, _) = self {
@@ -117,18 +120,18 @@ impl From<hyper::Error> for Error {
 
 impl From<std::convert::Infallible> for Error {
     fn from(e: std::convert::Infallible) -> Self {
-        Self::normal(e)
+        Self::boxed(e)
     }
 }
 
 impl From<std::io::Error> for Error {
     fn from(e: std::io::Error) -> Self {
-        Self::normal(e)
+        Self::boxed(e)
     }
 }
 
-impl From<Box<dyn StdError + Send + Sync>> for Error {
-    fn from(value: Box<dyn StdError + Send + Sync>) -> Self {
-        Self::Normal(value)
+impl From<BoxError> for Error {
+    fn from(value: BoxError) -> Self {
+        Self::Boxed(value)
     }
 }

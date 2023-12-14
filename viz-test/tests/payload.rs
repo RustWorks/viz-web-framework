@@ -41,10 +41,10 @@ async fn payload() -> Result<()> {
         .json(&form)
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(resp.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
     assert_eq!(
-        resp.text().await.map_err(Error::normal)?,
+        resp.text().await.map_err(Error::boxed)?,
         "unsupported media type, `application/x-www-form-urlencoded` is required"
     );
     let resp = client
@@ -52,10 +52,10 @@ async fn payload() -> Result<()> {
         .form(&form)
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(resp.status(), StatusCode::PAYLOAD_TOO_LARGE);
     assert_eq!(
-        resp.text().await.map_err(Error::normal)?,
+        resp.text().await.map_err(Error::boxed)?,
         "payload is too large"
     );
 
@@ -65,10 +65,10 @@ async fn payload() -> Result<()> {
         .form(&form)
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(resp.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
     assert_eq!(
-        resp.text().await.map_err(Error::normal)?,
+        resp.text().await.map_err(Error::boxed)?,
         "unsupported media type, `application/javascript; charset=utf-8` is required"
     );
     let resp = client
@@ -76,10 +76,10 @@ async fn payload() -> Result<()> {
         .json(&form)
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(resp.status(), StatusCode::PAYLOAD_TOO_LARGE);
     assert_eq!(
-        resp.text().await.map_err(Error::normal)?,
+        resp.text().await.map_err(Error::boxed)?,
         "payload is too large"
     );
 
@@ -89,10 +89,10 @@ async fn payload() -> Result<()> {
         .json(&form)
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(resp.status(), StatusCode::UNSUPPORTED_MEDIA_TYPE);
     assert_eq!(
-        resp.text().await.map_err(Error::normal)?,
+        resp.text().await.map_err(Error::boxed)?,
         "unsupported media type, `multipart/form-data` is required"
     );
     let form = viz_test::multipart::Form::new()
@@ -103,10 +103,10 @@ async fn payload() -> Result<()> {
         .multipart(form)
         .send()
         .await
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     assert_eq!(resp.status(), StatusCode::PAYLOAD_TOO_LARGE);
     assert_eq!(
-        resp.text().await.map_err(Error::normal)?,
+        resp.text().await.map_err(Error::boxed)?,
         "payload is too large"
     );
 

@@ -52,7 +52,7 @@ async fn index(req: Request) -> Result<Response> {
                 "todos": todos
             }),
         )
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     Ok(Response::html(body))
 }
 
@@ -70,7 +70,7 @@ async fn list(req: Request) -> Result<Response> {
                 "todos": todos
             }),
         )
-        .map_err(Error::normal)?;
+        .map_err(Error::boxed)?;
     Ok(Response::html(body))
 }
 

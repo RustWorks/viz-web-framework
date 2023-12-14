@@ -284,7 +284,7 @@ async fn swagger_ui(req: Request) -> Result<Response> {
         .map_err(|err| (StatusCode::INTERNAL_SERVER_ERROR, err.to_string()).into_error())?
     {
         Some(file) => Ok({
-            let content_type = HeaderValue::from_str(&file.content_type).map_err(Error::normal)?;
+            let content_type = HeaderValue::from_str(&file.content_type).map_err(Error::boxed)?;
 
             let mut resp = Response::new(Full::from(file.bytes).into());
             resp.headers_mut()
