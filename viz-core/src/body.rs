@@ -50,18 +50,19 @@ impl Body for IncomingBody {
         cx: &mut Context<'_>,
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         match self.get_mut() {
-            Self::Empty | Self::Incoming(None) => Poll::Ready(None),
-            Self::Incoming(s) => {
-                match Pin::new(s.as_mut().unwrap()).poll_frame(cx)? {
+            Self::Empty => Poll::Ready(None),
+            Self::Incoming(i) => match i {
+                None => Poll::Ready(None),
+                Some(b) => match Pin::new(b).poll_frame(cx)? {
                     Poll::Ready(Some(f)) => Poll::Ready(Some(Ok(f))),
                     Poll::Ready(None) => {
                         // the body has been used.
-                        *s = None;
+                        *i = None;
                         Poll::Ready(None)
                     }
                     Poll::Pending => Poll::Pending,
-                }
-            }
+                },
+            },
         }
     }
 
