@@ -3,7 +3,7 @@
 
 //! `SeaOrm` example for Viz framework.
 use sea_orm_example::{api, db::init_db};
-use std::{env, net::SocketAddr, sync::Arc};
+use std::{env, net::SocketAddr, path::PathBuf, sync::Arc};
 use tokio::net::TcpListener;
 use viz::{handlers::serve, middleware, serve, types::State, Result, Router, Tree};
 
@@ -15,14 +15,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let db = init_db().await?;
 
     println!("listening on http://{addr}");
-    let dir = env::current_dir().unwrap();
+
+    let dir = env::var("CARGO_MANIFEST_DIR").map(PathBuf::from).unwrap();
+
     let app = Router::new()
         .get("/", serve::File::new(dir.join("public/index.html")))
         .get("/todos", api::list)
         .post("/todos", api::create)
         .put("/todos/:id", api::update)
         .delete("/todos/:id", api::delete)
-        .with(State::new(db.clone()))
+        .with(State::new(db))
         .with(middleware::limits::Config::new());
     let tree = Arc::new(Tree::from(app));
 

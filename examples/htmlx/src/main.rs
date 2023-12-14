@@ -5,7 +5,9 @@ use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
 use std::{
+    env,
     net::SocketAddr,
+    path::PathBuf,
     sync::{Arc, Mutex, PoisonError},
 };
 use tokio::net::TcpListener;
@@ -24,8 +26,9 @@ struct Todo {
 }
 
 static TPLS: Lazy<Handlebars> = Lazy::new(|| {
+    let dir = env::var("CARGO_MANIFEST_DIR").map(PathBuf::from).unwrap();
     let mut h = Handlebars::new();
-    h.register_templates_directory(".html", "examples/htmlx/templates")
+    h.register_templates_directory(".html", dir.join("templates"))
         .unwrap();
     h
 });

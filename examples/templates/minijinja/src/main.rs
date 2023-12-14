@@ -1,7 +1,7 @@
 #![deny(warnings)]
 #![allow(clippy::unused_async)]
 
-use std::{net::SocketAddr, sync::Arc};
+use std::{env, net::SocketAddr, path::PathBuf, sync::Arc};
 
 use minijinja::{context, path_loader, Environment};
 use once_cell::sync::Lazy;
@@ -10,8 +10,9 @@ use tokio::net::TcpListener;
 use viz::{serve, BytesMut, Error, Request, Response, ResponseExt, Result, Router, Tree};
 
 static TPLS: Lazy<Environment> = Lazy::new(|| {
+    let dir = env::var("CARGO_MANIFEST_DIR").map(PathBuf::from).unwrap();
     let mut env = Environment::new();
-    env.set_loader(path_loader("examples/templates/minijinja/templates"));
+    env.set_loader(path_loader(dir.join("templates")));
     env
 });
 
