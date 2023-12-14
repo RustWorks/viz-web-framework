@@ -2,7 +2,6 @@
 
 use std::{
     any::type_name,
-    fmt,
     ops::{Deref, DerefMut},
 };
 
@@ -12,6 +11,7 @@ use crate::{
 };
 
 /// Extracts state from the extensions of a request.
+#[derive(Debug, Clone, Copy, Default)]
 pub struct State<T: ?Sized>(pub T);
 
 impl<T> State<T> {
@@ -35,24 +35,6 @@ impl<T> AsRef<T> for State<T> {
     }
 }
 
-impl<T> Clone for State<T>
-where
-    T: Clone,
-{
-    fn clone(&self) -> Self {
-        Self(self.0.clone())
-    }
-}
-
-impl<T> Default for State<T>
-where
-    T: Default,
-{
-    fn default() -> Self {
-        Self(T::default())
-    }
-}
-
 impl<T> Deref for State<T> {
     type Target = T;
 
@@ -64,15 +46,6 @@ impl<T> Deref for State<T> {
 impl<T> DerefMut for State<T> {
     fn deref_mut(&mut self) -> &mut T {
         &mut self.0
-    }
-}
-
-impl<T> fmt::Debug for State<T>
-where
-    T: fmt::Debug,
-{
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        T::fmt(self, f)
     }
 }
 
@@ -92,25 +65,24 @@ impl<H, T> Transform<H> for State<T>
 where
     T: Clone + Send + Sync + 'static,
 {
-    type Output = State<(H, T)>;
+    type Output = State<(T, H)>;
 
     fn transform(&self, h: H) -> Self::Output {
-        State((h, self.0.clone()))
+        State((self.0.clone(), h))
     }
 }
 
-// TODO: Maybe should be a `before` handler
 #[async_trait]
-impl<H, O, T> Handler<Request> for State<(H, T)>
+impl<T, H, O> Handler<Request> for State<(T, H)>
 where
-    O: IntoResponse,
-    H: Handler<Request, Output = Result<O>> + Clone,
     T: Clone + Send + Sync + 'static,
+    H: Handler<Request, Output = Result<O>> + Clone,
+    O: IntoResponse,
 {
     type Output = Result<Response>;
 
     async fn call(&self, mut req: Request) -> Self::Output {
-        let Self((h, t)) = self;
+        let Self((t, h)) = self;
         req.extensions_mut().insert(t.clone());
         h.call(req).await.map(IntoResponse::into_response)
     }
