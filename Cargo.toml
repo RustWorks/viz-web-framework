@@ -50,7 +50,7 @@ viz-core = { version = "0.6.0", path = "viz-core" }
 viz-router = { version = "0.6.0", path = "viz-router" }
 viz-handlers = { version = "0.6.0", path = "viz-handlers", default-features = false }
 viz-macros = { version = "0.2.0", path = "viz-macros" }
-viz-test = { version = "0.1.0", path = "viz-test" }
+viz-test = { version = "0.2.0", path = "viz-test" }
 
 async-trait = "0.1"
 dyn-clone = "1.0"
