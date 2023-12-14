@@ -111,7 +111,9 @@ pub trait HandlerExt<I>: Handler<I> {
         Map::new(self, f)
     }
 
-    /// Maps the handler's output type to the [`Response`][crate::Response].
+    /// Maps the handler's output type to the [`Response`].
+    ///
+    /// [`Response`]: crate::Response
     fn map_into_response(self) -> MapInToResponse<Self>
     where
         Self: Sized,
@@ -169,7 +171,6 @@ pub trait HandlerExt<I>: Handler<I> {
     }
 
     /// Maps the handler.
-    #[must_use]
     fn with_fn<F>(self, f: F) -> Self
     where
         F: Fn(Self) -> Self,

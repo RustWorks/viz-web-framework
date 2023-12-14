@@ -145,8 +145,9 @@
 //!
 //! But it's still recommended to use `into_handler` for conversion.
 //!
-//! ```ignore
+//! ```
 //! # use viz::{handler, types::Params, IntoHandler, IntoResponse, Result, Router};
+//!
 //! #[handler]
 //! async fn show_user(Params(id): Params<u64>) -> Result<impl IntoResponse> {
 //!     Ok(format!("Hi, NO.{}", id))
@@ -166,7 +167,7 @@
 //! The [`HandlerExt`] is an extension trait for [Handler]s that provides a variety of convenient
 //! combinator functions.
 //!
-//! Likes the [`FutureExt`] and [`StreamExt`] trait.
+//! Likes the [`FutureExt`] and [`StreamExt`] traits.
 //!
 //! ```
 //! # use viz::{
