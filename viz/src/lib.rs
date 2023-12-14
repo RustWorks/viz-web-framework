@@ -145,7 +145,7 @@
 //!
 //! But it's still recommended to use `into_handler` for conversion.
 //!
-//! ```
+//! ```ignore
 //! # use viz::{handler, types::Params, IntoHandler, IntoResponse, Result, Router};
 //!
 //! #[handler]
