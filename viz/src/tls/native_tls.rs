@@ -34,7 +34,7 @@ impl Config {
     pub fn build(self) -> Result<TlsAcceptor> {
         TlsAcceptorWrapper::new(self.identity)
             .map(Into::into)
-            .map_err(Error::normal)
+            .map_err(Error::boxed)
     }
 }
 
@@ -46,7 +46,7 @@ impl Listener<TcpListener, TlsAcceptor> {
     /// Will return `Err` if accepting the stream fails.
     pub async fn accept(&self) -> Result<(TlsStream<TcpStream>, SocketAddr)> {
         let (stream, addr) = self.inner.accept().await?;
-        let tls_stream = self.acceptor.accept(stream).await.map_err(Error::normal)?;
+        let tls_stream = self.acceptor.accept(stream).await.map_err(Error::boxed)?;
         Ok((tls_stream, addr))
     }
 }
