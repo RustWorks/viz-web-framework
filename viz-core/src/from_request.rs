@@ -1,6 +1,4 @@
-//! Extracts data from the [Request] by types.
-
-use std::convert::Infallible;
+//! Extracts data from the [`Request`] by types.
 
 use crate::{async_trait, IntoResponse, Request};
 
@@ -19,9 +17,8 @@ impl<T> FromRequest for Option<T>
 where
     T: FromRequest,
 {
-    type Error = Infallible;
+    type Error = std::convert::Infallible;
 
-    #[inline]
     async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         Ok(T::extract(req).await.ok())
     }
@@ -32,9 +29,8 @@ impl<T> FromRequest for Result<T, T::Error>
 where
     T: FromRequest,
 {
-    type Error = Infallible;
+    type Error = std::convert::Infallible;
 
-    #[inline]
     async fn extract(req: &mut Request) -> Result<Self, Self::Error> {
         Ok(T::extract(req).await)
     }
