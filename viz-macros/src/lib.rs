@@ -7,7 +7,7 @@
 //! ## Example
 //!
 //! ```
-//! # use viz::{IntoResponse, Result};
+//! # use viz_core::{IntoResponse, Result};
 //! # use viz_macros::handler;
 //!
 //! #[handler]
@@ -112,7 +112,8 @@ fn generate_handler(input: TokenStream) -> Result<TokenStream> {
             .fold(Vec::new(), |mut extractors, input| {
                 if let FnArg::Typed(pat) = input {
                     let ty = &pat.ty;
-                    extractors.push(quote!(<#ty as viz::FromRequest>::extract(&mut req).await?));
+                    extractors
+                        .push(quote!(<#ty as viz_core::FromRequest>::extract(&mut req).await?));
                 }
                 extractors
             });
@@ -123,16 +124,16 @@ fn generate_handler(input: TokenStream) -> Result<TokenStream> {
         #[derive(Clone)]
         #vis struct #name;
 
-        #[viz::async_trait]
-        impl viz::Handler<viz::Request> for #name
+        #[viz_core::async_trait]
+        impl viz_core::Handler<viz_core::Request> for #name
         {
-            type Output = viz::Result<viz::Response>;
+            type Output = viz_core::Result<viz_core::Response>;
 
             #[allow(unused, unused_mut)]
-            async fn call(&self, mut req: viz::Request) -> Self::Output {
+            async fn call(&self, mut req: viz_core::Request) -> Self::Output {
                 #ast
                 let res = #name(#(#extractors),*)#asyncness;
-                #out.map(viz::IntoResponse::into_response)
+                #out.map(viz_core::IntoResponse::into_response)
             }
         }
     };
