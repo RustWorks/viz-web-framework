@@ -1,9 +1,10 @@
 use futures_util::Stream;
 use http_body_util::Full;
 
-use crate::{header, Bytes, Error, OutgoingBody, Response, Result, StatusCode};
+use crate::{async_trait, header, Bytes, Error, OutgoingBody, Response, Result, StatusCode};
 
 /// The [`Response`] Extension.
+#[async_trait]
 pub trait ResponseExt: Sized {
     /// Get the size of this response's body.
     fn content_length(&self) -> Option<u64>;
@@ -17,6 +18,11 @@ pub trait ResponseExt: Sized {
         K: header::AsHeaderName,
         T: std::str::FromStr;
 
+    /// The response was successful (status in the range [`200-299`][mdn]) or not.
+    ///
+    /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/ok>
+    fn ok(&self) -> bool;
+
     /// The response with the specified [`Content-Type`][mdn].
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Type>
@@ -24,12 +30,12 @@ pub trait ResponseExt: Sized {
     where
         B: Into<OutgoingBody>,
     {
-        let mut res = Response::new(body.into());
-        res.headers_mut().insert(
+        let mut resp = Response::new(body.into());
+        resp.headers_mut().insert(
             header::CONTENT_TYPE,
             header::HeaderValue::from_static(content_type),
         );
-        res
+        resp
     }
 
     /// The response with `text/plain; charset=utf-8` media type.
@@ -82,20 +88,18 @@ pub trait ResponseExt: Sized {
         Response::new(OutgoingBody::streaming(stream))
     }
 
-    // TODO: Download transfers the file from path as an attachment.
-    // fn download() -> Response<Body>
-
-    /// The response was successful (status in the range [`200-299`][mdn]) or not.
-    ///
-    /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/API/Response/ok>
-    fn ok(&self) -> bool;
+    /// Downloads transfers the file from path as an attachment.
+    #[cfg(feature = "fs")]
+    async fn download<T>(path: T, name: Option<&str>) -> Result<Self>
+    where
+        T: AsRef<std::path::Path> + Send;
 
     /// The [`Content-Disposition`][mdn] header indicates if the content is expected to be
     /// displayed inline in the browser, that is, as a Web page or as part of a Web page,
     /// or as an attachment, that is downloaded and saved locally.
     ///
     /// [mdn]: <https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition>
-    fn attachment(file: &str) -> Self;
+    fn attachment(value: &str) -> Self;
 
     /// The [`Content-Location`][mdn] header indicates an alternate location for the returned data.
     ///
@@ -149,6 +153,7 @@ pub trait ResponseExt: Sized {
     }
 }
 
+#[async_trait]
 impl ResponseExt for Response {
     fn content_length(&self) -> Option<u64> {
         self.headers()
@@ -176,12 +181,33 @@ impl ResponseExt for Response {
         self.status().is_success()
     }
 
-    fn attachment(file: &str) -> Self {
-        let mut res = Self::default();
-        let val = header::HeaderValue::from_str(file)
+    #[cfg(feature = "fs")]
+    async fn download<T>(path: T, name: Option<&str>) -> Result<Self>
+    where
+        T: AsRef<std::path::Path> + Send,
+    {
+        let value = if let Some(filename) = name {
+            filename
+        } else if let Some(filename) = path.as_ref().file_name().and_then(std::ffi::OsStr::to_str) {
+            filename
+        } else {
+            "download"
+        }
+        .escape_default();
+
+        let mut resp = Self::attachment(&format!("attachment; filename=\"{value}\""));
+        *resp.body_mut() = OutgoingBody::streaming(tokio_util::io::ReaderStream::new(
+            tokio::fs::File::open(path).await.map_err(Error::from)?,
+        ));
+        Ok(resp)
+    }
+
+    fn attachment(value: &str) -> Self {
+        let val = header::HeaderValue::from_str(value)
             .expect("content-disposition is not the correct value");
-        res.headers_mut().insert(header::CONTENT_DISPOSITION, val);
-        res
+        let mut resp = Self::default();
+        resp.headers_mut().insert(header::CONTENT_DISPOSITION, val);
+        resp
     }
 
     fn location<T>(location: T) -> Self
@@ -190,9 +216,9 @@ impl ResponseExt for Response {
     {
         let val = header::HeaderValue::try_from(location.as_ref())
             .expect("location is not the correct value");
-        let mut res = Self::default();
-        res.headers_mut().insert(header::CONTENT_LOCATION, val);
-        res
+        let mut resp = Self::default();
+        resp.headers_mut().insert(header::CONTENT_LOCATION, val);
+        resp
     }
 
     fn redirect<T>(url: T) -> Self
@@ -201,9 +227,9 @@ impl ResponseExt for Response {
     {
         let val =
             header::HeaderValue::try_from(url.as_ref()).expect("url is not the correct value");
-        let mut res = Self::default();
-        res.headers_mut().insert(header::LOCATION, val);
-        res
+        let mut resp = Self::default();
+        resp.headers_mut().insert(header::LOCATION, val);
+        resp
     }
 
     fn redirect_with_status<T>(url: T, status: StatusCode) -> Self
@@ -212,8 +238,8 @@ impl ResponseExt for Response {
     {
         assert!(status.is_redirection(), "not a redirection status code");
 
-        let mut res = Self::redirect(url);
-        *res.status_mut() = status;
-        res
+        let mut resp = Self::redirect(url);
+        *resp.status_mut() = status;
+        resp
     }
 }

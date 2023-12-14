@@ -136,6 +136,12 @@ async fn response_ext_with_server() -> Result<()> {
                 Full::new("<xml/>".into()),
                 mime::TEXT_XML.as_ref(),
             ))
+        })
+        .get("/download", |_: Request| {
+            let dir = std::env::var("CARGO_MANIFEST_DIR")
+                .map(std::path::PathBuf::from)
+                .unwrap();
+            Response::download(dir.join("README.md"), Some("file.txt"))
         });
 
     let client = TestServer::new(router).await?;
@@ -147,6 +153,21 @@ async fn response_ext_with_server() -> Result<()> {
     let resp = client.post("/").send().await.map_err(Error::boxed)?;
     assert_eq!(resp.content_length(), Some(6));
     assert_eq!(resp.text().await.map_err(Error::boxed)?, "<xml/>");
+
+    let resp = client.get("/download").send().await.map_err(Error::boxed)?;
+    assert_eq!(resp.content_length(), None);
+    assert_eq!(
+        resp.headers().get(http::header::CONTENT_DISPOSITION),
+        Some(http::header::HeaderValue::from_static(
+            "attachment; filename=\"file.txt\""
+        ))
+        .as_ref()
+    );
+    assert!(resp
+        .text()
+        .await
+        .map_err(Error::boxed)?
+        .starts_with("<p align=\"center\">"));
 
     Ok(())
 }

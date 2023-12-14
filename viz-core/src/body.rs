@@ -7,7 +7,7 @@ use futures_util::{Stream, TryStreamExt};
 use http_body_util::{combinators::BoxBody, BodyExt, Full, StreamBody};
 use hyper::body::{Body, Frame, Incoming, SizeHint};
 
-use crate::{Bytes, Error, Result};
+use crate::{BoxError, Bytes, Error, Result};
 
 /// The incoming body from HTTP [`Request`].
 ///
@@ -84,7 +84,7 @@ impl Body for IncomingBody {
 }
 
 impl Stream for IncomingBody {
-    type Item = Result<Bytes, Box<dyn std::error::Error + Send + Sync + 'static>>;
+    type Item = Result<Bytes, BoxError>;
 
     #[inline]
     fn poll_next(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Option<Self::Item>> {
@@ -138,7 +138,7 @@ impl OutgoingBody {
             StreamBody::new(
                 stream
                     .map_ok(Into::into)
-                    .map_ok(Frame::<Bytes>::data)
+                    .map_ok(Frame::data)
                     .map_err(Into::into),
             )
             .boxed(),

@@ -25,6 +25,7 @@ default = [
   "websocket",
   "cookie",
   "session",
+  "fs"
 ]
 
 state = []
@@ -37,6 +38,7 @@ query = ["dep:serde", "dep:serde_urlencoded"]
 multipart = ["dep:form-data"]
 websocket = ["dep:tokio-tungstenite", "tokio/rt"]
 sse = ["dep:tokio-stream", "tokio/time"]
+fs = ["dep:tokio-util", "tokio/fs"]
 
 cookie = ["dep:cookie"]
 cookie-private = ["cookie", "cookie?/private"]

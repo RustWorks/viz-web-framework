@@ -65,9 +65,10 @@ mod route_info;
 pub use route_info::RouteInfo;
 
 mod header;
-mod payload;
-mod realip;
-
 pub use header::{Header, HeaderError};
+
+mod payload;
 pub use payload::{Payload, PayloadError};
+
+mod realip;
 pub use realip::RealIp;
