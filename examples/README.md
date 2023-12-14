@@ -38,7 +38,9 @@ Here you can find a lot of small crabs 🦀.
 ### Run it in `viz` directory
 
 ```console
-$ cargo run --bin hello-world -- --nocapture
+$ cargo run --bin xxx-example -- --nocapture
+
+$ cargo run --bin hello-world-example -- --nocapture
 ```
 
 ### Fetch data

@@ -1,5 +1,5 @@
 [package]
-name = "graceful-shutdown"
+name = "graceful-shutdown-example"
 version = "0.1.0"
 edition.workspace = true
 publish = false

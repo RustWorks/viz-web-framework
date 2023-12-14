@@ -1,5 +1,5 @@
 [package]
-name = "template-askama"
+name = "askama-template-example"
 version = "0.1.0"
 edition.workspace = true
 publish = false
