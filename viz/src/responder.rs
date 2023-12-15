@@ -27,31 +27,28 @@ impl Responder {
     ) -> Result<Response, Infallible> {
         let method = req.method().clone();
         let path = req.uri().path().to_owned();
-        let responded = Ok(
-            match tree.find(&method, &path).or_else(|| {
-                if method == Method::HEAD {
-                    tree.find(&Method::GET, &path)
-                } else {
-                    None
-                }
-            }) {
-                Some((handler, route)) => {
-                    req.extensions_mut().insert(addr);
-                    req.extensions_mut().insert(Arc::from(RouteInfo {
-                        id: *route.id,
-                        pattern: route.pattern(),
-                        params: Into::<Params>::into(route.params()),
-                    }));
-                    // req.set_state(tree.clone());
-                    handler
-                        .call(req.map(Some).map(IncomingBody::new))
-                        .await
-                        .unwrap_or_else(IntoResponse::into_response)
-                }
-                None => StatusCode::NOT_FOUND.into_response(),
-            },
-        );
-        responded
+
+        let Some((handler, route)) = tree.find(&method, &path).or_else(|| {
+            if method == Method::HEAD {
+                tree.find(&Method::GET, &path)
+            } else {
+                None
+            }
+        }) else {
+            return Ok(StatusCode::NOT_FOUND.into_response());
+        };
+
+        req.extensions_mut().insert(addr);
+        req.extensions_mut().insert(Arc::from(RouteInfo {
+            id: *route.id,
+            pattern: route.pattern(),
+            params: Into::<Params>::into(route.params()),
+        }));
+        // req.set_state(tree.clone());
+        Ok(handler
+            .call(req.map(Some).map(IncomingBody::new))
+            .await
+            .unwrap_or_else(IntoResponse::into_response))
     }
 }
 
