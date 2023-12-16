@@ -12,7 +12,7 @@ async fn handler() -> Result<()> {
     struct CatchError<H, F, R, E> {
         h: H,
         f: F,
-        _maker: PhantomData<fn(E) -> R>,
+        _marker: PhantomData<fn(E) -> R>,
     }
 
     impl<H: Clone, F: Clone, R, E> Clone for CatchError<H, F, R, E> {
@@ -20,7 +20,7 @@ async fn handler() -> Result<()> {
             Self {
                 h: self.h.clone(),
                 f: self.f.clone(),
-                _maker: PhantomData,
+                _marker: PhantomData,
             }
         }
     }
@@ -31,7 +31,7 @@ async fn handler() -> Result<()> {
             Self {
                 h,
                 f,
-                _maker: PhantomData,
+                _marker: PhantomData,
             }
         }
     }

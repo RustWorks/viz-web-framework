@@ -207,9 +207,9 @@ impl Resources {
 
     /// Adds a middleware for the resources.
     #[must_use]
-    pub fn with_handler<F>(self, f: F) -> Self
+    pub fn with_handler<H>(self, f: H) -> Self
     where
-        F: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
+        H: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
     {
         self.map_handler(|handler| handler.around(f.clone()).boxed())
     }

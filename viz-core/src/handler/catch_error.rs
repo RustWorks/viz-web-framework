@@ -7,7 +7,7 @@ use crate::{async_trait, Handler, IntoResponse, Response, Result};
 pub struct CatchError<H, F, R, E> {
     h: H,
     f: F,
-    _maker: PhantomData<fn(E) -> R>,
+    _marker: PhantomData<fn(E) -> R>,
 }
 
 impl<H, F, R, E> Clone for CatchError<H, F, R, E>
@@ -19,7 +19,7 @@ where
         Self {
             h: self.h.clone(),
             f: self.f.clone(),
-            _maker: PhantomData,
+            _marker: PhantomData,
         }
     }
 }
@@ -30,7 +30,7 @@ impl<H, F, R, E> CatchError<H, F, R, E> {
         Self {
             h,
             f,
-            _maker: PhantomData,
+            _marker: PhantomData,
         }
     }
 }
