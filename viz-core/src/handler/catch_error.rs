@@ -7,7 +7,7 @@ use crate::{async_trait, Handler, IntoResponse, Response, Result};
 pub struct CatchError<H, F, R, E> {
     h: H,
     f: F,
-    _maker: PhantomData<(R, E)>,
+    _maker: PhantomData<fn(E) -> R>,
 }
 
 impl<H, F, R, E> Clone for CatchError<H, F, R, E>
@@ -41,21 +41,16 @@ where
     I: Send + 'static,
     H: Handler<I, Output = Result<O>> + Clone,
     O: IntoResponse + Send,
-    R: IntoResponse + Send + Sync + 'static,
+    E: std::error::Error + Send + 'static,
     F: Handler<E, Output = R> + Clone,
-    E: std::error::Error + Send + Sync + 'static,
+    R: IntoResponse + 'static,
 {
     type Output = Result<Response>;
 
     async fn call(&self, i: I) -> Self::Output {
         match self.h.call(i).await {
             Ok(r) => Ok(r.into_response()),
-            Err(e) if e.is::<E>() => Ok(self
-                .f
-                .call(e.downcast::<E>().unwrap())
-                .await
-                .into_response()),
-            Err(e) => Err(e),
+            Err(e) => Ok(self.f.call(e.downcast::<E>()?).await.into_response()),
         }
     }
 }
