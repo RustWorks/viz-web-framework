@@ -19,7 +19,7 @@ where
     type Output = O;
 
     async fn call(&self, i: I) -> Self::Output {
-        match &self {
+        match self {
             Self::Left(l) => l.call(i),
             Self::Right(r) => r.call(i),
         }
