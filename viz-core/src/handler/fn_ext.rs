@@ -7,6 +7,5 @@ pub trait FnExt<E>: Clone + Send + Sync + 'static {
     type Output;
 
     /// Performs the call operation.
-    #[must_use]
     async fn call(&self, req: Request) -> Self::Output;
 }

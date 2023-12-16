@@ -4,6 +4,7 @@ pub trait Transform<H> {
     /// A new handler.
     type Output;
 
-    /// Transforms `self` and wraps [Handler][super::Handler] to a new handler.
+    /// Transforms `self` and wraps [`Handler`][super::Handler] to a new handler.
+    #[must_use]
     fn transform(&self, h: H) -> Self::Output;
 }
