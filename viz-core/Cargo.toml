@@ -57,16 +57,17 @@ otel-metrics = ["otel", "opentelemetry?/metrics"]
 
 [dependencies]
 async-trait.workspace = true
-bytes.workspace = true
 dyn-clone.workspace = true
 futures-util.workspace = true
-headers.workspace = true
-http.workspace = true
-http-body.workspace = true
-http-body-util.workspace = true
 
-hyper.workspace = true
+bytes.workspace = true
+headers.workspace = true
+http-body-util.workspace = true
+http-body.workspace = true
+http.workspace = true
 hyper-util.workspace = true
+hyper.workspace = true
+sync_wrapper = "0.1.2"
 
 mime.workspace = true
 thiserror.workspace = true
