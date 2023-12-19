@@ -12,6 +12,7 @@ Here you can find a lot of small crabs 🦀.
 * [Extract body from Multipart](forms/multipart)
 * [Extract body data with a limits](limits)
 * [Websockt Chat](websocket-chat)
+* [Socketioxide](https://github.com/Totodore/socketioxide/blob/main/examples/viz-echo/)
 * [Server-Sent Events](sse)
 * [Session](session)
 * [CSRF](csrf)
