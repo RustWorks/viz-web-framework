@@ -35,7 +35,7 @@ members = [
 ]
 
 [workspace.package]
-version = "0.7.0"
+version = "0.7.1"
 authors = ["Fangdun Tsai <cfddream@gmail.com>"]
 edition = "2021"
 homepage = "https://viz.rs"
@@ -45,10 +45,10 @@ license = "MIT"
 rust-version = "1.63"                           # follows `tokio` and `hyper`
 
 [workspace.dependencies]
-viz = { version = "0.7.0", path = "viz" }
-viz-core = { version = "0.7.0", path = "viz-core" }
-viz-router = { version = "0.7.0", path = "viz-router" }
-viz-handlers = { version = "0.7.0", path = "viz-handlers", default-features = false }
+viz = { version = "0.7.1", path = "viz" }
+viz-core = { version = "0.7.1", path = "viz-core" }
+viz-router = { version = "0.7.1", path = "viz-router" }
+viz-handlers = { version = "0.7.1", path = "viz-handlers", default-features = false }
 viz-macros = { version = "0.2.0", path = "viz-macros" }
 viz-test = { version = "0.2.0", path = "viz-test" }
 
