@@ -20,6 +20,7 @@ impl<H, F, I, O> Handler<I> for After<H, F>
 where
     I: Send + 'static,
     H: Handler<I, Output = Result<O>> + Clone,
+    O: Send + 'static,
     F: Handler<Result<O>, Output = Result<O>> + Clone,
 {
     type Output = F::Output;
