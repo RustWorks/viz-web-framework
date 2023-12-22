@@ -1,8 +1,8 @@
 use std::{convert::Infallible, future::Future, net::SocketAddr, pin::Pin, sync::Arc};
 
 use crate::{
-    types::{Params, RouteInfo},
-    Body, Handler, Incoming, IntoResponse, Method, Request, Response, StatusCode, Tree,
+    types::RouteInfo, Body, Handler, Incoming, IntoResponse, Method, Request, Response, StatusCode,
+    Tree,
 };
 
 /// Handles the HTTP [`Request`] and retures the HTTP [`Response`].
@@ -42,7 +42,7 @@ impl Responder {
         req.extensions_mut().insert(Arc::from(RouteInfo {
             id: *route.id,
             pattern: route.pattern(),
-            params: Into::<Params>::into(route.params()),
+            params: route.params().into(),
         }));
         // req.set_state(tree.clone());
         Ok(handler
