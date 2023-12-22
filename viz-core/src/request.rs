@@ -274,7 +274,7 @@ impl RequestExt for Request {
             .collect()
             .await
             .map_err(|err| {
-                if err.downcast_ref::<LengthLimitError>().is_some() {
+                if err.is::<LengthLimitError>() {
                     return PayloadError::TooLarge;
                 }
                 if let Ok(err) = err.downcast::<hyper::Error>() {
@@ -294,7 +294,7 @@ impl RequestExt for Request {
         .collect()
         .await
         .map_err(|err| {
-            if err.downcast_ref::<LengthLimitError>().is_some() {
+            if err.is::<LengthLimitError>() {
                 return PayloadError::TooLarge;
             }
             if let Ok(err) = err.downcast::<hyper::Error>() {
