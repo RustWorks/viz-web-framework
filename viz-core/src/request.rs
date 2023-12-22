@@ -223,8 +223,10 @@ impl RequestExt for Request {
     {
         self.headers()
             .get(key)
-            .and_then(|v| v.to_str().ok())
-            .and_then(|v| v.parse::<T>().ok())
+            .map(header::HeaderValue::to_str)
+            .and_then(Result::ok)
+            .map(str::parse)
+            .and_then(Result::ok)
     }
 
     fn header_typed<H>(&self) -> Option<H>
@@ -271,8 +273,16 @@ impl RequestExt for Request {
         self.incoming()?
             .collect()
             .await
+            .map_err(|err| {
+                if err.downcast_ref::<LengthLimitError>().is_some() {
+                    return PayloadError::TooLarge;
+                }
+                if let Ok(err) = err.downcast::<hyper::Error>() {
+                    return PayloadError::Hyper(err);
+                }
+                PayloadError::Read
+            })
             .map(Collected::to_bytes)
-            .map_err(|_| PayloadError::Read)
     }
 
     #[cfg(feature = "limits")]
@@ -369,7 +379,8 @@ impl RequestExt for Request {
             boundary,
             self.extensions()
                 .get::<std::sync::Arc<MultipartLimits>>()
-                .map(|ml| ml.as_ref().clone())
+                .map(AsRef::as_ref)
+                .cloned()
                 .unwrap_or_default(),
         ))
     }

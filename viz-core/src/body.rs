@@ -98,12 +98,9 @@ impl HttpBody for Body {
     ) -> Poll<Option<Result<Frame<Self::Data>, Self::Error>>> {
         match self.get_mut() {
             Self::Empty => Poll::Ready(None),
-            Self::Full(inner) => Pin::new(inner).poll_frame(cx).map_err(Error::from),
-            Self::Incoming(inner) => Pin::new(inner).poll_frame(cx).map_err(Error::from),
-            Self::Boxed(inner) => Pin::new(inner)
-                .get_pin_mut()
-                .poll_frame(cx)
-                .map_err(Error::from),
+            Self::Full(inner) => Pin::new(inner).poll_frame(cx).map_err(Into::into),
+            Self::Incoming(inner) => Pin::new(inner).poll_frame(cx).map_err(Into::into),
+            Self::Boxed(inner) => Pin::new(inner).get_pin_mut().poll_frame(cx),
         }
     }
 

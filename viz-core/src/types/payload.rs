@@ -34,8 +34,8 @@ pub enum PayloadError {
     #[error("JSON serialize or deserialize faild, {0}")]
     Json(#[from] serde_json::Error),
 
-    #[cfg(any(feature = "form", feature = "query"))]
     /// 400
+    #[cfg(any(feature = "form", feature = "query"))]
     #[error("url decode failed, {0}")]
     UrlDecode(#[from] serde_urlencoded::de::Error),
 
