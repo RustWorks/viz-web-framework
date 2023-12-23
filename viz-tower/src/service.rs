@@ -26,7 +26,7 @@ where
 
 impl<H> Service<Request> for HandlerService<H>
 where
-    H: Handler<Request, Output = Result<Response>> + Clone + Send + 'static,
+    H: Handler<Request, Output = Result<Response>> + Send + Clone + 'static,
 {
     type Response = Response;
     type Error = Error;

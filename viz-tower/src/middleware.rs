@@ -1,32 +1,9 @@
 use tower::{Layer, Service, ServiceExt};
 use viz_core::{
     async_trait, Body, BoxError, Bytes, Error, Handler, HttpBody, Request, Response, Result,
-    Transform,
 };
 
 use crate::HandlerService;
-
-/// Transforms a Tower layer into Viz Middleware.
-#[derive(Debug)]
-pub struct Layered<L>(L);
-
-impl<L> Layered<L> {
-    /// Creates a new tower layer.
-    pub fn new(l: L) -> Self {
-        Self(l)
-    }
-}
-
-impl<L, H> Transform<H> for Layered<L>
-where
-    L: Clone,
-{
-    type Output = Middleware<L, H>;
-
-    fn transform(&self, h: H) -> Self::Output {
-        Middleware::new(self.0.clone(), h)
-    }
-}
 
 /// A [`Service`] created from a [`Handler`] by applying a Tower middleware.
 #[derive(Debug, Clone)]

@@ -9,7 +9,10 @@ mod service;
 pub use service::HandlerService;
 
 mod middleware;
-pub use middleware::{Layered, Middleware};
+pub use middleware::Middleware;
+
+mod layer;
+pub use layer::Layered;
 
 /// Converts a tower [`Service`] into a [`Handler`].
 #[derive(Debug, Clone)]
