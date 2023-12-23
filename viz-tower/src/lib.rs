@@ -1,22 +1,29 @@
 //! An adapter that makes a tower [`Service`] into a [`Handler`].
 
-use http_body_util::BodyExt;
 use tower::{Service, ServiceExt};
-use viz_core::{async_trait, BoxError, Bytes, Error, Handler, HttpBody, Request, Response, Result};
+use viz_core::{
+    async_trait, Body, BoxError, Bytes, Error, Handler, HttpBody, Request, Response, Result,
+};
+
+mod service;
+pub use service::HandlerService;
+
+mod middleware;
+pub use middleware::{Layered, Middleware};
 
 /// Converts a tower [`Service`] into a [`Handler`].
 #[derive(Debug, Clone)]
-pub struct TowerServiceHandler<S>(S);
+pub struct ServiceHandler<S>(S);
 
-impl<S> TowerServiceHandler<S> {
-    /// Creates a new [`TowerServiceHandler`].
+impl<S> ServiceHandler<S> {
+    /// Creates a new [`ServiceHandler`].
     pub fn new(s: S) -> Self {
         Self(s)
     }
 }
 
 #[async_trait]
-impl<O, S> Handler<Request> for TowerServiceHandler<S>
+impl<O, S> Handler<Request> for ServiceHandler<S>
 where
     O: HttpBody + Send + 'static,
     O::Data: Into<Bytes>,
@@ -32,14 +39,7 @@ where
             .clone()
             .oneshot(req)
             .await
-            .map(|resp| {
-                resp.map(|body| {
-                    body.map_frame(|f| f.map_data(Into::into))
-                        .map_err(Error::boxed)
-                        .boxed_unsync()
-                        .into()
-                })
-            })
+            .map(|resp| resp.map(Body::wrap))
             .map_err(Error::boxed)
     }
 }
@@ -102,7 +102,7 @@ mod tests {
             .service(hello_svc);
 
         let r0 = Request::new(Body::Full("12".into()));
-        let h0 = TowerServiceHandler::new(svc);
+        let h0 = ServiceHandler::new(svc);
         assert!(h0.call(r0).await.is_err());
 
         let r1 = Request::new(Body::Full("1".into()));

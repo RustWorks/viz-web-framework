@@ -46,15 +46,23 @@ impl Body {
     }
 
     /// Wraps a body into box.
+    #[allow(clippy::missing_panics_doc)]
     pub fn wrap<B>(body: B) -> Self
     where
         B: HttpBody + Send + 'static,
         B::Data: Into<Bytes>,
         B::Error: Into<BoxError>,
     {
-        body.map_frame(|frame| frame.map_data(Into::into))
-            .map_err(Error::boxed)
-            .boxed_unsync()
+        // Copied from Axum, thanks.
+        let mut body = Some(body);
+        <dyn std::any::Any>::downcast_mut::<Option<UnsyncBoxBody<Bytes, Error>>>(&mut body)
+            .and_then(Option::take)
+            .unwrap_or_else(|| {
+                body.unwrap()
+                    .map_frame(|frame| frame.map_data(Into::into))
+                    .map_err(Error::boxed)
+                    .boxed_unsync()
+            })
             .into()
     }
 
