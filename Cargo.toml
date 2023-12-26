@@ -55,13 +55,15 @@ viz-macros = { version = "0.2.0", path = "viz-macros" }
 viz-test = { version = "0.2.0", path = "viz-test" }
 viz-tower = { version = "0.1.0", path = "viz-tower" }
 
+anyhow = "1.0"
 async-trait = "0.1"
-dyn-clone = "1.0"
 bytes = "1.5"
+dyn-clone = "1.0"
 serde = "1.0"
 serde_derive = "1.0"
 serde_json = "1.0"
 serde_urlencoded = "0.7"
+sync_wrapper = "0.1.2"
 thiserror = "1.0"
 
 # router
@@ -74,6 +76,12 @@ http-body = "1"
 http-body-util = "0.1"
 hyper = { version = "1.1", features = ["server"] }
 hyper-util = { version = "0.1.2", features = ["server-auto", "tokio"] }
+mime = "0.3"
+mime_guess = "2.0"
+percent-encoding = "2.3"
+
+hex = "0.4"
+rust-embed = "8"
 
 futures-util = "0.3"
 rustls-pemfile = "1.0"
@@ -83,14 +91,6 @@ tokio-rustls = "0.24"
 tokio-stream = "0.1"
 tokio-tungstenite = "0.21"
 tokio-util = "0.7"
-
-anyhow = "1.0"
-mime = "0.3"
-mime_guess = "2.0"
-percent-encoding = "2.3"
-
-hex = "0.4"
-rust-embed = "8"
 
 # OpenTelemetry
 opentelemetry = { version = "0.21", default-features = false }

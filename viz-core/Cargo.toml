@@ -59,6 +59,8 @@ otel-metrics = ["otel", "opentelemetry?/metrics"]
 async-trait.workspace = true
 dyn-clone.workspace = true
 futures-util.workspace = true
+sync_wrapper.workspace = true
+thiserror.workspace = true
 
 bytes.workspace = true
 headers.workspace = true
@@ -67,14 +69,11 @@ http-body.workspace = true
 http.workspace = true
 hyper-util.workspace = true
 hyper.workspace = true
-sync_wrapper = "0.1.2"
-
 mime.workspace = true
-thiserror.workspace = true
 
 rfc7239 = "0.1"                                                               # realip
 cookie = { version = "0.18", features = ["percent-encode"], optional = true }
-form-data = { version = "0.5.0", optional = true }
+form-data = { version = "0.5.1", optional = true }
 serde = { workspace = true, features = ["derive"], optional = true }
 serde_json = { workspace = true, optional = true }
 serde_urlencoded = { workspace = true, optional = true }
@@ -92,14 +91,15 @@ async-compression = { version = "0.4", features = [
   "deflate",
 ], optional = true }
 
-# OpenTelemetry
-opentelemetry = { workspace = true, default-features = false, optional = true }
-opentelemetry-semantic-conventions = { workspace = true, optional = true }
-
+# Tokio
 tokio = { workspace = true, optional = true }
 tokio-tungstenite = { workspace = true, optional = true }
 tokio-stream = { workspace = true, optional = true }
 tokio-util = { workspace = true, optional = true }
+
+# OpenTelemetry
+opentelemetry = { workspace = true, default-features = false, optional = true }
+opentelemetry-semantic-conventions = { workspace = true, optional = true }
 
 [dev-dependencies]
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
