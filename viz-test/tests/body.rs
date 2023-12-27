@@ -159,7 +159,7 @@ async fn outgoing_body() -> Result<()> {
     assert!(full_some.frame().await.is_none());
 
     let mut boxed: Body = UnsyncBoxBody::new(Full::new(Bytes::new()).map_err(Into::into)).into();
-    assert_eq!(boxed.is_end_stream(), false);
+    assert!(!boxed.is_end_stream());
     // boxed stream uses default size
     let size_hint = boxed.size_hint();
     assert_eq!(size_hint.lower(), 0);

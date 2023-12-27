@@ -21,7 +21,7 @@ where
     I: Send + 'static,
     H: Handler<I, Output = Result<O>> + Clone,
     O: Send + 'static,
-    F: Handler<Result<O>, Output = Result<O>> + Clone,
+    F: Handler<H::Output, Output = H::Output> + Clone,
 {
     type Output = F::Output;
 
