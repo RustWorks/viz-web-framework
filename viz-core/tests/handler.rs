@@ -22,18 +22,16 @@ async fn handler() -> Result<()> {
 
     struct MyU8(u8);
 
-    #[async_trait]
     impl FromRequest for MyU8 {
         type Error = std::convert::Infallible;
 
-        async fn extract(_req: &mut Request) -> Result<Self, Self::Error> {
+        async fn extract(_: &mut Request) -> Result<Self, Self::Error> {
             Ok(MyU8(u8::MAX))
         }
     }
 
     struct MyString(String);
 
-    #[async_trait]
     impl FromRequest for MyString {
         type Error = std::convert::Infallible;
 
