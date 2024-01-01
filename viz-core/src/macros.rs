@@ -21,7 +21,6 @@ macro_rules! tuple_impls {
             }
         }
 
-        #[crate::async_trait]
         impl<$($T,)* Fun, Fut, Out> FnExt<Request, ($($T,)*)> for Fun
         where
             $($T: FromRequest + Send,)*
