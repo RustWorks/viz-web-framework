@@ -14,12 +14,14 @@
 //!
 //! * Robust [`Routing`](#routing)
 //!
+//! * Supports Tower [`Service`]
+//!
 //! # Hello Viz
 //!
 //! ```no_run
-//! use std::{net::SocketAddr, sync::Arc};
+//! use std::net::SocketAddr;
 //! use tokio::net::TcpListener;
-//! use viz::{serve, Request, Result, Router, Tree};
+//! use viz::{serve, Request, Result, Router};
 //!
 //! async fn index(_: Request) -> Result<&'static str> {
 //!     Ok("Hello, Viz!")
@@ -32,13 +34,12 @@
 //!     println!("listening on http://{addr}");
 //!
 //!     let app = Router::new().get("/", index);
-//!     let tree = Arc::new(Tree::from(app));
 //!
-//!     loop {
-//!         let (stream, addr) = listener.accept().await?;
-//!         let tree = tree.clone();
-//!         tokio::task::spawn(serve(stream, tree, Some(addr)));
+//!     if let Err(e) = serve(listener, app).await {
+//!         println!("{e}");
 //!     }
+//!
+//!     Ok(())
 //! }
 //! ```
 //!
@@ -80,9 +81,9 @@
 //!
 //! #[async_trait]
 //! impl Handler<Request> for MyHandler {
-//!     type Output = Result<Response>;  
+//!     type Output = Result<Response>;
 //!
-//!     async fn call(&self, req: Request) -> Self::Output {
+//!     async fn call(&self, req: Request) -> Self::Output  {
 //!         let path = req.path();
 //!         let method = req.method().clone();
 //!         let code = self.code.fetch_add(1, Ordering::SeqCst);
@@ -188,7 +189,7 @@
 //!
 //! async fn around<H>((req, handler): Next<Request, H>) -> Result<Response>
 //! where
-//!     H: Handler<Request, Output = Result<Response>> + Clone,
+//!     H: Handler<Request, Output = Result<Response>>,
 //! {
 //!     // before ...
 //!     let result = handler.call(req).await;
@@ -221,7 +222,7 @@
 //! # use std::time::Duration;
 //! # use viz::{
 //! #   async_trait, get, types::Params, Transform, HandlerExt, IntoResponse, IntoHandler,
-//! #   Request, Response, ResponseExt, Result, Router, StatusCode, Next, Handler
+//! #   Request, Response, ResponseExt, Result, Router, StatusCode, Next, Handler,
 //! # };
 //! async fn index(_: Request) -> Result<Response> {
 //!     Ok(StatusCode::OK.into_response())
@@ -288,7 +289,7 @@
 //! #[async_trait]
 //! impl<H> Handler<Request> for TimeoutMiddleware<H>
 //! where
-//!     H: Handler<Request> + Clone,
+//!     H: Handler<Request>,
 //! {
 //!     type Output = H::Output;
 //!
@@ -512,6 +513,7 @@
 //!
 //! [`FutureExt`]: https://docs.rs/futures/latest/futures/future/trait.FutureExt.html
 //! [`StreamExt`]: https://docs.rs/futures/latest/futures/stream/trait.StreamExt.html
+//! [`Service`]: https://docs.rs/tower-service/latest/tower_service/trait.Service.html
 
 #![doc(html_logo_url = "https://viz.rs/logo.svg")]
 #![doc(html_favicon_url = "https://viz.rs/logo.svg")]
@@ -525,26 +527,24 @@
 mod responder;
 #[cfg(any(feature = "http1", feature = "http2"))]
 pub use responder::Responder;
-
 #[cfg(any(feature = "http1", feature = "http2"))]
-mod serve;
+mod server;
 #[cfg(any(feature = "http1", feature = "http2"))]
-pub use serve::{serve, serve_with_upgrades};
+pub use server::{serve, Server};
 
 /// TLS
+#[cfg(any(feature = "native_tls", feature = "rustls"))]
 pub mod tls;
-pub use viz_core::*;
-pub use viz_router::*;
 
 #[cfg(feature = "handlers")]
 #[cfg_attr(docsrs, doc(cfg(feature = "handlers")))]
 #[doc(inline)]
 pub use viz_handlers as handlers;
 
-#[cfg(any(feature = "http1", feature = "http2"))]
-pub use hyper::server;
-
 #[cfg(feature = "macros")]
 #[cfg_attr(docsrs, doc(cfg(feature = "macros")))]
 #[doc(inline)]
 pub use viz_macros::handler;
+
+pub use viz_core::*;
+pub use viz_router::*;

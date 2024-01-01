@@ -1,4 +1,4 @@
-use crate::{async_trait, Handler};
+use crate::Handler;
 
 /// Combines two different handlers having the same associated types into a single type.
 #[derive(Debug, Clone)]
@@ -9,12 +9,12 @@ pub enum Either<L, R> {
     Right(R),
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<L, R, I, O> Handler<I> for Either<L, R>
 where
     I: Send + 'static,
-    L: Handler<I, Output = O> + Clone,
-    R: Handler<I, Output = O> + Clone,
+    L: Handler<I, Output = O>,
+    R: Handler<I, Output = O>,
 {
     type Output = O;
 

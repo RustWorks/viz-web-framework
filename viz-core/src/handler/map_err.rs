@@ -1,4 +1,4 @@
-use crate::{async_trait, Error, Handler, Result};
+use crate::{Error, Handler, Result};
 
 /// Maps the `Err` value of the output if after the handler called.
 #[derive(Debug, Clone)]
@@ -15,20 +15,16 @@ impl<H, F> MapErr<H, F> {
     }
 }
 
-#[async_trait]
-impl<H, F, I, O> Handler<I> for MapErr<H, F>
+#[crate::async_trait]
+impl<H, F, I, O, E> Handler<I> for MapErr<H, F>
 where
     I: Send + 'static,
-    H: Handler<I, Output = Result<O>> + Clone,
-    O: Send,
-    F: Handler<Error, Output = Error> + Clone,
+    H: Handler<I, Output = Result<O, E>>,
+    F: FnOnce(E) -> Error + Send + Sync + Copy + 'static,
 {
-    type Output = H::Output;
+    type Output = Result<O>;
 
     async fn call(&self, i: I) -> Self::Output {
-        match self.h.call(i).await {
-            Ok(o) => Ok(o),
-            Err(e) => Err(self.f.call(e).await),
-        }
+        self.h.call(i).await.map_err(self.f)
     }
 }

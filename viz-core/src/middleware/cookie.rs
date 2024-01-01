@@ -3,7 +3,6 @@
 use std::fmt;
 
 use crate::{
-    async_trait,
     header::{HeaderValue, COOKIE, SET_COOKIE},
     types::{Cookie, CookieJar, CookieKey, Cookies},
     Handler, IntoResponse, Request, Response, Result, Transform,
@@ -80,10 +79,10 @@ impl<H> fmt::Debug for CookieMiddleware<H> {
     }
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<H, O> Handler<Request> for CookieMiddleware<H>
 where
-    H: Handler<Request, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>>,
     O: IntoResponse,
 {
     type Output = Result<Response>;

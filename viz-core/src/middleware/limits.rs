@@ -3,7 +3,7 @@
 #[cfg(feature = "multipart")]
 use std::sync::Arc;
 
-use crate::{async_trait, types, Handler, IntoResponse, Request, Response, Result, Transform};
+use crate::{types, Handler, IntoResponse, Request, Response, Result, Transform};
 
 /// A configuration for [`LimitsMiddleware`].
 #[derive(Debug, Clone)]
@@ -67,10 +67,10 @@ pub struct LimitsMiddleware<H> {
     config: Config,
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<H, O> Handler<Request> for LimitsMiddleware<H>
 where
-    H: Handler<Request, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>>,
     O: IntoResponse,
 {
     type Output = Result<Response>;

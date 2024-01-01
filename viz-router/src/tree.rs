@@ -7,7 +7,7 @@ use viz_core::{BoxHandler, Method};
 use crate::{Route, Router};
 
 /// Store all final routes.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct Tree(Vec<(Method, PathTree<BoxHandler>)>);
 
 impl Tree {

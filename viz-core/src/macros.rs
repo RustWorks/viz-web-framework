@@ -8,7 +8,7 @@ macro_rules! tuple_impls {
     };
     // "Private" internal implementation
     (@impl $( $T:ident )*) => {
-        #[async_trait]
+        #[crate::async_trait]
         impl<$($T,)*> FromRequest for ($($T,)*)
         where
             $($T: FromRequest + Send,)*
@@ -22,12 +22,12 @@ macro_rules! tuple_impls {
             }
         }
 
-        #[async_trait]
-        impl<$($T,)* Fun, Fut, Out> FnExt<($($T,)*)> for Fun
+        #[crate::async_trait]
+        impl<$($T,)* Fun, Fut, Out> FnExt<Request, ($($T,)*)> for Fun
         where
             $($T: FromRequest + Send,)*
             $($T::Error: IntoResponse + Send,)*
-            Fun: Fn($($T,)*) -> Fut + Clone + Send + Sync + 'static,
+            Fun: Fn($($T,)*) -> Fut + Send + Sync + 'static,
             Fut: Future<Output = Result<Out>> + Send,
         {
             type Output =  Fut::Output;

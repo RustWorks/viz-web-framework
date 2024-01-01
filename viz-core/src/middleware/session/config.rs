@@ -5,7 +5,6 @@ use std::{
 };
 
 use crate::{
-    async_trait,
     middleware::helper::{CookieOptions, Cookieable},
     types::{Cookie, Session},
     Error, Handler, IntoResponse, Request, RequestExt, Response, Result, StatusCode, Transform,
@@ -89,10 +88,10 @@ where
     }
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<H, O, S, G, V> Handler<Request> for SessionMiddleware<H, S, G, V>
 where
-    H: Handler<Request, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>>,
     O: IntoResponse,
     S: Storage + 'static,
     G: Fn() -> String + Send + Sync + 'static,
@@ -101,12 +100,14 @@ where
     type Output = Result<Response>;
 
     async fn call(&self, mut req: Request) -> Self::Output {
+        let Self { h, config } = self;
+
         let cookies = req.cookies().map_err(Error::from)?;
-        let cookie = self.config.get_cookie(&cookies);
+        let cookie = config.get_cookie(&cookies);
 
         let mut session_id = cookie.as_ref().map(Cookie::value).map(ToString::to_string);
         let data = match &session_id {
-            Some(sid) if (self.config.store().verify)(sid) => self.config.store().get(sid).await?,
+            Some(sid) if (config.store().verify)(sid) => config.store().get(sid).await?,
             _ => None,
         };
         if data.is_none() && session_id.is_some() {
@@ -115,7 +116,7 @@ where
         let session = Session::new(data.unwrap_or_default());
         req.extensions_mut().insert(session.clone());
 
-        let resp = self.h.call(req).await.map(IntoResponse::into_response);
+        let resp = h.call(req).await.map(IntoResponse::into_response);
 
         let status = session.status().load(Ordering::Acquire);
 
@@ -125,8 +126,8 @@ where
 
         if status == PURGED {
             if let Some(sid) = &session_id {
-                self.config.store().remove(sid).await.map_err(Error::from)?;
-                self.config.remove_cookie(&cookies);
+                config.store().remove(sid).await.map_err(Error::from)?;
+                config.remove_cookie(&cookies);
             }
 
             return resp;
@@ -134,23 +135,19 @@ where
 
         if status == RENEWED {
             if let Some(sid) = &session_id.take() {
-                self.config.store().remove(sid).await.map_err(Error::from)?;
+                config.store().remove(sid).await.map_err(Error::from)?;
             }
         }
 
         let sid = session_id.unwrap_or_else(|| {
-            let sid = (self.config.store().generate)();
-            self.config.set_cookie(&cookies, &sid);
+            let sid = (config.store().generate)();
+            config.set_cookie(&cookies, &sid);
             sid
         });
 
-        self.config
+        config
             .store()
-            .set(
-                &sid,
-                session.data()?,
-                &self.config.ttl().unwrap_or_else(max_age),
-            )
+            .set(&sid, session.data()?, &config.ttl().unwrap_or_else(max_age))
             .await
             .map_err(Error::from)?;
 

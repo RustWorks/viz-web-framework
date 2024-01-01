@@ -11,7 +11,6 @@ use tokio::io::AsyncReadExt;
 use tokio_util::io::ReaderStream;
 
 use viz_core::{
-    async_trait,
     headers::{
         AcceptRanges, ContentLength, ContentRange, ContentType, ETag, HeaderMap, HeaderMapExt,
         IfMatch, IfModifiedSince, IfNoneMatch, IfUnmodifiedSince, LastModified, Range,
@@ -47,7 +46,7 @@ impl File {
     }
 }
 
-#[async_trait]
+#[viz_core::async_trait]
 impl Handler<Request> for File {
     type Output = Result<Response>;
 
@@ -98,7 +97,7 @@ impl Dir {
     }
 }
 
-#[async_trait]
+#[viz_core::async_trait]
 impl Handler<Request> for Dir {
     type Output = Result<Response>;
 

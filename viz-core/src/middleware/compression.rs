@@ -6,7 +6,6 @@ use async_compression::tokio::bufread;
 use tokio_util::io::{ReaderStream, StreamReader};
 
 use crate::{
-    async_trait,
     header::{HeaderValue, ACCEPT_ENCODING, CONTENT_ENCODING, CONTENT_LENGTH},
     Body, Handler, IntoResponse, Request, Response, Result, Transform,
 };
@@ -32,11 +31,11 @@ pub struct CompressionMiddleware<H> {
     h: H,
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<H, O> Handler<Request> for CompressionMiddleware<H>
 where
+    H: Handler<Request, Output = Result<O>>,
     O: IntoResponse,
-    H: Handler<Request, Output = Result<O>> + Clone,
 {
     type Output = Result<Response>;
 

@@ -140,7 +140,7 @@ impl Router {
     #[must_use]
     pub fn map_handler<F>(self, f: F) -> Self
     where
-        F: Fn(BoxHandler) -> BoxHandler,
+        F: Fn(BoxHandler<Request, Result<Response>>) -> BoxHandler<Request, Result<Response>>,
     {
         Self {
             routes: self.routes.map(|routes| {
@@ -164,8 +164,8 @@ impl Router {
     #[must_use]
     pub fn with<T>(self, t: T) -> Self
     where
-        T: Transform<BoxHandler>,
-        T::Output: Handler<Request, Output = Result<Response>>,
+        T: Transform<BoxHandler<Request, Result<Response>>>,
+        T::Output: Handler<Request, Output = Result<Response>> + Clone,
     {
         self.map_handler(|handler| t.transform(handler).boxed())
     }
@@ -174,7 +174,8 @@ impl Router {
     #[must_use]
     pub fn with_handler<H>(self, f: H) -> Self
     where
-        H: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
+        H: Handler<Next<Request, BoxHandler<Request, Result<Response>>>, Output = Result<Response>>
+            + Clone,
     {
         self.map_handler(|handler| handler.around(f.clone()).boxed())
     }
@@ -217,7 +218,7 @@ mod tests {
     #[async_trait]
     impl<H> Handler<Request> for LoggerHandler<H>
     where
-        H: Handler<Request> + Clone,
+        H: Handler<Request>,
     {
         type Output = H::Output;
 
@@ -280,7 +281,7 @@ mod tests {
 
         async fn middle<H>((req, h): Next<Request, H>) -> Result<Response>
         where
-            H: Handler<Request, Output = Result<Response>> + Clone,
+            H: Handler<Request, Output = Result<Response>>,
         {
             h.call(req).await
         }

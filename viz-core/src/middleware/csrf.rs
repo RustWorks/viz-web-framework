@@ -5,7 +5,6 @@ use std::{collections::HashSet, fmt, sync::Arc};
 use base64::Engine as _;
 
 use crate::{
-    async_trait,
     header::{HeaderName, HeaderValue, VARY},
     middleware::helper::{CookieOptions, Cookieable},
     Error, FromRequest, Handler, IntoResponse, Method, Request, RequestExt, Response, Result,
@@ -37,7 +36,7 @@ pub enum Store {
 #[derive(Debug, Clone)]
 pub struct CsrfToken(pub String);
 
-#[async_trait]
+#[crate::async_trait]
 impl FromRequest for CsrfToken {
     type Error = Error;
 
@@ -186,10 +185,10 @@ where
     }
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<H, O, S, G, V> Handler<Request> for CsrfMiddleware<H, S, G, V>
 where
-    H: Handler<Request, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>>,
     O: IntoResponse,
     S: Fn() -> Result<Vec<u8>> + Send + Sync + 'static,
     G: Fn(&[u8], Vec<u8>) -> Vec<u8> + Send + Sync + 'static,
@@ -199,6 +198,7 @@ where
 
     async fn call(&self, mut req: Request) -> Self::Output {
         let mut secret = self.config.get(&req)?;
+
         let config = self.config.as_ref();
 
         if !config.ignored_methods.contains(req.method()) {
@@ -212,11 +212,11 @@ where
                 return Err((StatusCode::FORBIDDEN, "Invalid csrf token").into_error());
             }
         }
-
         let otp = (config.secret)()?;
         let secret = (config.secret)()?;
         let token = base64::engine::general_purpose::URL_SAFE_NO_PAD
             .encode((config.generate)(&secret, otp));
+
         req.extensions_mut().insert(CsrfToken(token.to_string()));
         self.config.set(&req, token, secret)?;
 

@@ -1,4 +1,4 @@
-use crate::{async_trait, Handler, Result};
+use crate::{Handler, Result};
 
 /// Calls `op` if the output is `Ok`, otherwise returns the `Err` value of the output.
 #[derive(Debug, Clone)]
@@ -15,13 +15,13 @@ impl<H, F> AndThen<H, F> {
     }
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<H, F, I, O> Handler<I> for AndThen<H, F>
 where
     I: Send + 'static,
-    H: Handler<I, Output = Result<O>> + Clone,
+    H: Handler<I, Output = Result<O>>,
+    F: Handler<O, Output = H::Output>,
     O: Send,
-    F: Handler<O, Output = H::Output> + Clone,
 {
     type Output = F::Output;
 

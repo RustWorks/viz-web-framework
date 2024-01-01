@@ -1,10 +1,12 @@
-use std::pin::Pin;
-use std::task::{Context, Poll};
+use std::{
+    future::Future,
+    pin::Pin,
+    task::{Context, Poll},
+};
 
-use tower::Service;
-use viz_core::{Error, Future, Handler, Request, Response, Result};
+use viz_core::{Error, Handler, Request, Response, Result};
 
-/// An adapter that makes a [`Handler`] into a [`Service`].
+/// An adapter that makes a [`Handler`] into a [`Service`](tower::Service).
 #[derive(Debug)]
 pub struct HandlerService<H>(H);
 
@@ -24,13 +26,13 @@ where
     }
 }
 
-impl<H> Service<Request> for HandlerService<H>
+impl<H> tower::Service<Request> for HandlerService<H>
 where
-    H: Handler<Request, Output = Result<Response>> + Send + Clone + 'static,
+    H: Handler<Request, Output = Result<Response>> + Clone,
 {
     type Response = Response;
     type Error = Error;
-    type Future = Pin<Box<dyn Future<Output = Result<Response>> + Send + 'static>>;
+    type Future = Pin<Box<dyn Future<Output = H::Output> + Send>>;
 
     #[inline]
     fn poll_ready(&mut self, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
@@ -38,7 +40,7 @@ where
     }
 
     fn call(&mut self, req: Request) -> Self::Future {
-        let handler = self.0.clone();
-        Box::pin(async move { handler.call(req).await })
+        let h = self.0.clone();
+        Box::pin(async move { h.call(req).await })
     }
 }

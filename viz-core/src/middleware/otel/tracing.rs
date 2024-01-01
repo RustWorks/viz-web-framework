@@ -19,7 +19,6 @@ use opentelemetry_semantic_conventions::trace::{
 };
 
 use crate::{
-    async_trait,
     header::{HeaderMap, HeaderName},
     headers::UserAgent,
     Handler, IntoResponse, Request, RequestExt, Response, ResponseExt, Result, Transform,
@@ -58,10 +57,10 @@ pub struct TracingMiddleware<H, T> {
     tracer: Arc<T>,
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<H, O, T> Handler<Request> for TracingMiddleware<H, T>
 where
-    H: Handler<Request, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>>,
     O: IntoResponse,
     T: Tracer + Send + Sync + Clone + 'static,
     T::Span: Send + Sync + 'static,

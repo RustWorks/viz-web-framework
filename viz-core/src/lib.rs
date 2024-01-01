@@ -43,21 +43,22 @@ pub type Request<T = Body> = http::Request<T>;
 /// Represents an HTTP Response.
 pub type Response<T = Body> = http::Response<T>;
 /// Represents either success (Ok) or failure (Err).
-pub type Result<T, E = Error> = core::result::Result<T, E>;
+pub type Result<T, E = Error> = ::core::result::Result<T, E>;
 
 pub use async_trait::async_trait;
 pub use bytes::{Bytes, BytesMut};
+pub use core::future::Future;
+pub use futures_util::future;
 #[doc(inline)]
 pub use headers;
 pub use http::{header, Method, StatusCode};
 pub use hyper::body::{Body as HttpBody, Incoming};
 pub use hyper_util::rt::TokioIo as Io;
-pub use std::future::Future;
 pub use thiserror::Error as ThisError;
 
 #[doc(hidden)]
 mod tuples {
-    use super::{async_trait, Error, FnExt, FromRequest, Future, IntoResponse, Request, Result};
+    use super::{Error, FnExt, FromRequest, Future, IntoResponse, Request, Result};
 
     tuple_impls!(A B C D E F G H I J K L);
 }

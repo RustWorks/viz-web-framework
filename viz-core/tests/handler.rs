@@ -200,11 +200,11 @@ async fn handler() -> Result<()> {
             }
         }
 
-        async fn map(res: Response) -> Response {
+        fn map(res: Response) -> Response {
             res
         }
 
-        async fn map_err(err: Error) -> Error {
+        fn map_err(err: Error) -> Error {
             err
         }
 
@@ -232,7 +232,9 @@ async fn handler() -> Result<()> {
                 name: "round 1".to_string(),
             })
             .map(map)
-            .catch_error(|_: CustomError2| async move { "Custom Error 2" })
+            .catch_error::<_, CustomError2, &'static str>(|_: CustomError2| async move {
+                "Custom Error 2"
+            })
             .catch_unwind(
                 |_: Box<dyn std::any::Any + Send>| async move { panic!("Custom Error 2") },
             );
@@ -255,12 +257,14 @@ async fn handler() -> Result<()> {
             .map_err(map_err)
             .or_else(or_else);
         let rhb = b.map_into_response();
-        let rhc = c
-            .map_into_response()
-            .catch_error(|_: CustomError2| async move { "Custom Error 2" })
-            .catch_error2(|e: std::io::Error| async move {
-                (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
-            });
+        let rhc =
+            c.map_into_response()
+                .catch_error(|_: CustomError2| async move { "Custom Error 2" })
+                .catch_error2::<_, std::io::Error, (StatusCode, String)>(
+                    |e: std::io::Error| async move {
+                        (StatusCode::INTERNAL_SERVER_ERROR, e.to_string())
+                    },
+                );
         let rhd = d
             .map_into_response()
             .map(map)
@@ -289,25 +293,25 @@ async fn handler() -> Result<()> {
 
         assert!(rhb.call(Request::default()).await.is_err());
 
-        let brha: BoxHandler = rha.boxed();
-        let brhb: BoxHandler = Box::new(rhb)
+        let brha: BoxHandler<_, _> = rha.boxed();
+        let brhb: BoxHandler<_, _> = Box::new(rhb)
             .around(MyAround {
                 name: "MyRound 3".to_string(),
             })
             .boxed();
-        let brhc: BoxHandler = Box::new(rhc);
-        let brhd: BoxHandler = Box::new(rhd);
-        let brhe: BoxHandler = rhe.boxed();
-        let brhf: BoxHandler = Box::new(rhf);
-        let brhg: BoxHandler = Box::new(rhg);
-        let brhh: BoxHandler = Box::new(rhh);
-        let brhi: BoxHandler = Box::new(rhi);
-        let brhj: BoxHandler = Box::new(rhj);
-        let brhk: BoxHandler = rhk.boxed();
-        let brhl: BoxHandler = Box::new(rhl);
-        let brhm: BoxHandler = rhm.boxed();
+        let brhc: BoxHandler<_, _> = rhc.boxed();
+        let brhd: BoxHandler<_, _> = rhd.boxed();
+        let brhe: BoxHandler<_, _> = rhe.boxed();
+        let brhf: BoxHandler<_, _> = rhf.boxed();
+        let brhg: BoxHandler<_, _> = rhg.boxed();
+        let brhh: BoxHandler<_, _> = rhh.boxed();
+        let brhi: BoxHandler<_, _> = rhi.boxed();
+        let brhj: BoxHandler<_, _> = rhj.boxed();
+        let brhk: BoxHandler<_, _> = rhk.boxed();
+        let brhl: BoxHandler<_, _> = rhl.boxed();
+        let brhm: BoxHandler<_, _> = rhm.boxed();
 
-        let v: Vec<BoxHandler> = vec![
+        let v: Vec<BoxHandler<_, _>> = vec![
             brha, brhb, brhc, brhd, brhe, brhf, brhg, brhh, brhi, brhj, brhk, brhl, brhm,
         ];
 

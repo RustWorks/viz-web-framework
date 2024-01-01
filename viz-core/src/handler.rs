@@ -1,6 +1,6 @@
 //! Traits and types for handling an HTTP.
 
-use crate::{async_trait, Future};
+mod cloneable;
 
 mod after;
 pub use after::After;
@@ -56,8 +56,8 @@ pub use service::ServiceHandler;
 /// A simplified asynchronous interface for handling input and output.
 ///
 /// Composable request handlers.
-#[async_trait]
-pub trait Handler<Input>: dyn_clone::DynClone + Send + Sync + 'static {
+#[crate::async_trait]
+pub trait Handler<Input>: Send + Sync + 'static {
     /// The returned type after the call operator is used.
     type Output;
 
@@ -65,12 +65,12 @@ pub trait Handler<Input>: dyn_clone::DynClone + Send + Sync + 'static {
     async fn call(&self, input: Input) -> Self::Output;
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<F, I, Fut, O> Handler<I> for F
 where
     I: Send + 'static,
     F: Fn(I) -> Fut + ?Sized + Clone + Send + Sync + 'static,
-    Fut: Future<Output = O> + Send,
+    Fut: ::core::future::Future<Output = O> + Send + 'static,
 {
     type Output = Fut::Output;
 
@@ -168,7 +168,7 @@ pub trait HandlerExt<I>: Handler<I> {
     }
 
     /// Catches rejected error while calling the handler.
-    fn catch_error<F, R, E>(self, f: F) -> CatchError<Self, F, R, E>
+    fn catch_error<F, E, R>(self, f: F) -> CatchError<Self, F, E, R>
     where
         Self: Sized,
     {
@@ -186,9 +186,9 @@ pub trait HandlerExt<I>: Handler<I> {
     /// Converts this Handler into a [`BoxHandler`].
     fn boxed(self) -> BoxHandler<I, Self::Output>
     where
-        Self: Sized,
+        Self: Sized + Clone,
     {
-        Box::new(self)
+        BoxHandler::new(self)
     }
 
     /// Returns a new [`Handler`] that wrapping the `Self` and a type implementing [`Transform`].

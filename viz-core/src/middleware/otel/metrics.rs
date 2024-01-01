@@ -14,10 +14,7 @@ use opentelemetry_semantic_conventions::trace::{
     HTTP_ROUTE, NETWORK_PROTOCOL_VERSION, SERVER_ADDRESS, SERVER_PORT, URL_SCHEME,
 };
 
-use crate::{
-    async_trait, Handler, IntoResponse, Request, RequestExt, Response, ResponseExt, Result,
-    Transform,
-};
+use crate::{Handler, IntoResponse, Request, RequestExt, Response, ResponseExt, Result, Transform};
 
 const HTTP_SERVER_ACTIVE_REQUESTS: &str = "http.server.active_requests";
 const HTTP_SERVER_DURATION: &str = "http.server.duration";
@@ -96,40 +93,45 @@ pub struct MetricsMiddleware<H> {
     response_size: Histogram<u64>,
 }
 
-#[async_trait]
+#[crate::async_trait]
 impl<H, O> Handler<Request> for MetricsMiddleware<H>
 where
-    H: Handler<Request, Output = Result<O>> + Clone,
+    H: Handler<Request, Output = Result<O>>,
     O: IntoResponse,
 {
     type Output = Result<Response>;
 
     async fn call(&self, req: Request) -> Self::Output {
+        let Self {
+            active_requests,
+            duration,
+            request_size,
+            response_size,
+            h,
+        } = self;
+
         let timer = SystemTime::now();
         let mut attributes = build_attributes(&req, req.route_info().pattern.as_str());
 
-        self.active_requests.add(1, &attributes);
+        active_requests.add(1, &attributes);
 
-        self.request_size
-            .record(req.content_length().unwrap_or(0), &attributes);
+        request_size.record(req.content_length().unwrap_or(0), &attributes);
 
-        let resp = self
-            .h
+        let resp = h
             .call(req)
             .await
             .map(IntoResponse::into_response)
             .map(|resp| {
-                self.active_requests.add(-1, &attributes);
+                active_requests.add(-1, &attributes);
 
                 attributes.push(HTTP_RESPONSE_STATUS_CODE.i64(i64::from(resp.status().as_u16())));
 
-                self.response_size
-                    .record(resp.content_length().unwrap_or(0), &attributes);
+                response_size.record(resp.content_length().unwrap_or(0), &attributes);
 
                 resp
             });
 
-        self.duration.record(
+        duration.record(
             timer.elapsed().map(|t| t.as_secs_f64()).unwrap_or_default(),
             &attributes,
         );

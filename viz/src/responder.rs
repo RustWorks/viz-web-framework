@@ -1,4 +1,4 @@
-use std::{convert::Infallible, future::Future, net::SocketAddr, pin::Pin, sync::Arc};
+use std::{convert::Infallible, future::Future, pin::Pin, sync::Arc};
 
 use crate::{
     types::RouteInfo, Body, Handler, Incoming, IntoResponse, Method, Request, Response, StatusCode,
@@ -7,58 +7,58 @@ use crate::{
 
 /// Handles the HTTP [`Request`] and retures the HTTP [`Response`].
 #[derive(Debug)]
-pub struct Responder {
+pub struct Responder<A> {
     tree: Arc<Tree>,
-    addr: Option<SocketAddr>,
+    remote_addr: Option<A>,
 }
 
-impl Responder {
+impl<A> Responder<A>
+where
+    A: Clone + Send + Sync + 'static,
+{
     /// Creates a Responder for handling the [`Request`].
     #[must_use]
-    pub fn new(tree: Arc<Tree>, addr: Option<SocketAddr>) -> Self {
-        Self { tree, addr }
+    pub fn new(tree: Arc<Tree>, remote_addr: Option<A>) -> Self {
+        Self { tree, remote_addr }
     }
+}
 
-    /// Serves a request and returns a response.
-    async fn serve(
-        mut req: Request<Incoming>,
-        tree: Arc<Tree>,
-        addr: Option<SocketAddr>,
-    ) -> Result<Response, Infallible> {
+impl<A> hyper::service::Service<Request<Incoming>> for Responder<A>
+where
+    A: Clone + Send + Sync + 'static,
+{
+    type Response = Response;
+    type Error = Infallible;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn call(&self, mut req: Request<Incoming>) -> Self::Future {
         let method = req.method().clone();
         let path = req.uri().path().to_owned();
 
-        let Some((handler, route)) = tree.find(&method, &path).or_else(|| {
+        let Some((handler, route)) = self.tree.find(&method, &path).or_else(|| {
             if method == Method::HEAD {
-                tree.find(&Method::GET, &path)
+                self.tree.find(&Method::GET, &path)
             } else {
                 None
             }
         }) else {
-            return Ok(StatusCode::NOT_FOUND.into_response());
+            return Box::pin(async move { Ok(StatusCode::NOT_FOUND.into_response()) });
         };
 
-        req.extensions_mut().insert(addr);
+        req.extensions_mut().insert(self.remote_addr.clone());
         req.extensions_mut().insert(Arc::from(RouteInfo {
             id: *route.id,
             pattern: route.pattern(),
             params: route.params().into(),
         }));
-        // req.set_state(tree.clone());
-        Ok(handler
-            .call(req.map(Body::Incoming))
-            .await
-            .unwrap_or_else(IntoResponse::into_response))
-    }
-}
 
-impl hyper::service::Service<Request<Incoming>> for Responder {
-    type Response = Response;
-    type Error = Infallible;
-    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+        let handler = handler.clone();
 
-    #[inline]
-    fn call(&self, req: Request<Incoming>) -> Self::Future {
-        Box::pin(Self::serve(req, self.tree.clone(), self.addr))
+        Box::pin(async move {
+            Ok(handler
+                .call(req.map(Body::Incoming))
+                .await
+                .unwrap_or_else(IntoResponse::into_response))
+        })
     }
 }
