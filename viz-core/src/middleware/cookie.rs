@@ -4,9 +4,12 @@ use std::fmt;
 
 use crate::{
     header::{HeaderValue, COOKIE, SET_COOKIE},
-    types::{Cookie, CookieJar, CookieKey, Cookies},
+    types::{Cookie, CookieJar, Cookies},
     Handler, IntoResponse, Request, Response, Result, Transform,
 };
+
+#[cfg(any(feature = "cookie-signed", feature = "cookie-private"))]
+use crate::types::CookieKey;
 
 /// A configure for [`CookieMiddleware`].
 pub struct Config {

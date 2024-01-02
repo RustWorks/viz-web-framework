@@ -7,20 +7,15 @@ use std::{
 use crate::{
     middleware::helper::{CookieOptions, Cookieable},
     types::{Cookie, Session},
-    Error, Handler, IntoResponse, Request, RequestExt, Response, Result, StatusCode, Transform,
+    Handler, IntoResponse, Request, RequestExt, Response, Result, Transform,
 };
 
-use super::{Error as SessionError, Storage, Store, PURGED, RENEWED, UNCHANGED};
+use super::{Storage, Store, PURGED, RENEWED, UNCHANGED};
 
 /// A configuration for [`SessionMiddleware`].
 pub struct Config<S, G, V>(Arc<(Store<S, G, V>, CookieOptions)>);
 
-impl<S, G, V> Config<S, G, V>
-where
-    S: Send + Sync,
-    G: Send + Sync,
-    V: Send + Sync,
-{
+impl<S, G, V> Config<S, G, V> {
     /// Creates a new configuration with the [`Store`] and [`CookieOptions`].
     #[must_use]
     pub fn new(store: Store<S, G, V>, cookie: CookieOptions) -> Self {
@@ -102,7 +97,7 @@ where
     async fn call(&self, mut req: Request) -> Self::Output {
         let Self { h, config } = self;
 
-        let cookies = req.cookies().map_err(Error::from)?;
+        let cookies = req.cookies()?;
         let cookie = config.get_cookie(&cookies);
 
         let mut session_id = cookie.as_ref().map(Cookie::value).map(ToString::to_string);
@@ -126,7 +121,7 @@ where
 
         if status == PURGED {
             if let Some(sid) = &session_id {
-                config.store().remove(sid).await.map_err(Error::from)?;
+                config.store().remove(sid).await?;
                 config.remove_cookie(&cookies);
             }
 
@@ -135,7 +130,7 @@ where
 
         if status == RENEWED {
             if let Some(sid) = &session_id.take() {
-                config.store().remove(sid).await.map_err(Error::from)?;
+                config.store().remove(sid).await?;
             }
         }
 
@@ -148,8 +143,7 @@ where
         config
             .store()
             .set(&sid, session.data()?, &config.ttl().unwrap_or_else(max_age))
-            .await
-            .map_err(Error::from)?;
+            .await?;
 
         resp
     }
@@ -157,16 +151,4 @@ where
 
 fn max_age() -> Duration {
     Duration::from_secs(CookieOptions::MAX_AGE)
-}
-
-impl From<SessionError> for Error {
-    fn from(e: SessionError) -> Self {
-        Self::Responder(e.into_response())
-    }
-}
-
-impl IntoResponse for SessionError {
-    fn into_response(self) -> Response {
-        (StatusCode::INTERNAL_SERVER_ERROR, self.to_string()).into_response()
-    }
 }

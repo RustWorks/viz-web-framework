@@ -1,6 +1,6 @@
 // #![deny(warnings)]
 
-use handlebars::Handlebars;
+use handlebars::{DirectorySourceOptions, Handlebars};
 use once_cell::sync::Lazy;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -28,7 +28,7 @@ struct Todo {
 static TPLS: Lazy<Handlebars> = Lazy::new(|| {
     let dir = env::var("CARGO_MANIFEST_DIR").map(PathBuf::from).unwrap();
     let mut h = Handlebars::new();
-    h.register_templates_directory(".html", dir.join("templates"))
+    h.register_templates_directory(dir.join("templates"), DirectorySourceOptions::default())
         .unwrap();
     h
 });

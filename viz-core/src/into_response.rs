@@ -78,21 +78,13 @@ impl IntoResponse for &'static str {
 
 impl IntoResponse for &'static [u8] {
     fn into_response(self) -> Response {
-        Response::builder()
-            .header(CONTENT_TYPE, mime::APPLICATION_OCTET_STREAM.as_ref())
-            .header(CONTENT_LENGTH, self.len())
-            .body(Full::from(self).into())
-            .unwrap()
+        bytes::Bytes::into_response(self.into())
     }
 }
 
 impl IntoResponse for Vec<u8> {
     fn into_response(self) -> Response {
-        Response::builder()
-            .header(CONTENT_TYPE, mime::APPLICATION_OCTET_STREAM.as_ref())
-            .header(CONTENT_LENGTH, self.len())
-            .body(Full::from(self).into())
-            .unwrap()
+        bytes::Bytes::into_response(self.into())
     }
 }
 

@@ -276,6 +276,7 @@ impl RequestExt for Request {
             .collect()
             .await
             .map_err(|err| {
+                #[cfg(feature = "limits")]
                 if err.is::<LengthLimitError>() {
                     return PayloadError::TooLarge;
                 }

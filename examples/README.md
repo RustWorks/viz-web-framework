@@ -31,8 +31,9 @@ Here you can find a lot of small crabs 🦀.
   * [tera](templates/tera)
   * [maud](templates/maud)
   * [minijinja](templates/minijinja)
+  * [handlebars(htmlx)
 * [Tracing aka logging](tracing)
-* [htmlx](htmlx)
+* [htmlx + handlebars](htmlx)
 * [Tower Services](tower)
 
 ## Usage

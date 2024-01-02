@@ -164,7 +164,7 @@ impl Router {
     #[must_use]
     pub fn with<T>(self, t: T) -> Self
     where
-        T: Transform<BoxHandler<Request, Result<Response>>>,
+        T: Transform<BoxHandler>,
         T::Output: Handler<Request, Output = Result<Response>> + Clone,
     {
         self.map_handler(|handler| t.transform(handler).boxed())
@@ -174,8 +174,7 @@ impl Router {
     #[must_use]
     pub fn with_handler<H>(self, f: H) -> Self
     where
-        H: Handler<Next<Request, BoxHandler<Request, Result<Response>>>, Output = Result<Response>>
-            + Clone,
+        H: Handler<Next<Request, BoxHandler>, Output = Result<Response>> + Clone,
     {
         self.map_handler(|handler| handler.around(f.clone()).boxed())
     }
