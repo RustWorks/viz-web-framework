@@ -1,10 +1,8 @@
 use std::{
     io::{Error as IoError, ErrorKind, Result as IoResult},
     net::SocketAddr,
-    task::{Context, Poll},
 };
 
-use futures_util::FutureExt;
 use tokio::net::{TcpListener, TcpStream};
 use tokio_rustls::{
     rustls::{
@@ -16,7 +14,6 @@ use tokio_rustls::{
     server::TlsStream,
 };
 
-use super::Listener;
 use crate::{Error, Result};
 
 pub use tokio_rustls::TlsAcceptor;
@@ -151,18 +148,14 @@ impl Config {
     }
 }
 
-impl tokio_util::net::Listener for Listener<TcpListener, TlsAcceptor> {
+impl crate::Listener for super::TlsListener<TcpListener, TlsAcceptor> {
     type Io = TlsStream<TcpStream>;
     type Addr = SocketAddr;
 
-    fn poll_accept(&mut self, cx: &mut Context<'_>) -> Poll<IoResult<(Self::Io, Self::Addr)>> {
-        let Poll::Ready((stream, addr)) = self.inner.poll_accept(cx)? else {
-            return Poll::Pending;
-        };
-        self.acceptor
-            .accept(stream)
-            .poll_unpin(cx)
-            .map_ok(|stream| (stream, addr))
+    async fn accept(&self) -> IoResult<(Self::Io, Self::Addr)> {
+        let (stream, addr) = self.inner.accept().await?;
+        let stream = self.acceptor.accept(stream).await?;
+        Ok((stream, addr))
     }
 
     fn local_addr(&self) -> IoResult<Self::Addr> {

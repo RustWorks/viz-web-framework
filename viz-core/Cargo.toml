@@ -76,7 +76,7 @@ form-data = { version = "0.5.3", optional = true }
 serde = { workspace = true, features = ["derive"], optional = true }
 serde_json = { workspace = true, optional = true }
 serde_urlencoded = { workspace = true, optional = true }
-sessions-core = { version = "0.6", optional = true }
+sessions-core = { workspace = true, optional = true }
 
 # CSRF
 getrandom = { version = "0.2", optional = true }

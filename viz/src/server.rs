@@ -11,9 +11,17 @@ use hyper_util::{
     server::conn::auto::Builder,
 };
 use tokio::{pin, select, sync::watch};
-use tokio_util::net::Listener;
 
 use crate::{future::FutureExt, Responder, Router, Tree};
+
+mod listener;
+pub use listener::Listener;
+
+#[cfg(any(feature = "http1", feature = "http2"))]
+mod tcp;
+
+#[cfg(all(unix, feature = "unix-socket"))]
+mod unix;
 
 /// Starts a server and serves the connections.
 pub fn serve<L>(listener: L, router: Router) -> Server<L>
@@ -77,7 +85,7 @@ where
             tree,
             signal,
             builder,
-            mut listener,
+            listener,
         } = self;
 
         let (shutdown_tx, shutdown_rx) = watch::channel(());

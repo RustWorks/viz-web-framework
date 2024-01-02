@@ -24,7 +24,7 @@ http-body-util.workspace = true
 hyper.workspace = true
 mime.workspace = true
 serde.workspace = true
-sessions = { version = "0.5", features = ["memory"] }
+sessions = { workspace = true, features = ["memory"] }
 nano-id = "0.3"
 
 http = "=0.2"

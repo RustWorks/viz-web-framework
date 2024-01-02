@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
 
     let app = Router::new().route("/", get(index));
 
-    let listener = tls::Listener::<_, tls::rustls::TlsAcceptor>::new(
+    let listener = tls::TlsListener::<_, tls::rustls::TlsAcceptor>::new(
         listener,
         tls::rustls::Config::new()
             .cert(include_bytes!("../../tls/cert.pem").to_vec())

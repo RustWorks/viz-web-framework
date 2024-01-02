@@ -1,6 +1,6 @@
 mod listener;
 
-pub use listener::Listener;
+pub use listener::TlsListener;
 
 /// `native_tls`
 #[cfg(feature = "native-tls")]
