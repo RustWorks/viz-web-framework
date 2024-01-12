@@ -525,12 +525,14 @@
 mod responder;
 pub use responder::Responder;
 
-mod server;
-pub use server::{serve, Listener, Server};
+mod listener;
+pub use listener::Listener;
 
-/// TLS
+mod server;
+pub use server::{serve, Server};
+
 #[cfg(any(feature = "native_tls", feature = "rustls"))]
-pub mod tls;
+pub use server::tls;
 
 pub use viz_core::*;
 pub use viz_router::*;

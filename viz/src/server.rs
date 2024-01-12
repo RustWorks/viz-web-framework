@@ -6,16 +6,19 @@ use std::{
     sync::Arc,
 };
 
-use hyper_util::{
-    rt::{TokioExecutor, TokioIo},
-    server::conn::auto::Builder,
+use hyper_util::rt::{TokioExecutor, TokioIo};
+use hyper_util::server::conn::auto::Builder;
+use tokio::{
+    io::{AsyncRead, AsyncWrite},
+    pin, select,
+    sync::watch,
 };
-use tokio::{pin, select, sync::watch};
 
-use crate::{future::FutureExt, Responder, Router, Tree};
+use crate::{future::FutureExt, Listener, Responder, Router};
 
-mod listener;
-pub use listener::Listener;
+/// TLS
+#[cfg(any(feature = "native_tls", feature = "rustls"))]
+pub mod tls;
 
 #[cfg(any(feature = "http1", feature = "http2"))]
 mod tcp;
@@ -24,58 +27,63 @@ mod tcp;
 mod unix;
 
 /// Starts a server and serves the connections.
-pub fn serve<L>(listener: L, router: Router) -> Server<L>
-where
-    L: Listener + Send + 'static,
-    L::Io: Send + Unpin,
-    L::Addr: Send + Sync + Debug,
-{
-    Server::<L>::new(listener, router)
+pub fn serve<L>(
+    listener: L,
+    router: Router,
+) -> Server<L, TokioExecutor, fn(TokioExecutor) -> Builder<TokioExecutor>, Pending<()>> {
+    Server::<L, TokioExecutor, fn(TokioExecutor) -> Builder<TokioExecutor>, Pending<()>>::new(
+        TokioExecutor::new(),
+        listener,
+        router,
+        |executor: TokioExecutor| Builder::new(executor),
+    )
 }
 
 /// A listening HTTP server that accepts connections.
 #[derive(Debug)]
-pub struct Server<L, E = TokioExecutor, F = Pending<()>> {
-    signal: F,
-    tree: Tree,
+pub struct Server<L, E, F, S> {
     listener: L,
-    builder: Builder<E>,
+    executor: E,
+    build: F,
+    signal: S,
+    tree: crate::Tree,
 }
 
-impl<L, E, F> Server<L, E, F> {
-    /// Starts a [`Server`] with a listener and a [`Tree`].
-    pub fn new(listener: L, router: Router) -> Server<L> {
+impl<L, E, F, S> Server<L, E, F, S> {
+    /// Starts a [`Server`] with a listener and a [`Router`].
+    pub fn new(executor: E, listener: L, router: Router, build: F) -> Server<L, E, F, Pending<()>>
+    where
+        F: Fn(E) -> Builder<E> + Send + 'static,
+    {
         Server {
+            build,
+            executor,
             listener,
             signal: pending(),
             tree: router.into(),
-            builder: Builder::new(TokioExecutor::new()),
         }
     }
 
     /// Changes the signal for graceful shutdown.
-    pub fn signal<T>(self, signal: T) -> Server<L, E, T> {
+    pub fn signal<X>(self, signal: X) -> Server<L, E, F, X> {
         Server {
             signal,
             tree: self.tree,
-            builder: self.builder,
+            build: self.build,
+            executor: self.executor,
             listener: self.listener,
         }
-    }
-
-    /// Returns the HTTP1 or HTTP2 connection builder.
-    pub fn builder(&mut self) -> &mut Builder<E> {
-        &mut self.builder
     }
 }
 
 /// Copied from Axum. Thanks.
-impl<L, F> IntoFuture for Server<L, TokioExecutor, F>
+impl<L, F, S> IntoFuture for Server<L, TokioExecutor, F, S>
 where
     L: Listener + Send + 'static,
-    L::Io: Send + Unpin,
+    L::Io: AsyncRead + AsyncWrite + Send + Unpin,
     L::Addr: Send + Sync + Debug,
-    F: Future + Send + 'static,
+    F: Fn(TokioExecutor) -> Builder<TokioExecutor> + Send + 'static,
+    S: Future + Send + 'static,
 {
     type Output = io::Result<()>;
     type IntoFuture = Pin<Box<dyn Future<Output = Self::Output> + Send>>;
@@ -83,8 +91,9 @@ where
     fn into_future(self) -> Self::IntoFuture {
         let Self {
             tree,
+            build,
             signal,
-            builder,
+            executor,
             listener,
         } = self;
 
@@ -127,7 +136,7 @@ where
 
                 let io = TokioIo::new(stream);
                 let remote_addr = Arc::new(remote_addr);
-                let builder = builder.clone();
+                let builder = (build)(executor.clone());
                 let responder =
                     Responder::<Arc<L::Addr>>::new(tree.clone(), Some(remote_addr.clone()));
 

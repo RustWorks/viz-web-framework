@@ -1,0 +1,12 @@
+[package]
+name = "smol-example"
+version = "0.1.0"
+edition.workspace = true
+publish = false
+
+[dependencies]
+viz-smol.workspace = true
+
+async-net.workspace = true
+smol-macros.workspace = true
+macro_rules_attribute.workspace = true
