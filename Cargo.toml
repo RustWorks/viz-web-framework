@@ -57,7 +57,7 @@ viz-macros = { version = "0.2.0", path = "viz-macros" }
 viz-test = { version = "0.2.0", path = "viz-test" }
 viz-tower = { version = "0.1.0", path = "viz-tower" }
 
-viz-smol = { version = "0.1.0", path = "viz-smol" }
+viz-smol = { version = "0.1.1", path = "viz-smol" }
 
 anyhow = "1.0"
 async-trait = "0.1"
