@@ -8,4 +8,4 @@ publish = false
 viz.workspace = true
 
 tokio = { workspace = true, features = ["rt-multi-thread", "macros"] }
-maud = "0.25"
+maud = "0.26"
